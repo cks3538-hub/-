@@ -1,0 +1,5 @@
+# Local-only Playwright CLI workspace state (machine-specific browser path, session snapshots).
+# Do not commit: .playwright/cli.config.json points at this sandbox's pre-installed Chromium
+# (/opt/pw-browsers/chromium), which won't exist on other machines.
+.playwright/
+.playwright-cli/
