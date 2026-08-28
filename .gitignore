@@ -3,3 +3,14 @@
 # (/opt/pw-browsers/chromium), which won't exist on other machines.
 .playwright/
 .playwright-cli/
+
+# unlazy skill: local runtime/approval state and machine-specific hook settings
+# (per .claude/skills/unlazy/SKILL.md - these are machine-specific, never shared)
+.unlazy/
+.unlazy-hook-state.json
+.claude/settings.local.json
+.claude/settings.local.json.unlazy.bak
+.claude/settings.json.unlazy.bak
+
+node_modules/
+*.tmp
