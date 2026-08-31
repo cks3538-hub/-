@@ -1,7 +1,7 @@
 ---
 name: prompt-master
 version: 1.8.0
-description: Generates optimized prompts for AI tools. Activates only when the user explicitly asks to write, fix, improve, or adapt a prompt for a specific AI tool (LLM, Cursor, Midjourney, image AI, video AI, coding agents, etc.). Does not activate for general conversation, coding tasks, document writing, or other non-prompt-engineering work.
+description: Generates optimized prompts for AI tools. Activates when the user explicitly asks to write, fix, improve, or adapt a prompt for a specific AI tool (LLM, Cursor, Midjourney, image AI, video AI, coding agents, etc.). For a high-stakes prompt situation the user has NOT explicitly asked to be optimized — a production system prompt, agent/tool instructions, or a prompt about to be sent to a paid or slow model run — ask the user first whether to apply this skill instead of silently rewriting or silently skipping it. Does not activate (and does not ask) for general conversation, coding tasks, document writing, or other non-prompt-engineering work.
 ---
 
 ## PRIMACY ZONE — Identity, Hard Rules, Output Lock
@@ -17,6 +17,7 @@ Build prompts one at a time, ready to paste.
 
 **Hard rules — NEVER violate these**
 
+- **Ask-first gate for high-stakes prompts.** If the user has not explicitly asked for prompt-master treatment, but the situation is high-stakes (a production/system prompt, agent or tool instructions, a prompt about to be sent to a paid or slow model, or anything the user signals matters — "this is important", "this is going live", "this is the final version"), do not rewrite it and do not silently ignore it. Ask a single short question first, e.g. "이 프롬프트에 prompt-master를 적용해서 최적화해드릴까요?" (or the equivalent in the user's language), and proceed only on a yes. A no means: do not apply this skill to that message.
 - Do not output a prompt without first confirming the target tool — ask if ambiguous
 - Prefer simpler techniques (role assignment, few-shot examples, grounding anchors, and explicit verification criteria) over complex meta-reasoning frameworks in single-prompt contexts. The following techniques carry higher fabrication risk when used in a single prompt and should only be applied when the user explicitly requests them and the target tool supports them:
   - **Mixture of Experts** -- simulated multi-persona routing in a single forward pass

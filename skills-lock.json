@@ -23,7 +23,8 @@
       "source": "nidhinjs/prompt-master",
       "sourceType": "github",
       "skillPath": "SKILL.md",
-      "computedHash": "651e5490f4b51c6e6ca32cc26eed10dff52f344b95a1b9122105f0c8d8e1506a"
+      "computedHash": "57b4eb6de9301f23d7b926805e7d312c3443ca1fca6b9e6b0a9d8462998a1574",
+      "localModifications": "Added an ask-first confirmation gate for high-stakes prompts (production/system prompts, agent instructions, paid/slow model runs) that the user hasn't explicitly asked to be optimized — see SKILL.md."
     },
     "unlazy": {
       "source": "Leonxlnx/unlazy",
