@@ -19,6 +19,12 @@
       "skillPath": "skills/image-to-code-skill/SKILL.md",
       "computedHash": "58517b03b2a01f4c9ba65861559d03df931400871bbc200978c975b24bb92c73"
     },
+    "prompt-master": {
+      "source": "nidhinjs/prompt-master",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "651e5490f4b51c6e6ca32cc26eed10dff52f344b95a1b9122105f0c8d8e1506a"
+    },
     "unlazy": {
       "source": "Leonxlnx/unlazy",
       "sourceType": "github",
