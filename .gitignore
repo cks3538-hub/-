@@ -14,3 +14,8 @@
 
 node_modules/
 *.tmp
+
+# graphify: generated knowledge-graph build output. Contains a machine-specific
+# pinned interpreter path (.graphify_python, .graphify_root) and a local
+# extraction cache/ dir - regenerate with `/graphify .` rather than committing.
+graphify-out/
