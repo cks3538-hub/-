@@ -14,3 +14,7 @@
 
 node_modules/
 *.tmp
+
+# Python bytecode caches (created when ui-ux-pro-max scripts/tests run)
+__pycache__/
+*.pyc
