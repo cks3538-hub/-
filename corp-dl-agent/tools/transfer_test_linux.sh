@@ -28,16 +28,27 @@ with zipfile.ZipFile(src) as zi, zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED)
 PY
 chown "$TESTER:$TESTER" "$TEST_ROOT/in/tampered.zip"
 
-run_step() {  # name, command-string (tester 로, netns 안에서, CWD=/tmp)
+run_step() {  # name, command-string (tester 로, netns 안에서, CWD=/tmp). 중첩 인용 문제를 피하려고 단계 스크립트 파일로 실행한다.
   local name="$1"; shift
   local cmd="$*"
+  local step="$TEST_ROOT/steps/$name.sh"
+  mkdir -p "$TEST_ROOT/steps"
+  {
+    echo '#!/usr/bin/env bash'
+    echo 'export PYTHONUTF8=1 LANG=C.UTF-8 LC_ALL=C.UTF-8'
+    echo 'unset HTTPS_PROXY https_proxy HTTP_PROXY http_proxy PIP_INDEX_URL PIP_EXTRA_INDEX_URL PIP_FIND_LINKS PIP_CERT PIP_CONFIG_FILE'
+    echo 'export PIP_INDEX_URL=https://blocked.invalid/simple'   # 설치기가 이 오염을 차단해야 한다
+    echo 'cd /tmp'
+    echo "$cmd"
+  } > "$step"
+  chmod 755 "$step"; chown "$TESTER:$TESTER" "$step"
   python3 "$PROJECT_ROOT/tools/collect_evidence.py" --name "$name" --out-dir "$EVID" \
     --normalize "<PROJECT_ROOT>=$PROJECT_ROOT" --normalize "<TEST_ROOT>=$TEST_ROOT" \
     --python-note "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)" \
     --network-note "unshare -n (network namespace, external interfaces absent, loopback only)" \
-    --user-note "non-root user '$TESTER' (no sudo), cwd=/tmp, Korean+space install path" \
+    --user-note "non-root user '$TESTER' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/$name.sh" \
     --timeout 1800 -- \
-    unshare -n bash -c "ip link set lo up 2>/dev/null; cd /tmp && su - $TESTER -c 'export PYTHONUTF8=1 LANG=C.UTF-8 LC_ALL=C.UTF-8; unset HTTPS_PROXY https_proxy HTTP_PROXY http_proxy PIP_INDEX_URL PIP_EXTRA_INDEX_URL PIP_FIND_LINKS PIP_CERT; export PIP_INDEX_URL=https://blocked.invalid/simple; $cmd'"
+    unshare -n bash -c "ip link set lo up 2>/dev/null; su - $TESTER -c 'bash \"$step\"'"
 }
 
 PKG="$TEST_ROOT/pkg"
