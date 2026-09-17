@@ -58,7 +58,9 @@ def test_parse_origin_and_defaults() -> None:
     assert parse_origin("HTTPS://Host.Example:8443").host == "host.example"
 
 
-@pytest.mark.parametrize("bad", ["", "ftp://x", "https://", "https://user:pw@host/x", "not a url", "file:///etc/passwd"])
+@pytest.mark.parametrize(
+    "bad", ["", "ftp://x", "https://", "https://user:pw@host/x", "not a url", "file:///etc/passwd"]
+)
 def test_parse_origin_rejects(bad: str) -> None:
     with pytest.raises(AgentError) as ei:
         parse_origin(bad)
@@ -87,7 +89,11 @@ def test_assert_origin_allowed_details_have_no_secret() -> None:
 
 def test_is_loopback_host() -> None:
     assert is_loopback_host("127.0.0.1") and is_loopback_host("localhost") and is_loopback_host("::1")
-    assert is_loopback_host("127.5.6.7") and not is_loopback_host("10.0.0.1") and not is_loopback_host("example.com")
+    assert (
+        is_loopback_host("127.5.6.7")
+        and not is_loopback_host("10.0.0.1")
+        and not is_loopback_host("example.com")
+    )
 
 
 def test_approved_origins_from_config_empty_when_offline(tmp_path: Path) -> None:

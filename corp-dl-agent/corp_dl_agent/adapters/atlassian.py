@@ -874,11 +874,13 @@ class BambooClient(AtlassianClient):
     datacenter_base_path: ClassVar[str | None] = "/rest/api/latest"
     probe_path: ClassVar[str] = "/info"
 
+    # Bamboo: plans.size 는 전체 개수(total), start-index/max-result 로 offset 이동
     PLANS: ClassVar[PageSpec] = PageSpec(
-        style="start_limit",
+        style="start_at_max_results",
         items_keys=("plan",),
         start_param="start-index",
         limit_param="max-result",
+        total_key="size",
         items_path=("plans",),
         page_size=25,
     )

@@ -144,14 +144,18 @@ def test_mock_server_records_requests_and_serves_queue() -> None:
     with MockServer() as srv:
         srv.enqueue(201, {"ok": True}, {"x-test": "1"})
         conn = http.client.HTTPConnection("127.0.0.1", srv.port, timeout=5)
-        conn.request("POST", "/p?a=1", body=json.dumps({"k": "v"}), headers={"content-type": "application/json"})
+        conn.request(
+            "POST", "/p?a=1", body=json.dumps({"k": "v"}), headers={"content-type": "application/json"}
+        )
         resp = conn.getresponse()
         assert resp.status == 201 and resp.getheader("x-test") == "1"
         assert json.loads(resp.read()) == {"ok": True}
         conn.close()
         assert len(srv.requests) == 1
         rec = srv.requests[0]
-        assert rec.method == "POST" and rec.path == "/p" and rec.query == {"a": ["1"]} and rec.body == {"k": "v"}
+        assert (
+            rec.method == "POST" and rec.path == "/p" and rec.query == {"a": ["1"]} and rec.body == {"k": "v"}
+        )
         # queue 소진 시 500
         conn = http.client.HTTPConnection("127.0.0.1", srv.port, timeout=5)
         conn.request("GET", "/x")
