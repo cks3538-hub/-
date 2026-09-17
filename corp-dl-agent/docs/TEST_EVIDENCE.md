@@ -4,6 +4,14 @@
 
 | 이름 | 상태 | exit | 소요(s) | 환경 | 명령 |
 |---|---|---|---|---|---|
-| smoke-version | PASS | 0 | 0.04 | Linux x86_64 / CPython 3.12.3 (.venv) | `.venv/bin/python -m corp_dl_agent version` |
+| host-01-pytest-all | PASS | 0 | 99.69 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m pytest -q tests -p no:cacheprovider` |
+| host-02-ruff-check | PASS | 0 | 0.03 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m ruff check .` |
+| host-03-ruff-format | PASS | 0 | 0.03 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m ruff format --check .` |
+| host-04-mypy | PASS | 0 | 0.55 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m mypy corp_dl_agent` |
+| host-05-build-wheel | PASS | 0 | 0.67 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m build --wheel --no-isolation -o dist` |
+| host-06-demo-offline-cpu | PASS | 0 | 7.18 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m corp_dl_agent demo --offline --device cpu --output-dir workspace/demo-evidence --json` |
+| host-07-selftest | PASS | 0 | 3.18 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m corp_dl_agent self-test --set paths.data_root=workspace/selftest-ws` |
+| host-08-package-build-win | PASS | 0 | 4.52 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse/win-x64-cp312-cpu --app-wheel dist/co...` |
+| host-09-package-build-linux | PASS | 0 | 57.2 | Linux x86_64 / CPython-3.12.3-(.venv) | `.venv/bin/python -m corp_dl_agent package build --profile linux-x64-cp312-cpu --wheelhouse wheelhouse/linux-x64-cp312-cpu --app-wheel dis...` |
 
 각 항목의 stdout/stderr 꼬리와 lock hash 는 `test-evidence/<이름>.json` 에 있습니다.

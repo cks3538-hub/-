@@ -1,0 +1,23 @@
+{
+  "name": "host-09-package-build-linux",
+  "command": ".venv/bin/python -m corp_dl_agent package build --profile linux-x64-cp312-cpu --wheelhouse wheelhouse/linux-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:포장 시점에는 미실행. 외부 acceptance.json 에 Linux rehearsal 결과 기록 --json",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-17T11:23:05+00:00",
+  "elapsed_seconds": 57.2,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython-3.12.3-(.venv)",
+    "network_isolation": "host network (no isolation)",
+    "user": null
+  },
+  "lock_sha256": null,
+  "stdout_tail": "{\n  \"ok\": true,\n  \"zip\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_linux-x64-cp312-cpu.zip\",\n  \"zip_sha256\": \"6eca5328cdbe3ce54fdc81ec6c8a036e5e56563bd16e0f9ca0c842256832ebfb\",\n  \"zip_size\": 3101944104,\n  \"sha256_file\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_linux-x64-cp312-cpu.zip.sha256\",\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"linux-x64-cp312-cpu\",\n  \"package_kind\": \"CPU_OFFLINE\",\n  \"file_count\": 271,\n  \"total_bytes\": 3103571446,\n  \"wheel_count\": 56,\n  \"verification\": {\n    \"HOST_CORE_TESTED\": \"PASS\",\n    \"TARGET_BUNDLE_PREPARED\": \"PASS\",\n    \"TARGET_OFFLINE_TESTED\": \"NOT_RUN\",\n    \"CORP_INSTALLED\": \"NOT_RUN\",\n    \"CORP_INTEGRATED\": \"NOT_RUN\",\n    \"BUSINESS_VALIDATED\": \"NOT_RUN\",\n    \"TARGET_CONFIRMED\": \"TARGET_UNCONFIRMED\"\n  },\n  \"warnings\": [],\n  \"skipped_count\": 13\n}",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/host-09-package-build-linux.log (개인 로컬 보관, 반입 제외)"
+}

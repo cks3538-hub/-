@@ -1,9 +1,11 @@
 # 반입 패키지 내용 (TRANSFER_CONTENTS_KO)
 
-## 옮길 파일 (3개)
+## 옮길 파일 (3개) — Windows 참조 타깃용
+
+(Linux 참조 프로파일 ZIP `DIA_4.0.0_linux-x64-cp312-cpu.zip` 은 개인 환경 rehearsal 용이며 사내 Windows PC 에는 옮기지 않습니다.)
 | 파일 | 설명 |
 |---|---|
-| `DIA_4.0.0_win-x64-cp312-cpu.zip` | 반입 패키지 (package_kind=CPU_OFFLINE) |
+| `DIA_4.0.0_win-x64-cp312-cpu.zip` | 반입 패키지 (package_kind=CPU_OFFLINE, 약 220 MB, 254 항목) |
 | `DIA_4.0.0_win-x64-cp312-cpu.zip.sha256` | ZIP 의 SHA-256 (ZIP 밖) |
 | `DIA_4.0.0_win-x64-cp312-cpu.acceptance.json` | 최종 ZIP hash·검증 환경·명령/exit code·PASS/FAIL/NOT_RUN |
 
@@ -12,7 +14,7 @@
 |---|---|
 | `source/` | 검토용 소스(corp_dl_agent/), tests/, pyproject.toml, CLAUDE.md, docs/CONTRACT.md |
 | `app/` | 미리 빌드한 앱 wheel `corp_dl_agent-4.0.0-py3-none-any.whl` |
-| `wheelhouse/win-x64-cp312-cpu/` | core+documents+ml-cpu 의 모든 dependency wheel (38개, 약 218 MB; torch 는 PyPI Windows CPU 빌드) |
+| `wheelhouse/win-x64-cp312-cpu/` | core+documents+ml-cpu 의 모든 dependency wheel (38개, 약 218 MB; torch 2.14.0 은 PyPI Windows CPU 빌드) |
 | `locks/win-x64-cp312-cpu.txt` | 앱 포함 version + sha256 고정 설치 명세 (`--require-hashes`) |
 | `scripts/` | preflight/verify/install/launch/selftest/upgrade/rollback/acceptance (.py 표준 라이브러리) + `00_Preflight.cmd`…`06_Rollback.cmd`, `preflight.ps1`, `*.sh` |
 | `config-examples/` | secret 없는 회사 설정·매핑 예시 |
@@ -31,9 +33,9 @@
 ## 상태 (개인 빌드 시점)
 | 상태 | 값 | 근거 |
 |---|---|---|
-| HOST_CORE_TESTED | (BUILD_STATUS.md 참조) | test-evidence/ |
-| TARGET_BUNDLE_PREPARED | (BUILD_STATUS.md 참조) | wheelhouse/lock/manifest |
-| TARGET_OFFLINE_TESTED | NOT_RUN (Windows 환경 없음; Linux rehearsal 은 별도 프로파일) | acceptance.json |
+| HOST_CORE_TESTED | PASS | test-evidence/host-01~07 (pytest 572, ruff, mypy, wheel, demo, self-test) |
+| TARGET_BUNDLE_PREPARED | PASS | wheelhouse/lock/manifest/inventory (PyPI sha256 대조) |
+| TARGET_OFFLINE_TESTED | NOT_RUN (Windows 환경 없음). Linux 참조 프로파일(linux-x64-cp312-cpu, 약 3.1 GB) 은 별도 ZIP 으로 새 환경 설치 rehearsal 수행 — 그 결과는 해당 ZIP 의 acceptance.json | acceptance.json |
 | CORP_INSTALLED / CORP_INTEGRATED / BUSINESS_VALIDATED | NOT_RUN | 사내에서만 확인 |
 
 라이브러리 반입/사용 승인은 회사 절차이며 `dependency-inventory.json` 의 `approval_state` 는 UNREVIEWED 입니다.
