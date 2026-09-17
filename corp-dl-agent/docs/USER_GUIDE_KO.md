@@ -12,7 +12,7 @@
 |---|---|
 | `doctor` | 환경/패키지/경로/프로파일/연결 상태 진단 (secret 마스킹) |
 | `self-test` | 설치 자체 검증 (단위 1.0 kg, sqlite, torch CPU, 문서 라이브러리) |
-| `demo --offline --device cpu --output-dir <폴더>` | 합성 CAD A/B → 중량/원가 → 학습/예측 → 근거 검색 → PPTX/XLSX 까지 한 번에 |
+| `demo --offline --device cpu --output-dir <폴더> [--fast] [--fixtures-dir <폴더>]` | 합성 CAD A/B → 중량/원가 → 학습/예측 → 근거 검색 → PPTX/XLSX 까지 한 번에. 기본 산출 폴더 `<data_root>\outputs\demo-<UTC시각>` (run/상태 DB 는 그 아래 `workspace\`). fixtures 는 설치된 release 의 `fixtures\` 를 자동 사용 |
 | `config validate --config <yaml>` / `config show` | 회사 설정 검증 / 마스킹된 최종 설정 표시 |
 | `cad import --input <csv|json> --output <snapshot.json> [--mapping k=v]` | CATIA export 수입·검증 |
 | `cad extract --adapter catia_v5_com` | (사내 CATIA 확인 후) live 추출. 개인 빌드에서는 INACTIVE |
@@ -74,6 +74,9 @@
 4. 템플릿 규칙: PPTX 의 텍스트/표 셀에 `{{key}}` placeholder, XLSX 는 named range 이름 = key. 프로그램은 복사본의 승인된 placeholder/named range/table 만 바꾸고 슬라이드 순서·master·theme·수식을 보존합니다. 지원되지 않는 요소는 삭제하지 않고 `document_manifest.json` 의 compatibility 에 기록합니다.
 5. 생성: `docs generate --payload report_payload.json --pptx-template company\templates\review.pptx --xlsx-template company\templates\comparison.xlsx --output-dir out\` → `review.pptx, comparison.xlsx, evidence.json, document_manifest.json, validation_report.json`.
    - `validation_report.json`: 문서에서 다시 읽은 수치 == payload, 구조 보존, 과거 값 잔존 검사, `RECALC_NOT_RUN`/`RENDER_NOT_RUN` 상태.
+
+## 5b. demo 산출물
+`demo_manifest.json` 에 단계(12)·검사(16)별 PASS/FAIL, 모든 산출물 sha256, 원본 fixture 불변 여부, outbound 시도 횟수(프로세스 내 socket 검사)가 기록됩니다. 주요 파일: `design_comparison.json`, `performance_predictions.csv`, `retention_predictions.csv`, `evidence.json`, `report_payload.json`, `review.pptx`, `comparison.xlsx`, `document_manifest.json`, `validation_report.json`. 모두 `synthetic: true` 이며 업무 판단용이 아닙니다.
 
 ## 6. 산출물 이해
 - `value_type=predicted` 값은 모델 예측이며 `model_run_id` 로 추적됩니다. `synthetic: true` 표시가 있는 산출물은 합성 데이터 결과이므로 업무 판단에 쓰지 않습니다.

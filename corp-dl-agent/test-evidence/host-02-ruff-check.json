@@ -1,0 +1,23 @@
+{
+  "name": "host-02-ruff-check",
+  "command": ".venv/bin/python -m ruff check .",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-17T11:16:04+00:00",
+  "elapsed_seconds": 0.03,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython-3.12.3-(.venv)",
+    "network_isolation": "host network (no isolation)",
+    "user": null
+  },
+  "lock_sha256": null,
+  "stdout_tail": "All checks passed!",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/host-02-ruff-check.log (개인 로컬 보관, 반입 제외)"
+}

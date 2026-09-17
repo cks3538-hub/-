@@ -1,0 +1,23 @@
+{
+  "name": "host-07-selftest",
+  "command": ".venv/bin/python -m corp_dl_agent self-test --set paths.data_root=workspace/selftest-ws",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-17T11:16:26+00:00",
+  "elapsed_seconds": 3.18,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython-3.12.3-(.venv)",
+    "network_isolation": "host network (no isolation)",
+    "user": null
+  },
+  "lock_sha256": null,
+  "stdout_tail": "self-test corp-dl-agent 4.0.0: PASS\n  ✔ config                     [필수] PASS    profile=corp-offline, network_allowed=False\n  ✔ strict_schema_reject       [필수] PASS    extra 필드 거부 확인\n  ✔ hash                       [필수] PASS    sha256 검증\n  ✔ quantity                   [필수] PASS    Quantity provenance\n  ✔ units_1kg                  [필수] PASS    1,000,000 mm3 × 1.0 g/cm3 = 1.0 kg\n  ✔ fixture_mass               [선택] PASS    asm_a PART_CUBE.1 unit_mass=1.0 kg, total=4.675\n  ✔ sqlite                     [필수] PASS    WAL sqlite 쓰기/읽기\n  ✔ atomic_write_korean_path   [필수] PASS    한글/공백 경로 원자적 쓰기: 원자적 쓰기.json\n  ✔ path_isolation             [필수] PASS    root 이탈/traversal 거부\n  ✔ documents_libs             [필수] PASS    python-pptx 1.0.2, openpyxl 3.1.5\n  ✔ ml_libs                    [필수] PASS    numpy 2.5.3, pandas 3.0.5, scikit-learn 1.9.1\n  ✔ torch_cpu                  [필수] PASS    torch 2.14.0+cu130 CPU 연산 OK (cuda=False)",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/host-07-selftest.log (개인 로컬 보관, 반입 제외)"
+}

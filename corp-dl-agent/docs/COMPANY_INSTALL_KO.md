@@ -92,6 +92,7 @@ PowerShell 실행 정책·인증서·GPO·백신을 해제하지 않습니다. `
 ```
 scripts\launch.cmd demo --offline --device cpu --output-dir "<data_root>\outputs\demo"
 ```
+(`--fast` 를 붙이면 학습 epoch 를 줄여 약 5초 내 확인. fixtures 는 설치된 release 폴더의 `fixtures\` 를 자동으로 사용하며 `--fixtures-dir` 로 바꿀 수 있습니다.)
 CAD A/B 중량·원가 비교 → 합성 CSV 학습/예측 → 근거 검색 → review.pptx/comparison.xlsx 생성까지 한 번에 실행되며 `demo_manifest.json` 에 항목별 PASS/FAIL 이 남습니다. 이 결과가 CORP_INSTALLED 의 근거입니다. (합성 데이터이며 업무 검증이 아닙니다.)
 
 ## 6. 다음 단계
