@@ -35,6 +35,7 @@ run_step() {  # name, command-string (tester 로, netns 안에서, CWD=/tmp). �
   mkdir -p "$TEST_ROOT/steps"
   {
     echo '#!/usr/bin/env bash'
+    echo 'set -o pipefail'
     echo 'export PYTHONUTF8=1 LANG=C.UTF-8 LC_ALL=C.UTF-8'
     echo 'unset HTTPS_PROXY https_proxy HTTP_PROXY http_proxy PIP_INDEX_URL PIP_EXTRA_INDEX_URL PIP_FIND_LINKS PIP_CERT PIP_CONFIG_FILE'
     echo 'export PIP_INDEX_URL=https://blocked.invalid/simple'   # 설치기가 이 오염을 차단해야 한다

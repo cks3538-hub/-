@@ -39,7 +39,7 @@ def main(argv):
         return 0
     cmd = argv[0]
     if cmd == "version":
-        print(json.dumps({{"version": VERSION, "synthetic": True}}))
+        print(json.dumps({{"version": VERSION, "synthetic": True}}, indent=2))  # 실제 앱처럼 여러 줄 JSON
         return 0
     if cmd == "self-test":
         res = {{"version": VERSION, "ok": SELFTEST_OK, "exit_code": 0 if SELFTEST_OK else 5, "args": argv[1:], "synthetic": True}}

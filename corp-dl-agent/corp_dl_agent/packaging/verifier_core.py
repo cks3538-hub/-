@@ -1950,11 +1950,17 @@ def run_install(
             timeout=timeout,
         )
         _step_ok("smoke_version", log, dest, r, what="version smoke")
-        try:
-            vinfo = json.loads(r["stdout_tail"].strip().splitlines()[-1])
-            reported = str(vinfo.get("version"))
-        except (ValueError, IndexError, AttributeError):
-            reported = "?"
+        reported = "?"
+        stdout_text = str(r.get("stdout_tail") or "").strip()
+        # version --json 은 여러 줄(들여쓰기) JSON 을 출력한다. 전체 파싱 → 실패 시 마지막 줄만 시도.
+        for candidate in (stdout_text, stdout_text.splitlines()[-1] if stdout_text else ""):
+            try:
+                vinfo = json.loads(candidate)
+                if isinstance(vinfo, dict) and vinfo.get("version") is not None:
+                    reported = str(vinfo.get("version"))
+                    break
+            except ValueError:
+                continue
         if reported != manifest["version"]:
             _log_record(
                 log,

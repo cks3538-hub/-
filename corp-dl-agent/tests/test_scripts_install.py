@@ -495,7 +495,7 @@ def test_rollback_code_only_keeps_db(env: Env) -> None:
     assert core.sha256_file(env.db_path()) == db_hash
     assert Path(out["log_path"]).is_file() and Path(out["log_path"]).parent == env.install_root / "backups"
     r = env.run("launch.py", "--install-root", str(env.install_root), "--", "version")
-    assert r.returncode == 0 and json.loads(r.stdout.strip().splitlines()[-1])["version"] == "1.0.0"
+    assert r.returncode == 0 and json.loads(r.stdout.strip())["version"] == "1.0.0"
 
 
 def test_rollback_missing_release_and_lease(env: Env) -> None:
