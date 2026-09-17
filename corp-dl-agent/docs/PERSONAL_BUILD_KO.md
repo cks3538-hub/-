@@ -36,6 +36,20 @@
 6. 새 환경 설치 시험(transfer-test): 다른 드라이브/한글·공백 폴더에 ZIP 만 복사 → `00_Preflight.cmd` → `01_Verify.cmd` → `02_Install.cmd` → `04_SelfTest.cmd` → `launch.cmd demo --offline --device cpu`. 네트워크를 끊거나(승인된 방법) 프로그램의 OutboundGuard 결과로 outbound 0 을 확인.
 7. 외부 acceptance: `python scripts\acceptance.py --zip dist\DIA_4.0.0_win-x64-cp312-cpu.zip --evidence-dir <transfer-test 결과 폴더> --out dist\` → `DIA_4.0.0_win-x64-cp312-cpu.acceptance.json`. **시험 결과를 넣기 위해 ZIP 을 다시 포장하지 않습니다.** 소스를 고쳤으면 새 ZIP 을 만들고 시험을 다시 합니다.
 
+## 2b. ZIP 을 직접 받지 못한 경우 (git 저장소만 있을 때)
+소스 저장소에는 wheelhouse/ZIP 이 없습니다(용량). Windows PC 에서 아래 순서로 같은 ZIP 을 재현합니다. 내려받은 wheel 의 sha256 은 `requirements/download_provenance.json` 과 대조되어 하나라도 다르면 실패합니다.
+```powershell
+cd <프로젝트>\corp-dl-agent
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -U pip build wheel
+.\.venv\Scripts\python.exe tools\reproduce_wheelhouse.py --profile win-x64-cp312-cpu
+.\.venv\Scripts\python.exe -m build --wheel
+.\.venv\Scripts\python.exe -m pip install -e ".[documents,ml-cpu,dev]"   # 시험/ZIP 빌드용
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse\win-x64-cp312-cpu --app-wheel dist\corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist
+```
+이렇게 만든 ZIP 은 wheel 내용이 동일하지만 ZIP 자체의 sha256 은 빌드 시각 등으로 달라질 수 있으므로, 사내 반입 hash 는 **실제로 옮기는 ZIP** 의 `.zip.sha256` 을 기준으로 합니다.
+
 ## 3. 포장 allowlist / 제외
 포함: `source/ app/ wheelhouse/<profile>/ locks/ scripts/ config-examples/ fixtures/ schemas/ docs/ release-manifest.json checksums.sha256 dependency-inventory.json test-evidence/`
 제외: `.venv .env .git .claude __pycache__ workspace dist 개인 절대경로 API 키 실제 회사 파일 학습 결과`. 합성 demo 모델을 넣는 경우 origin=synthetic 표시.
