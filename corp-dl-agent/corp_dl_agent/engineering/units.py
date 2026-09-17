@@ -69,11 +69,17 @@ def _factor(table: dict[str, float], unit: str | None, kind: str) -> float:
 
 def _check_number(value: float, kind: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise AgentError("E_INPUT_INVALID", f"{kind} 값은 숫자여야 합니다.", details={"kind": kind, "value": repr(value)})
+        raise AgentError(
+            "E_INPUT_INVALID", f"{kind} 값은 숫자여야 합니다.", details={"kind": kind, "value": repr(value)}
+        )
     if value != value or value in (float("inf"), float("-inf")):
-        raise AgentError("E_INPUT_INVALID", f"{kind} 값이 유한하지 않습니다.", details={"kind": kind, "value": repr(value)})
+        raise AgentError(
+            "E_INPUT_INVALID", f"{kind} 값이 유한하지 않습니다.", details={"kind": kind, "value": repr(value)}
+        )
     if value < 0:
-        raise AgentError("E_INPUT_INVALID", f"{kind} 값은 음수일 수 없습니다.", details={"kind": kind, "value": value})
+        raise AgentError(
+            "E_INPUT_INVALID", f"{kind} 값은 음수일 수 없습니다.", details={"kind": kind, "value": value}
+        )
     return float(value)
 
 

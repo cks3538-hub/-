@@ -79,7 +79,16 @@ def test_injection_process_formula(cube: MassItem, recipes: dict) -> None:
 def test_injection_full_breakdown(cube: MassItem, recipes: dict) -> None:
     cb = compute_cost(cube, recipes["injection_synthetic_pp"])
     assert isinstance(cb, CostBreakdown)
-    assert [ln.name for ln in cb.lines] == ["재료비", "사출가공비", "후가공비", "조립비", "구매품", "금형상각", "setup", "포장"]
+    assert [ln.name for ln in cb.lines] == [
+        "재료비",
+        "사출가공비",
+        "후가공비",
+        "조립비",
+        "구매품",
+        "금형상각",
+        "setup",
+        "포장",
+    ]
     assert cb.line("재료비").amount.value == pytest.approx(2750.0)  # 2500 × 1.0 kg × (1 + 0.1)
     assert cb.line("후가공비").amount.value == 50.0
     assert cb.line("조립비").amount.value == 30.0
@@ -173,11 +182,25 @@ def test_generic_recipe(mass_a: MassResult, recipes: dict) -> None:
 
 
 def test_generic_unit_errors(cube: MassItem) -> None:
-    bad = parse_recipe({"recipe_type": "generic", "currency": "KRW", "base_date": "2026-09-01", "lines": [{"name": "x", "value": 1, "unit": "KRW/each"}]})
+    bad = parse_recipe(
+        {
+            "recipe_type": "generic",
+            "currency": "KRW",
+            "base_date": "2026-09-01",
+            "lines": [{"name": "x", "value": 1, "unit": "KRW/each"}],
+        }
+    )
     with pytest.raises(AgentError) as ei:
         compute_cost(cube, bad)
     assert ei.value.code == "E_UNIT_MISMATCH"
-    other_cur = parse_recipe({"recipe_type": "generic", "currency": "KRW", "base_date": "2026-09-01", "lines": [{"name": "x", "value": 1, "unit": "USD/unit"}]})
+    other_cur = parse_recipe(
+        {
+            "recipe_type": "generic",
+            "currency": "KRW",
+            "base_date": "2026-09-01",
+            "lines": [{"name": "x", "value": 1, "unit": "USD/unit"}],
+        }
+    )
     with pytest.raises(AgentError) as ei2:
         compute_cost(cube, other_cur)
     assert ei2.value.code == "E_REVISION_MISMATCH"
@@ -191,16 +214,22 @@ def test_currency_and_base_date_mismatch(cube: MassItem, recipes: dict) -> None:
         compute_cost(cube, recipes["injection_synthetic_pp"], expected_base_date="2026-01-01")
     assert ei2.value.code == "E_REVISION_MISMATCH"
     # 구매품 통화가 recipe 와 다름
-    r = parse_recipe(_base(purchased_items=[{"name": "clip", "unit_price": 0.1, "quantity": 2, "currency": "USD"}]))
+    r = parse_recipe(
+        _base(purchased_items=[{"name": "clip", "unit_price": 0.1, "quantity": 2, "currency": "USD"}])
+    )
     with pytest.raises(AgentError) as ei3:
         compute_cost(cube, r)
     assert ei3.value.code == "E_REVISION_MISMATCH"
-    r2 = parse_recipe(_base(purchased_items=[{"name": "clip", "unit_price": 100, "quantity": 2, "base_date": "2025-12-31"}]))
+    r2 = parse_recipe(
+        _base(purchased_items=[{"name": "clip", "unit_price": 100, "quantity": 2, "base_date": "2025-12-31"}])
+    )
     with pytest.raises(AgentError) as ei4:
         compute_cost(cube, r2)
     assert ei4.value.code == "E_REVISION_MISMATCH"
     # 일치하면 통과
-    ok = compute_cost(cube, recipes["injection_synthetic_pp"], expected_currency="krw", expected_base_date="2026-09-01")
+    ok = compute_cost(
+        cube, recipes["injection_synthetic_pp"], expected_currency="krw", expected_base_date="2026-09-01"
+    )
     assert ok.complete
 
 
@@ -214,7 +243,8 @@ def test_invalid_recipes_rejected() -> None:
     for bad in (
         _base(material_price_per_kg=-1),
         _base(base_date="2026/09/01"),
-        _base(currency="won"),
+        _base(currency="원화"),
+        _base(currency="KRWX"),
         _base(good_rate=1.5),
         _base(cavities=0),
         _base(unknown_field=1),
@@ -227,7 +257,12 @@ def test_invalid_recipes_rejected() -> None:
 
 
 def test_load_recipes_marks_synthetic_and_names(recipes: dict) -> None:
-    assert set(recipes) >= {"injection_synthetic_pp", "purchased_clip_quote", "generic_stamping", "injection_missing_price"}
+    assert set(recipes) >= {
+        "injection_synthetic_pp",
+        "purchased_clip_quote",
+        "generic_stamping",
+        "injection_missing_price",
+    }
     assert all(r.synthetic for r in recipes.values())
     assert recipes["injection_synthetic_pp"].name == "injection_synthetic_pp"
     assert isinstance(recipes["injection_synthetic_pp"], InjectionMoldingRecipe)

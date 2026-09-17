@@ -17,7 +17,12 @@ from pydantic import Field
 
 from corp_dl_agent.common import Quantity, StrictModel, now_iso
 from corp_dl_agent.engineering import units as U
-from corp_dl_agent.engineering.cad_snapshot import CadSnapshot, CadSnapshotRow, read_text_detect_encoding
+from corp_dl_agent.engineering.cad_snapshot import (
+    BOM_CHAR,
+    CadSnapshot,
+    CadSnapshotRow,
+    read_text_detect_encoding,
+)
 from corp_dl_agent.errors import AgentError
 from corp_dl_agent.version import CALCULATION_VERSION
 
@@ -36,7 +41,12 @@ MassStatus = Literal[
 DensityPolicy = Literal["reject", "use_material_table"]
 ScopeCategory = Literal["paint", "foam", "adhesive", "purchased"]
 _SCOPE_CATEGORIES: tuple[ScopeCategory, ...] = ("paint", "foam", "adhesive", "purchased")
-_SCOPE_LABEL_KO: dict[str, str] = {"paint": "도장", "foam": "폼", "adhesive": "접착제", "purchased": "미모델링 구매품"}
+_SCOPE_LABEL_KO: dict[str, str] = {
+    "paint": "도장",
+    "foam": "폼",
+    "adhesive": "접착제",
+    "purchased": "미모델링 구매품",
+}
 
 
 class ScopeItem(StrictModel):
@@ -72,7 +82,11 @@ class MassScope(StrictModel):
         for cat, label in _SCOPE_LABEL_KO.items():
             if self.included(cat):
                 n = len(self.items_of(cat))
-                out[cat] = f"{label}: 포함 (명시 항목 {n}건)" if n else f"{label}: 포함 범위이나 항목 미정량 (MISSING)"
+                out[cat] = (
+                    f"{label}: 포함 (명시 항목 {n}건)"
+                    if n
+                    else f"{label}: 포함 범위이나 항목 미정량 (MISSING)"
+                )
             else:
                 out[cat] = f"{label}: 미포함"
         out["cad_modeled"] = "CAD 모델링 솔리드: 포함 (suppressed/assembly 노드 제외)"
@@ -147,7 +161,11 @@ def load_material_table(path: str) -> dict[str, float]:
     reader = csv.DictReader(io.StringIO(text, newline=""))
     out: dict[str, float] = {}
     for idx, raw in enumerate(reader, start=1):
-        row = {str(k).strip().lstrip("﻿"): (v.strip() if isinstance(v, str) else v) for k, v in raw.items() if k}
+        row = {
+            str(k).strip().lstrip(BOM_CHAR): (v.strip() if isinstance(v, str) else v)
+            for k, v in raw.items()
+            if k
+        }
         mid = row.get("material_id")
         if not mid:
             continue
@@ -155,12 +173,18 @@ def load_material_table(path: str) -> dict[str, float]:
         unit = row.get("density_unit")
         if dens in (None, "") or unit in (None, ""):
             raise AgentError(
-                "E_INPUT_INVALID", f"재료표 행 {idx}: density/density_unit 이 없습니다", details={"material_id": mid, "row": idx}
+                "E_INPUT_INVALID",
+                f"재료표 행 {idx}: density/density_unit 이 없습니다",
+                details={"material_id": mid, "row": idx},
             )
         try:
             out[mid] = U.convert_density(float(str(dens).replace(",", "")), str(unit))
         except ValueError as exc:
-            raise AgentError("E_INPUT_INVALID", f"재료표 행 {idx}: density 가 숫자가 아닙니다", details={"material_id": mid}) from exc
+            raise AgentError(
+                "E_INPUT_INVALID",
+                f"재료표 행 {idx}: density 가 숫자가 아닙니다",
+                details={"material_id": mid},
+            ) from exc
     if not out:
         raise AgentError("E_INPUT_INVALID", "재료표에 유효한 행이 없습니다", details={"path": str(path)})
     return out
@@ -215,7 +239,12 @@ def _resolve_density(
     """(density_kg_m3, assumed, note)."""
     if row.density_kg_m3 is not None:
         return row.density_kg_m3, False, None
-    if policy == "use_material_table" and material_table and row.material_id and row.material_id in material_table:
+    if (
+        policy == "use_material_table"
+        and material_table
+        and row.material_id
+        and row.material_id in material_table
+    ):
         d = material_table[row.material_id]
         loc = f"material_table:{material_table_path or ''}#{row.material_id}"
         return d, True, f"밀도 기본값 사용({row.material_id}={d:g} kg/m3, {loc})"
@@ -238,7 +267,9 @@ def _compute_row(
     locator = f"{snapshot.source_path}#{row.occurrence_path}"
     calc_id = f"mass:{row.occurrence_path}"
     cad_mass = (
-        Quantity(value=row.mass_kg, unit="kg", value_type="source", source_locator=locator, notes="CAD 제공 질량")
+        Quantity(
+            value=row.mass_kg, unit="kg", value_type="source", source_locator=locator, notes="CAD 제공 질량"
+        )
         if row.mass_kg is not None
         else Quantity.missing("kg", "CAD 제공 질량 없음")
     )
@@ -253,7 +284,9 @@ def _compute_row(
     elif row.is_assembly or has_children:
         status = "assembly_node"
         if not row.is_assembly and has_children:
-            warnings.append(f"{row.occurrence_path}: is_assembly=False 이지만 자식 행이 있어 총량 노드로 취급 (이중합산 방지)")
+            warnings.append(
+                f"{row.occurrence_path}: is_assembly=False 이지만 자식 행이 있어 총량 노드로 취급 (이중합산 방지)"
+            )
         unit_mass = _q_missing("assembly 총량 노드: 자식 부품만 합산")
     elif row.geometry_status == "unloaded":
         status = "unloaded"
@@ -282,9 +315,13 @@ def _compute_row(
             area_m2 = U.convert_area(float(area_raw), area_unit)
             value = U.surface_mass_kg(area_m2, row.surface_thickness_m, density)
             assumed = True
-            note_parts.append(f"surface 근사: {area_m2:g} m2 × {row.surface_thickness_m:g} m × {density:g} kg/m3")
+            note_parts.append(
+                f"surface 근사: {area_m2:g} m2 × {row.surface_thickness_m:g} m × {density:g} kg/m3"
+            )
             status = "ok"
-            unit_mass = _q_calc(value, locator=locator, calc_id=calc_id, assumption=True, notes="; ".join(note_parts))
+            unit_mass = _q_calc(
+                value, locator=locator, calc_id=calc_id, assumption=True, notes="; ".join(note_parts)
+            )
     else:  # solid
         density, d_assumed, d_note = _resolve_density(
             row, policy=policy, material_table=material_table, material_table_path=material_table_path
@@ -302,7 +339,9 @@ def _compute_row(
             assumed = d_assumed
             note_parts.append(f"{row.volume_m3:g} m3 × {density:g} kg/m3")
             status = "ok"
-            unit_mass = _q_calc(value, locator=locator, calc_id=calc_id, assumption=assumed, notes="; ".join(note_parts))
+            unit_mass = _q_calc(
+                value, locator=locator, calc_id=calc_id, assumption=assumed, notes="; ".join(note_parts)
+            )
 
     mass_check: Literal["match", "mismatch", "not_available"] = "not_available"
     if status == "ok" and cad_mass.value is not None and unit_mass.value is not None:
@@ -403,9 +442,13 @@ def compute_mass(
             missing.append(f"{it.occurrence_path} (assembly_node_without_children)")
             warnings.append(f"{it.occurrence_path}: assembly 노드에 자식 행이 없어 내용을 알 수 없습니다")
             continue
-        if it.cad_mass.value is not None and all(c.status in ("ok", "suppressed", "assembly_node") for c in children):
+        if it.cad_mass.value is not None and all(
+            c.status in ("ok", "suppressed", "assembly_node") for c in children
+        ):
             sub = sum(c.total_mass.value or 0.0 for c in children if c.counted)
-            if abs(sub - it.cad_mass.value) > max(cad_mass_tolerance_abs_kg, cad_mass_tolerance_rel * abs(it.cad_mass.value)):
+            if abs(sub - it.cad_mass.value) > max(
+                cad_mass_tolerance_abs_kg, cad_mass_tolerance_rel * abs(it.cad_mass.value)
+            ):
                 warnings.append(
                     f"{it.occurrence_path}: 자식 합계 {sub:.6g} kg 과 CAD 총량 {it.cad_mass.value:.6g} kg 불일치 (총량 노드는 합산 제외)"
                 )
@@ -421,7 +464,9 @@ def compute_mass(
         sitems = scope.items_of(cat)
         if not included:
             if sitems:
-                warnings.append(f"{_SCOPE_LABEL_KO[cat]}: include_{cat}=False 이므로 명시 항목 {len(sitems)}건은 합산하지 않습니다")
+                warnings.append(
+                    f"{_SCOPE_LABEL_KO[cat]}: include_{cat}=False 이므로 명시 항목 {len(sitems)}건은 합산하지 않습니다"
+                )
             continue
         if not sitems:
             missing.append(f"scope:{cat} (포함 범위이나 항목 미정량)")

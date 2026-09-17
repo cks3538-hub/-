@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import platform
 from pathlib import Path
@@ -45,7 +46,9 @@ def check_input_path(cfg: AppConfig, path: str) -> Path:
 def check_output_path(cfg: AppConfig, path: str) -> Path:
     p = Path(path).expanduser()
     parent = p.parent if str(p.parent) not in ("", ".") else Path.cwd()
-    resolved_parent = resolve_within(parent, approved_roots(cfg, for_output=True), forbid_links=cfg.security.forbid_symlinks)
+    resolved_parent = resolve_within(
+        parent, approved_roots(cfg, for_output=True), forbid_links=cfg.security.forbid_symlinks
+    )
     resolved_parent.mkdir(parents=True, exist_ok=True)
     return resolved_parent / p.name
 
@@ -78,9 +81,13 @@ def register(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     p = sub.add_parser("cad", help="CAD snapshot 수입(CSV/JSON) 및 live 추출 상태")
     sp = p.add_subparsers(dest="cad_command", metavar="<하위명령>")
 
-    imp = sp.add_parser("import", help="CSV(UTF-8/UTF-8-SIG/CP949) 또는 JSON snapshot 을 검증하여 cad_snapshot.json 으로 저장")
+    imp = sp.add_parser(
+        "import", help="CSV(UTF-8/UTF-8-SIG/CP949) 또는 JSON snapshot 을 검증하여 cad_snapshot.json 으로 저장"
+    )
     add_common_arguments(imp)
-    imp.add_argument("--input", required=True, help="입력 snapshot 파일 (.csv/.tsv/.json). 원본은 수정하지 않습니다")
+    imp.add_argument(
+        "--input", required=True, help="입력 snapshot 파일 (.csv/.tsv/.json). 원본은 수정하지 않습니다"
+    )
     imp.add_argument("--output", required=True, help="출력 cad_snapshot.json 경로")
     imp.add_argument(
         "--mapping",
@@ -90,11 +97,21 @@ def register(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
         help="회사 export 열 이름 매핑 (예: --mapping volume=Volume_mm3). config cad.field_mapping 과 병합",
     )
     imp.add_argument("--delimiter", default=",", help="CSV 구분자 (기본 ','; .tsv 는 탭)")
-    imp.add_argument("--lenient", action="store_true", help="오류 행이 있어도 issues 와 함께 저장 (기본은 E_INPUT_INVALID 로 거부)")
-    imp.add_argument("--mass-output", default=None, help="지정 시 기본 MassScope 로 질량을 계산하여 mass_result.json 도 저장")
+    imp.add_argument(
+        "--lenient",
+        action="store_true",
+        help="오류 행이 있어도 issues 와 함께 저장 (기본은 E_INPUT_INVALID 로 거부)",
+    )
+    imp.add_argument(
+        "--mass-output",
+        default=None,
+        help="지정 시 기본 MassScope 로 질량을 계산하여 mass_result.json 도 저장",
+    )
     imp.set_defaults(handler=run_import)
 
-    ext = sp.add_parser("extract", help="CATIA/3DEXPERIENCE live 추출 (설치·COM·라이선스가 확인된 환경에서만)")
+    ext = sp.add_parser(
+        "extract", help="CATIA/3DEXPERIENCE live 추출 (설치·COM·라이선스가 확인된 환경에서만)"
+    )
     add_common_arguments(ext)
     ext.add_argument("--adapter", required=True, choices=sorted(LIVE_ADAPTERS), help="live adapter 종류")
     ext.add_argument("--output", default=None, help="출력 cad_snapshot.json 경로")
@@ -116,10 +133,17 @@ def run_import(args: argparse.Namespace) -> int:
     mapping.update(parse_mapping(args.mapping))
     in_path = check_input_path(cfg, args.input)
     out_path = check_output_path(cfg, args.output)
-    snapshot = import_snapshot(in_path, field_mapping=mapping or None, strict=not args.lenient, delimiter=args.delimiter)
+    snapshot = import_snapshot(
+        in_path, field_mapping=mapping or None, strict=not args.lenient, delimiter=args.delimiter
+    )
     write_snapshot(snapshot, out_path)
     summary = summarize_snapshot(snapshot)
-    payload: dict[str, Any] = {"ok": True, "output": str(out_path), "summary": summary, "issues": [i.model_dump() for i in snapshot.issues]}
+    payload: dict[str, Any] = {
+        "ok": True,
+        "output": str(out_path),
+        "summary": summary,
+        "issues": [i.model_dump() for i in snapshot.issues],
+    }
     lines = [
         f"snapshot 저장: {out_path}",
         f"  행 {summary['n_rows']}개, reference {summary['n_references']}개, assembly {summary['n_assemblies']}개, 인코딩 {summary['encoding']}",
@@ -130,7 +154,11 @@ def run_import(args: argparse.Namespace) -> int:
     if args.mass_output:
         from corp_dl_agent.engineering.mass import compute_mass, load_material_table, mass_summary
 
-        table = load_material_table(str(check_input_path(cfg, cfg.cad.material_table))) if cfg.cad.material_table else None
+        table = (
+            load_material_table(str(check_input_path(cfg, cfg.cad.material_table)))
+            if cfg.cad.material_table
+            else None
+        )
         result = compute_mass(
             snapshot,
             density_policy=cfg.cad.default_density_policy,
@@ -143,7 +171,9 @@ def run_import(args: argparse.Namespace) -> int:
         payload["mass_output"] = str(mass_path)
         payload["mass"] = ms
         lines.append(f"mass_result 저장: {mass_path}")
-        lines.append(f"  총 질량 {ms['total_kg']:.6g} kg (complete={ms['complete']}, 누락 {len(ms['missing'])}건)")
+        lines.append(
+            f"  총 질량 {ms['total_kg']:.6g} kg (complete={ms['complete']}, 누락 {len(ms['missing'])}건)"
+        )
     emit(args, payload, lines)
     return 0
 
@@ -157,11 +187,13 @@ def live_adapter_status(adapter: str) -> StatusRecord:
     else:
         reasons.append(f"{label} 설치/COM 등록/라이선스가 이 환경에서 확인되지 않았습니다")
     try:
-        from corp_dl_agent.adapters import cad as cad_adapters  # 선택 모듈 (다른 소유자)
+        cad_adapters = importlib.import_module("corp_dl_agent.adapters.cad")  # 선택 모듈 (다른 소유자)
     except Exception:  # noqa: BLE001 - adapter 모듈 부재/오류는 진단만 하고 계속
         reasons.append("live adapter 모듈(adapters.cad)을 로드할 수 없습니다")
     else:
-        cls_name = {"catia_v5_com": "CatiaV5ComAdapter", "3dexperience": "ThreeDExperienceAdapter"}.get(adapter)
+        cls_name = {"catia_v5_com": "CatiaV5ComAdapter", "3dexperience": "ThreeDExperienceAdapter"}.get(
+            adapter
+        )
         cls = getattr(cad_adapters, cls_name, None) if cls_name else None
         if cls is None:
             reasons.append("adapters.cad 에 해당 adapter 계약이 없습니다")
@@ -172,7 +204,9 @@ def live_adapter_status(adapter: str) -> StatusRecord:
                 available = False
             if not available:
                 reasons.append("adapter.available() = False")
-    return StatusRecord(status=Status.BLOCKED, reason="INACTIVE: " + "; ".join(reasons), evidence=[], checked_at=now_iso())
+    return StatusRecord(
+        status=Status.BLOCKED, reason="INACTIVE: " + "; ".join(reasons), evidence=[], checked_at=now_iso()
+    )
 
 
 def run_extract(args: argparse.Namespace) -> int:

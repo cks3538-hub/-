@@ -28,7 +28,13 @@ def _row(path: str, **kw: object) -> CadSnapshotRow:
 
 def _snap(rows: list[CadSnapshotRow], issues: list[SnapshotIssue] | None = None) -> CadSnapshot:
     return CadSnapshot(
-        rows=rows, source_path="mem://test.csv", source_hash="0" * 64, extracted_at="2026-09-01T00:00:00+00:00", extractor_version="t", issues=issues or [], synthetic=True
+        rows=rows,
+        source_path="mem://test.csv",
+        source_hash="0" * 64,
+        extracted_at="2026-09-01T00:00:00+00:00",
+        extractor_version="t",
+        issues=issues or [],
+        synthetic=True,
     )
 
 
@@ -45,7 +51,9 @@ def test_known_part_is_one_kg(mass_a: MassResult) -> None:
     assert it.unit_mass.value_type == "calculated"
     assert it.unit_mass.calculation_version == CALCULATION_VERSION
     assert it.unit_mass.assumption is False
-    assert it.unit_mass.source_locator is not None and it.unit_mass.source_locator.endswith("#ROOT/ASM_A/PART_CUBE.1")
+    assert it.unit_mass.source_locator is not None and it.unit_mass.source_locator.endswith(
+        "#ROOT/ASM_A/PART_CUBE.1"
+    )
     assert it.unit_mass.calculation_id == "mass:ROOT/ASM_A/PART_CUBE.1"
     assert it.cad_mass.value_type == "source" and it.cad_mass.value == 1.0
     assert it.mass_check == "match"
@@ -67,7 +75,9 @@ def test_assembly_node_not_double_counted(mass_a: MassResult) -> None:
     assert root.unit_mass.is_missing()
     assert mass_a.total.value == pytest.approx(4.675)  # 4.675 + 4.675 가 아니다
     assert mass_a.total_modeled.value == pytest.approx(4.675)
-    assert mass_a.total.value == pytest.approx(sum(i.total_mass.value or 0 for i in mass_a.items if i.counted))
+    assert mass_a.total.value == pytest.approx(
+        sum(i.total_mass.value or 0 for i in mass_a.items if i.counted)
+    )
 
 
 def test_suppressed_excluded_not_missing(mass_a: MassResult) -> None:
@@ -87,7 +97,14 @@ def test_unloaded_no_density_surface_are_missing(mass_a: MassResult) -> None:
     assert len(mass_a.missing) == 3
     assert "누락 3건" in (mass_a.total.notes or "")
     assert mass_a.total.value_type == "calculated"
-    assert mass_a.counts == {"assembly_node": 1, "ok": 4, "suppressed": 1, "unloaded": 1, "missing_density": 1, "surface_no_thickness": 1}
+    assert mass_a.counts == {
+        "assembly_node": 1,
+        "ok": 4,
+        "suppressed": 1,
+        "unloaded": 1,
+        "missing_density": 1,
+        "surface_no_thickness": 1,
+    }
 
 
 def test_bracket_cm3_kg_m3(mass_a: MassResult) -> None:
@@ -108,7 +125,12 @@ def test_material_table_policy_marks_assumption() -> None:
     snap = import_snapshot(FIXTURES / "asm_a_snapshot.csv")
     table = load_material_table(str(FIXTURES / "material_table.csv"))
     assert table["PP-GF30"] == pytest.approx(1130.0)
-    res = compute_mass(snap, density_policy="use_material_table", material_table=table, material_table_path="material_table.csv")
+    res = compute_mass(
+        snap,
+        density_policy="use_material_table",
+        material_table=table,
+        material_table_path="material_table.csv",
+    )
     it = res.item("ROOT/ASM_A/PART_NODENSITY.1")
     assert it.status == "ok"
     assert it.unit_mass.value == pytest.approx(0.113)
@@ -124,9 +146,22 @@ def test_material_table_policy_marks_assumption() -> None:
 
 def test_surface_with_thickness_and_area_is_assumed() -> None:
     rows = [
-        _row("ROOT/SKIN.1", geometry_status="surface", density_kg_m3=1200.0, surface_thickness_m=0.002, parameter_map={"area": 200000.0}, units={"area": "mm2", "density": "kg/m3"}),
+        _row(
+            "ROOT/SKIN.1",
+            geometry_status="surface",
+            density_kg_m3=1200.0,
+            surface_thickness_m=0.002,
+            parameter_map={"area": 200000.0},
+            units={"area": "mm2", "density": "kg/m3"},
+        ),
         _row("ROOT/SKIN.2", geometry_status="surface", density_kg_m3=1200.0, surface_thickness_m=0.002),
-        _row("ROOT/SKIN.3", geometry_status="surface", surface_thickness_m=0.002, parameter_map={"area": 200000.0}, units={"area": "mm2"}),
+        _row(
+            "ROOT/SKIN.3",
+            geometry_status="surface",
+            surface_thickness_m=0.002,
+            parameter_map={"area": 200000.0},
+            units={"area": "mm2"},
+        ),
     ]
     res = compute_mass(_snap(rows))
     ok = res.item("ROOT/SKIN.1")
@@ -154,7 +189,13 @@ def test_sub_assembly_quantity_propagates() -> None:
     rows = [
         _row("ROOT/ASM", is_assembly=True),
         _row("ROOT/ASM/SUB.1", parent_path="ROOT/ASM", quantity=2, is_assembly=True),
-        _row("ROOT/ASM/SUB.1/P.1", parent_path="ROOT/ASM/SUB.1", quantity=3, volume_m3=0.001, density_kg_m3=1000.0),
+        _row(
+            "ROOT/ASM/SUB.1/P.1",
+            parent_path="ROOT/ASM/SUB.1",
+            quantity=3,
+            volume_m3=0.001,
+            density_kg_m3=1000.0,
+        ),
     ]
     res = compute_mass(_snap(rows))
     p = res.item("ROOT/ASM/SUB.1/P.1")
@@ -202,7 +243,9 @@ def test_scope_items_and_missing_scope() -> None:
     assert res.scope_summary["foam"].endswith("(MISSING)")
     assert res.scope_summary["adhesive"] == "접착제: 미포함"
     assert res.scope_summary["purchased"] == "미모델링 구매품: 미포함"
-    assumed = MassScope(include_purchased=True, purchased_items=[ScopeItem(name="클립", mass_kg=0.002, assumption=True)])
+    assumed = MassScope(
+        include_purchased=True, purchased_items=[ScopeItem(name="클립", mass_kg=0.002, assumption=True)]
+    )
     res2 = compute_mass(snap, scope=assumed)
     assert res2.total.assumption is True and res2.extra_items[0].mass.value_type == "assumed"
 
@@ -213,7 +256,10 @@ def test_default_scope_excludes_everything(mass_a: MassResult) -> None:
 
 
 def test_snapshot_with_errors_refused() -> None:
-    snap = _snap([_row("ROOT/P.1", volume_m3=0.001, density_kg_m3=1000.0)], issues=[SnapshotIssue(level="error", code="X", message="x")])
+    snap = _snap(
+        [_row("ROOT/P.1", volume_m3=0.001, density_kg_m3=1000.0)],
+        issues=[SnapshotIssue(level="error", code="X", message="x")],
+    )
     with pytest.raises(AgentError) as ei:
         compute_mass(snap)
     assert ei.value.code == "E_INPUT_INVALID"

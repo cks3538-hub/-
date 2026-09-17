@@ -53,7 +53,7 @@ def test_import_fixture_a_utf8_sig() -> None:
     assert skin.geometry_status == "surface" and skin.surface_thickness_m is None
     assert skin.parameter_map["area"] == 200000.0 and skin.units["area"] == "mm2"
     summary = summarize_snapshot(snap)
-    assert summary["n_rows"] == 9 and summary["n_references"] == 9
+    assert summary["n_rows"] == 9 and summary["n_references"] == 7  # PART_CUBE 3회 -> reference 1개
     assert summary["geometry_status_counts"] == {"solid": 6, "suppressed": 1, "unloaded": 1, "surface": 1}
 
 
@@ -185,7 +185,16 @@ def test_json_roundtrip_and_json_import(tmp_path: Path) -> None:
 
 def test_json_rows_with_extra_field_rejected(tmp_path: Path) -> None:
     rows = [
-        {"document_id": "D", "revision": "R1", "occurrence_path": "ROOT/P.1", "reference_id": "P", "volume_m3": 0.001, "density_kg_m3": 1000.0, "units": {"volume": "m3"}, "bogus": 1}
+        {
+            "document_id": "D",
+            "revision": "R1",
+            "occurrence_path": "ROOT/P.1",
+            "reference_id": "P",
+            "volume_m3": 0.001,
+            "density_kg_m3": 1000.0,
+            "units": {"volume": "m3"},
+            "bogus": 1,
+        }
     ]
     p = tmp_path / "rows.json"
     p.write_text(json.dumps(rows), encoding="utf-8")
@@ -195,7 +204,16 @@ def test_json_rows_with_extra_field_rejected(tmp_path: Path) -> None:
 
 
 def test_json_negative_value_rejected(tmp_path: Path) -> None:
-    rows = [{"document_id": "D", "revision": "R1", "occurrence_path": "ROOT/P.1", "reference_id": "P", "volume_m3": -0.001, "density_kg_m3": 1000.0}]
+    rows = [
+        {
+            "document_id": "D",
+            "revision": "R1",
+            "occurrence_path": "ROOT/P.1",
+            "reference_id": "P",
+            "volume_m3": -0.001,
+            "density_kg_m3": 1000.0,
+        }
+    ]
     p = tmp_path / "neg.json"
     p.write_text(json.dumps(rows), encoding="utf-8")
     with pytest.raises(AgentError) as ei:

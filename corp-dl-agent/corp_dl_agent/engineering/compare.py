@@ -133,7 +133,9 @@ def _delta(metric: str, cand: DesignCandidate, base: DesignCandidate, a: Quantit
             delta=Quantity.missing(a.unit or b.unit, "; ".join(why)),
         )
     if a.unit != b.unit:
-        raise AgentError("E_REVISION_MISMATCH", f"{metric} 단위 불일치: {cand.id} '{a.unit}' ≠ {base.id} '{b.unit}'")
+        raise AgentError(
+            "E_REVISION_MISMATCH", f"{metric} 단위 불일치: {cand.id} '{a.unit}' ≠ {base.id} '{b.unit}'"
+        )
     d = a.value - b.value
     rel = d / b.value if b.value not in (0, 0.0) else None
     assumed = a.assumption or b.assumption or a.value_type == "predicted" or b.value_type == "predicted"
@@ -161,13 +163,19 @@ def compare_designs(
     baseline_id: str | None = None,
 ) -> DesignComparison:
     if len(candidates) < 2:
-        raise AgentError("E_INPUT_INVALID", "비교하려면 후보가 2개 이상 필요합니다", details={"n": len(candidates)})
+        raise AgentError(
+            "E_INPUT_INVALID", "비교하려면 후보가 2개 이상 필요합니다", details={"n": len(candidates)}
+        )
     ids = [c.id for c in candidates]
     if len(set(ids)) != len(ids):
         raise AgentError("E_INPUT_INVALID", "후보 id 가 중복됩니다", details={"ids": ids})
-    base = candidates[0] if baseline_id is None else next((c for c in candidates if c.id == baseline_id), None)
+    base = (
+        candidates[0] if baseline_id is None else next((c for c in candidates if c.id == baseline_id), None)
+    )
     if base is None:
-        raise AgentError("E_INPUT_INVALID", f"기준 후보를 찾을 수 없습니다: {baseline_id}", details={"ids": ids})
+        raise AgentError(
+            "E_INPUT_INVALID", f"기준 후보를 찾을 수 없습니다: {baseline_id}", details={"ids": ids}
+        )
 
     warnings: list[str] = []
     mismatches: list[str] = []
@@ -205,17 +213,28 @@ def compare_designs(
                     details={"candidate": c.id},
                 )
         if c.mass.total.unit != "kg":
-            raise AgentError("E_UNIT_MISMATCH", f"후보 {c.id} 의 질량 단위가 kg 이 아닙니다: '{c.mass.total.unit}'")
+            raise AgentError(
+                "E_UNIT_MISMATCH", f"후보 {c.id} 의 질량 단위가 kg 이 아닙니다: '{c.mass.total.unit}'"
+            )
 
     revisions = [c.revision for c in candidates]
     if len(set(revisions)) > 1:
-        mismatch("후보 간 revision 불일치: " + ", ".join(f"{c.id}={c.revision}" for c in candidates), {"revisions": revisions})
+        mismatch(
+            "후보 간 revision 불일치: " + ", ".join(f"{c.id}={c.revision}" for c in candidates),
+            {"revisions": revisions},
+        )
     dates = [c.base_date for c in candidates]
     if not _all_equal(dates):
-        mismatch("후보 간 기준일 불일치: " + ", ".join(f"{c.id}={c.base_date}" for c in candidates), {"base_dates": dates})
+        mismatch(
+            "후보 간 기준일 불일치: " + ", ".join(f"{c.id}={c.base_date}" for c in candidates),
+            {"base_dates": dates},
+        )
     currencies = [c.currency for c in candidates]
     if not _all_equal(currencies):
-        mismatch("후보 간 통화 불일치: " + ", ".join(f"{c.id}={c.currency}" for c in candidates), {"currencies": currencies})
+        mismatch(
+            "후보 간 통화 불일치: " + ", ".join(f"{c.id}={c.currency}" for c in candidates),
+            {"currencies": currencies},
+        )
     calc_versions = {c.mass.calculation_version for c in candidates}
     if len(calc_versions) > 1:
         warnings.append(f"후보 간 계산식 버전이 다릅니다: {sorted(calc_versions)}")
@@ -260,7 +279,9 @@ def compare_designs(
                 mass_total=c.mass.total,
                 mass_complete=c.mass.complete,
                 mass_missing=list(c.mass.missing),
-                unit_cost=c.cost.unit_cost if c.cost is not None else Quantity.missing("", "cost_breakdown 없음"),
+                unit_cost=c.cost.unit_cost
+                if c.cost is not None
+                else Quantity.missing("", "cost_breakdown 없음"),
                 cost_complete=c.cost.complete if c.cost is not None else None,
                 cost_missing=list(c.cost.missing) if c.cost is not None else [],
                 estimate_type=c.cost.estimate_type if c.cost is not None else None,
@@ -339,7 +360,11 @@ def load_candidate_dir(
     """후보 폴더: cad_snapshot.json (필수, mass_result.json 없으면 계산), cost_breakdown.json / candidate.json (선택)."""
     d = Path(directory)
     if not d.is_dir():
-        raise AgentError("E_INPUT_INVALID", f"후보 폴더가 없습니다: {d}", details={"candidate": candidate_id, "path": str(d)})
+        raise AgentError(
+            "E_INPUT_INVALID",
+            f"후보 폴더가 없습니다: {d}",
+            details={"candidate": candidate_id, "path": str(d)},
+        )
     meta: dict[str, Any] = {}
     meta_path = d / CANDIDATE_FILES["meta"]
     if meta_path.is_file():
@@ -381,7 +406,11 @@ def load_candidate_dir(
         try:
             performance[str(k)] = validate_strict(Quantity, v)
         except ValidationError as exc:
-            raise AgentError("E_SCHEMA_INVALID", f"performance '{k}' 는 Quantity 형식이어야 합니다", details={"error": str(exc)[:300]}) from exc
+            raise AgentError(
+                "E_SCHEMA_INVALID",
+                f"performance '{k}' 는 Quantity 형식이어야 합니다",
+                details={"error": str(exc)[:300]},
+            ) from exc
     data = {
         "id": candidate_id,
         "label": meta.get("label") or label or candidate_id,
@@ -403,7 +432,9 @@ def load_candidate_dir(
         raise AgentError(
             "E_INPUT_INVALID",
             f"후보 {candidate_id} 정의가 올바르지 않습니다",
-            details={"errors": [f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()[:20]]},
+            details={
+                "errors": [f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()[:20]]
+            },
         ) from exc
 
 
@@ -429,7 +460,10 @@ def comparison_summary(cmp: DesignComparison) -> dict[str, Any]:
             }
             for r in cmp.rows
         ],
-        "deltas": [{"metric": d.metric, "candidate": d.candidate_id, "delta": d.delta.value, "unit": d.delta.unit} for d in cmp.deltas],
+        "deltas": [
+            {"metric": d.metric, "candidate": d.candidate_id, "delta": d.delta.value, "unit": d.delta.unit}
+            for d in cmp.deltas
+        ],
         "warnings": cmp.warnings,
         "synthetic": cmp.synthetic,
     }

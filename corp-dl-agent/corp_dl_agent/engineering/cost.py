@@ -23,7 +23,9 @@ from corp_dl_agent.errors import AgentError
 from corp_dl_agent.version import CALCULATION_VERSION
 
 EstimateType = Literal["manufacturing_estimate", "quote"]
-CostCategory = Literal["material", "process", "post_process", "assembly", "purchased", "tooling", "setup", "other"]
+CostCategory = Literal[
+    "material", "process", "post_process", "assembly", "purchased", "tooling", "setup", "other"
+]
 _CURRENCY_RE = re.compile(r"^[A-Z]{3}$")
 
 # other/generic line 이름에서 중복 반영을 의심하는 키워드
@@ -130,7 +132,11 @@ class InjectionMoldingRecipe(_RecipeBase):
             raise ValueError("runner/regrind 가 runner_ratio 와 other 항목에 중복 반영되었습니다")
         if self.setup_cost_per_batch is not None and any(w in n for n in names for w in _SETUP_WORDS):
             raise ValueError("setup 비용이 setup_cost_per_batch 와 other 항목에 중복 반영되었습니다")
-        if self.good_rate is not None and self.good_rate < 1 and any(w in n for n in names for w in _YIELD_WORDS):
+        if (
+            self.good_rate is not None
+            and self.good_rate < 1
+            and any(w in n for n in names for w in _YIELD_WORDS)
+        ):
             raise ValueError("양품률/수율 손실이 good_rate 와 other 항목에 중복 반영되었습니다")
         if self.tooling_cost is not None and any(w in n for n in names for w in _TOOLING_WORDS):
             raise ValueError("금형비가 tooling_cost 와 other 항목에 중복 반영되었습니다")
@@ -189,7 +195,9 @@ def parse_recipe(data: dict[str, Any]) -> Recipe:
         raise AgentError(
             "E_SCHEMA_INVALID",
             f"recipe 검증 실패 ({data.get('name') or rtype})",
-            details={"errors": [f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()[:20]]},
+            details={
+                "errors": [f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()[:20]]
+            },
         ) from exc
 
 
@@ -200,7 +208,11 @@ def load_recipes(path: str | Path) -> dict[str, Recipe]:
         raise AgentError("E_INPUT_INVALID", f"recipe 파일이 없습니다: {p.name}", details={"path": str(p)})
     data = read_json(p)
     if not isinstance(data, dict) or not isinstance(data.get("recipes"), dict):
-        raise AgentError("E_SCHEMA_INVALID", "recipe 파일은 {'recipes': {이름: recipe}} 형식이어야 합니다", details={"path": str(p)})
+        raise AgentError(
+            "E_SCHEMA_INVALID",
+            "recipe 파일은 {'recipes': {이름: recipe}} 형식이어야 합니다",
+            details={"path": str(p)},
+        )
     synthetic = bool(data.get("synthetic", False))
     out: dict[str, Recipe] = {}
     for name, body in data["recipes"].items():
@@ -258,7 +270,9 @@ class CostBreakdown(StrictModel):
 # ---------------------------------------------------------------------------
 
 
-def _amount(value: float, currency: str, calc_id: str, *, assumption: bool = False, notes: str | None = None) -> Quantity:
+def _amount(
+    value: float, currency: str, calc_id: str, *, assumption: bool = False, notes: str | None = None
+) -> Quantity:
     return Quantity(
         value=value,
         unit=f"{currency}/unit",
@@ -306,7 +320,9 @@ def compute_cost(
     mass_q, subject_name = _mass_basis(subject)
     if mass_q.unit and mass_q.unit != "kg":
         raise AgentError("E_UNIT_MISMATCH", f"질량 기준 단위는 kg 이어야 합니다: '{mass_q.unit}'")
-    _check_mismatch("통화", expected_currency.upper() if expected_currency else None, recipe.currency, "recipe")
+    _check_mismatch(
+        "통화", expected_currency.upper() if expected_currency else None, recipe.currency, "recipe"
+    )
     _check_mismatch("기준일", expected_base_date, recipe.base_date, "recipe")
     cur = recipe.currency
     lines: list[CostLine] = []
@@ -324,7 +340,9 @@ def compute_cost(
         r = recipe
         quantity_basis = r.production_volume if r.production_volume is not None else 1
         if r.production_volume is None:
-            assumptions.append("생산량(production_volume) 미입력: 단가는 1개 기준, 금형상각은 tooling_amortization_qty 에 의존")
+            assumptions.append(
+                "생산량(production_volume) 미입력: 단가는 1개 기준, 금형상각은 tooling_amortization_qty 에 의존"
+            )
         # 재료비
         if r.material_price_per_kg is None or mass_kg is None:
             why = "material_price_per_kg 미입력" if r.material_price_per_kg is None else "질량 기준값 없음"
@@ -337,7 +355,11 @@ def compute_cost(
             if r.runner_ratio > 0:
                 assumptions.append(
                     f"runner_ratio {r.runner_ratio:g}: "
-                    + ("regrind 허용 → runner 재료 미과금" if r.regrind_allowed else f"재료비 × {runner_factor:g} (regrind 미허용)")
+                    + (
+                        "regrind 허용 → runner 재료 미과금"
+                        if r.regrind_allowed
+                        else f"재료비 × {runner_factor:g} (regrind 미허용)"
+                    )
                 )
             if r.apply_good_rate_to_material and r.good_rate:
                 assumptions.append(f"재료비에 양품률 {r.good_rate:g} 1회 반영")
@@ -367,7 +389,9 @@ def compute_cost(
         absent = [k for k, v in proc_inputs.items() if v is None]
         if absent:
             why = "미입력: " + ", ".join(absent)
-            lines.append(CostLine(name="사출가공비", category="process", amount=_missing(cur, why), inputs=proc_inputs))
+            lines.append(
+                CostLine(name="사출가공비", category="process", amount=_missing(cur, why), inputs=proc_inputs)
+            )
             missing.append(f"사출가공비: {why}")
         else:
             assert r.machine_rate_per_hour is not None and r.cycle_time_s is not None
@@ -407,7 +431,9 @@ def compute_cost(
                 CostLine(
                     name="구매품",
                     category="purchased",
-                    amount=_amount(0.0, cur, f"cost:purchased:{subject_name}", notes="구매품 없음 (recipe 에 명시)"),
+                    amount=_amount(
+                        0.0, cur, f"cost:purchased:{subject_name}", notes="구매품 없음 (recipe 에 명시)"
+                    ),
                     formula="0 (항목 없음)",
                 )
             )
@@ -438,9 +464,13 @@ def compute_cost(
                     )
                 )
         # 금형상각
-        amort_qty = r.tooling_amortization_qty if r.tooling_amortization_qty is not None else r.production_volume
+        amort_qty = (
+            r.tooling_amortization_qty if r.tooling_amortization_qty is not None else r.production_volume
+        )
         if r.tooling_cost is None:
-            lines.append(CostLine(name="금형상각", category="tooling", amount=_missing(cur, "tooling_cost 미입력")))
+            lines.append(
+                CostLine(name="금형상각", category="tooling", amount=_missing(cur, "tooling_cost 미입력"))
+            )
             missing.append("금형상각: tooling_cost 미입력")
         elif amort_qty is None:
             why = "상각 수량 없음 (tooling_amortization_qty/production_volume 미입력)"
@@ -461,7 +491,9 @@ def compute_cost(
             )
         # setup
         if r.setup_cost_per_batch is None:
-            lines.append(CostLine(name="setup", category="setup", amount=_missing(cur, "setup_cost_per_batch 미입력")))
+            lines.append(
+                CostLine(name="setup", category="setup", amount=_missing(cur, "setup_cost_per_batch 미입력"))
+            )
             missing.append("setup: setup_cost_per_batch 미입력")
         elif r.batch_size is None:
             lines.append(CostLine(name="setup", category="setup", amount=_missing(cur, "batch_size 미입력")))
@@ -484,14 +516,18 @@ def compute_cost(
                 missing.append(f"{o.name}: value 미입력")
             elif o.unit == "per_kg":
                 if mass_kg is None:
-                    lines.append(CostLine(name=o.name, category="other", amount=_missing(cur, "질량 기준값 없음")))
+                    lines.append(
+                        CostLine(name=o.name, category="other", amount=_missing(cur, "질량 기준값 없음"))
+                    )
                     missing.append(f"{o.name}: 질량 기준값 없음")
                 else:
                     lines.append(
                         CostLine(
                             name=o.name,
                             category="other",
-                            amount=_amount(o.value * mass_kg, cur, f"cost:other:{o.name}", assumption=mass_q.assumption),
+                            amount=_amount(
+                                o.value * mass_kg, cur, f"cost:other:{o.name}", assumption=mass_q.assumption
+                            ),
                             formula=f"{_fmt(o.value)} {cur}/kg × {_fmt(mass_kg)} kg",
                             inputs={"value_per_kg": o.value, "mass_kg": mass_kg},
                         )
@@ -509,7 +545,9 @@ def compute_cost(
     elif isinstance(recipe, PurchasedPartRecipe):
         quantity_basis = recipe.quantity_basis
         if recipe.unit_price is None:
-            lines.append(CostLine(name="구매 단가", category="purchased", amount=_missing(cur, "unit_price 미입력")))
+            lines.append(
+                CostLine(name="구매 단가", category="purchased", amount=_missing(cur, "unit_price 미입력"))
+            )
             missing.append("구매 단가: unit_price 미입력")
         else:
             lines.append(
@@ -525,25 +563,38 @@ def compute_cost(
         for ln in recipe.lines:
             unit = ln.unit.strip()
             if "/" not in unit:
-                raise AgentError("E_UNIT_MISMATCH", f"generic line '{ln.name}' 단위는 '<통화>/unit' 또는 '<통화>/kg' 이어야 합니다: '{ln.unit}'")
+                raise AgentError(
+                    "E_UNIT_MISMATCH",
+                    f"generic line '{ln.name}' 단위는 '<통화>/unit' 또는 '<통화>/kg' 이어야 합니다: '{ln.unit}'",
+                )
             line_cur, per = unit.split("/", 1)
             line_cur = line_cur.upper()
             _check_mismatch("통화", cur, line_cur, f"generic line '{ln.name}'")
             if per not in ("unit", "kg"):
-                raise AgentError("E_UNIT_MISMATCH", f"generic line '{ln.name}' 단위 분모는 unit 또는 kg 만 허용됩니다: '{ln.unit}'")
+                raise AgentError(
+                    "E_UNIT_MISMATCH",
+                    f"generic line '{ln.name}' 단위 분모는 unit 또는 kg 만 허용됩니다: '{ln.unit}'",
+                )
             if ln.value is None:
                 lines.append(CostLine(name=ln.name, category="other", amount=_missing(cur, "value 미입력")))
                 missing.append(f"{ln.name}: value 미입력")
             elif per == "kg":
                 if mass_kg is None:
-                    lines.append(CostLine(name=ln.name, category="other", amount=_missing(cur, "질량 기준값 없음")))
+                    lines.append(
+                        CostLine(name=ln.name, category="other", amount=_missing(cur, "질량 기준값 없음"))
+                    )
                     missing.append(f"{ln.name}: 질량 기준값 없음")
                 else:
                     lines.append(
                         CostLine(
                             name=ln.name,
                             category="other",
-                            amount=_amount(ln.value * mass_kg, cur, f"cost:generic:{ln.name}", assumption=mass_q.assumption),
+                            amount=_amount(
+                                ln.value * mass_kg,
+                                cur,
+                                f"cost:generic:{ln.name}",
+                                assumption=mass_q.assumption,
+                            ),
                             formula=f"{_fmt(ln.value)} {cur}/kg × {_fmt(mass_kg)} kg",
                             inputs={"value_per_kg": ln.value, "mass_kg": mass_kg},
                         )

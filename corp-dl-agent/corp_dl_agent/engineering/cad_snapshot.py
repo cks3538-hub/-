@@ -103,13 +103,16 @@ class CadSnapshot(StrictModel):
 # ---------------------------------------------------------------------------
 
 _BOM = b"\xef\xbb\xbf"
+BOM_CHAR = chr(0xFEFF)  # 열 이름 앞 BOM 제거용 (escape 가 formatter 로 풀리지 않도록 chr 사용)
 
 
 def read_text_detect_encoding(path: str | os.PathLike[str]) -> tuple[str, str]:
     """UTF-8-SIG -> UTF-8 -> CP949 순으로 시도. (text, encoding) 반환."""
     p = Path(path)
     if not p.is_file():
-        raise AgentError("E_INPUT_INVALID", f"입력 파일을 찾을 수 없습니다: {p.name}", details={"path": str(p)})
+        raise AgentError(
+            "E_INPUT_INVALID", f"입력 파일을 찾을 수 없습니다: {p.name}", details={"path": str(p)}
+        )
     data = p.read_bytes()
     if data.startswith(_BOM):
         return data.decode("utf-8-sig"), "utf-8-sig"
@@ -157,7 +160,16 @@ _KNOWN_COLUMNS = (
     | set(_MEASURE_COLUMNS)
     | {v[0] for v in _MEASURE_COLUMNS.values()}
     | set(_SI_COLUMNS)
-    | {"quantity", "geometry_status", "is_assembly", "parameter_map", "units", "area", "area_unit", "synthetic"}
+    | {
+        "quantity",
+        "geometry_status",
+        "is_assembly",
+        "parameter_map",
+        "units",
+        "area",
+        "area_unit",
+        "synthetic",
+    }
 )
 _TRUE = {"true", "1", "yes", "y", "t", "예", "참"}
 _FALSE = {"false", "0", "no", "n", "f", "아니오", "거짓", ""}
@@ -222,7 +234,7 @@ def _csv_row_to_dict(
     for k, v in raw_in.items():
         if k is None:
             continue
-        key = str(k).strip().lstrip("﻿")
+        key = str(k).strip().lstrip(BOM_CHAR)
         val = v.strip() if isinstance(v, str) else v
         raw[key] = val if val not in ("",) else None
     occ = raw.get("occurrence_path")
@@ -233,7 +245,9 @@ def _csv_row_to_dict(
         nonlocal ok
         ok = False
         issues.append(
-            SnapshotIssue(level="error", code=code, message=msg, row_index=row_index, occurrence_path=occ, field=field)
+            SnapshotIssue(
+                level="error", code=code, message=msg, row_index=row_index, occurrence_path=occ, field=field
+            )
         )
 
     for f in _DIRECT_STR_FIELDS:
@@ -295,7 +309,9 @@ def _csv_row_to_dict(
             except ValueError:
                 err("ROW_INVALID", f"숫자가 아닙니다: {raw['area']!r}", "area")
             except AgentError as exc:
-                err("UNIT_UNKNOWN" if exc.code == "E_UNIT_MISMATCH" else "NEGATIVE_VALUE", exc.message, "area")
+                err(
+                    "UNIT_UNKNOWN" if exc.code == "E_UNIT_MISMATCH" else "NEGATIVE_VALUE", exc.message, "area"
+                )
     # param:<name> 열 과 parameter_map JSON 열
     for k, v in raw.items():
         if k.startswith("param:") and v is not None:
@@ -326,7 +342,9 @@ def _csv_row_to_dict(
     return row if ok else None
 
 
-def _validation_issues(exc: ValidationError, *, row_index: int | None, occ: str | None) -> list[SnapshotIssue]:
+def _validation_issues(
+    exc: ValidationError, *, row_index: int | None, occ: str | None
+) -> list[SnapshotIssue]:
     out: list[SnapshotIssue] = []
     for e in exc.errors():
         loc = ".".join(str(x) for x in e.get("loc", ()))
@@ -344,7 +362,14 @@ def _validation_issues(exc: ValidationError, *, row_index: int | None, occ: str 
         else:
             code = "ROW_INVALID"
         out.append(
-            SnapshotIssue(level="error", code=code, message=f"{loc}: {msg}", row_index=row_index, occurrence_path=occ, field=loc or None)
+            SnapshotIssue(
+                level="error",
+                code=code,
+                message=f"{loc}: {msg}",
+                row_index=row_index,
+                occurrence_path=occ,
+                field=loc or None,
+            )
         )
     return out
 
@@ -378,7 +403,12 @@ def _cross_row_checks(rows: list[CadSnapshotRow], issues: list[SnapshotIssue]) -
                     field="parent_path",
                 )
             )
-        if r.geometry_status == "solid" and not r.is_assembly and r.volume_m3 is not None and "volume" not in r.units:
+        if (
+            r.geometry_status == "solid"
+            and not r.is_assembly
+            and r.volume_m3 is not None
+            and "volume" not in r.units
+        ):
             issues.append(
                 SnapshotIssue(
                     level="error",
@@ -440,7 +470,13 @@ def _finalize(
             details={
                 "path": str(source_path),
                 "errors": [
-                    {"row": i.row_index, "occurrence_path": i.occurrence_path, "field": i.field, "code": i.code, "message": i.message}
+                    {
+                        "row": i.row_index,
+                        "occurrence_path": i.occurrence_path,
+                        "field": i.field,
+                        "code": i.code,
+                        "message": i.message,
+                    }
                     for i in errors[:50]
                 ],
                 "error_count": len(errors),
@@ -459,17 +495,27 @@ def _import_csv(
     file_hash: str,
 ) -> CadSnapshot:
     text, encoding = read_text_detect_encoding(path)
-    issues: list[SnapshotIssue] = [SnapshotIssue(level="info", code="ENCODING", message=f"CSV 인코딩: {encoding}")]
+    issues: list[SnapshotIssue] = [
+        SnapshotIssue(level="info", code="ENCODING", message=f"CSV 인코딩: {encoding}")
+    ]
     reader = csv.DictReader(io.StringIO(text, newline=""), delimiter=delimiter)
     if not reader.fieldnames:
         raise AgentError("E_INPUT_INVALID", f"CSV 헤더가 없습니다: {path.name}", details={"path": str(path)})
     mapping = field_mapping or {}
-    header = [h.strip().lstrip("﻿") for h in reader.fieldnames]
+    header = [h.strip().lstrip(BOM_CHAR) for h in reader.fieldnames]
     mapped_columns = set(mapping.values())
-    unknown = [h for h in header if h not in _KNOWN_COLUMNS and h not in mapped_columns and not h.startswith("param:")]
+    unknown = [
+        h
+        for h in header
+        if h not in _KNOWN_COLUMNS and h not in mapped_columns and not h.startswith("param:")
+    ]
     if unknown:
         issues.append(
-            SnapshotIssue(level="warning", code="UNKNOWN_COLUMNS", message=f"인식되지 않은 열은 무시됩니다: {', '.join(unknown)}")
+            SnapshotIssue(
+                level="warning",
+                code="UNKNOWN_COLUMNS",
+                message=f"인식되지 않은 열은 무시됩니다: {', '.join(unknown)}",
+            )
         )
     extracted_at = now_iso()
     rows: list[CadSnapshotRow] = []
@@ -485,8 +531,14 @@ def _import_csv(
                 synthetic_flags.append(_parse_bool(str(raw.get("synthetic"))))
             except ValueError:
                 synthetic_flags.append(False)
-        raw = {k: v for k, v in raw.items() if k is not None and (k in _KNOWN_COLUMNS or str(k).startswith("param:")) and k != "synthetic"}
-        row = _csv_row_to_dict(raw, row_index=n, issues=issues, file_hash=file_hash, extracted_at=extracted_at)
+        raw = {
+            k: v
+            for k, v in raw.items()
+            if k is not None and (k in _KNOWN_COLUMNS or str(k).startswith("param:")) and k != "synthetic"
+        }
+        row = _csv_row_to_dict(
+            raw, row_index=n, issues=issues, file_hash=file_hash, extracted_at=extracted_at
+        )
         if row is None:
             continue
         try:
@@ -497,7 +549,14 @@ def _import_csv(
         issues.append(SnapshotIssue(level="error", code="EMPTY", message="데이터 행이 없습니다"))
     is_synthetic = synthetic if synthetic is not None else (bool(synthetic_flags) and all(synthetic_flags))
     return _finalize(
-        rows, issues, source_path=path, file_hash=file_hash, extracted_at=extracted_at, encoding=encoding, synthetic=is_synthetic, strict=strict
+        rows,
+        issues,
+        source_path=path,
+        file_hash=file_hash,
+        extracted_at=extracted_at,
+        encoding=encoding,
+        synthetic=is_synthetic,
+        strict=strict,
     )
 
 
@@ -512,7 +571,11 @@ def _import_json(
     try:
         data = read_json(path)
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-        raise AgentError("E_INPUT_INVALID", f"JSON 파싱 실패: {path.name}", details={"path": str(path), "error": str(exc)[:200]}) from exc
+        raise AgentError(
+            "E_INPUT_INVALID",
+            f"JSON 파싱 실패: {path.name}",
+            details={"path": str(path), "error": str(exc)[:200]},
+        ) from exc
     issues: list[SnapshotIssue] = []
     top_synthetic: bool | None = None
     if isinstance(data, dict):
@@ -522,12 +585,22 @@ def _import_json(
     else:
         raw_rows = data
     if not isinstance(raw_rows, list):
-        raise AgentError("E_INPUT_INVALID", "JSON snapshot 은 행 배열 또는 {'rows': [...]} 이어야 합니다", details={"path": str(path)})
-    extracted_at = str(data.get("extracted_at")) if isinstance(data, dict) and data.get("extracted_at") else now_iso()
+        raise AgentError(
+            "E_INPUT_INVALID",
+            "JSON snapshot 은 행 배열 또는 {'rows': [...]} 이어야 합니다",
+            details={"path": str(path)},
+        )
+    extracted_at = (
+        str(data.get("extracted_at")) if isinstance(data, dict) and data.get("extracted_at") else now_iso()
+    )
     rows: list[CadSnapshotRow] = []
     for idx, item in enumerate(raw_rows, start=1):
         if not isinstance(item, dict):
-            issues.append(SnapshotIssue(level="error", code="ROW_INVALID", message="행이 객체(dict)가 아닙니다", row_index=idx))
+            issues.append(
+                SnapshotIssue(
+                    level="error", code="ROW_INVALID", message="행이 객체(dict)가 아닙니다", row_index=idx
+                )
+            )
             continue
         item = _apply_mapping(item, field_mapping)
         item.setdefault("source_hash", file_hash)
@@ -542,7 +615,14 @@ def _import_json(
         issues.append(SnapshotIssue(level="error", code="EMPTY", message="데이터 행이 없습니다"))
     is_synthetic = synthetic if synthetic is not None else bool(top_synthetic)
     return _finalize(
-        rows, issues, source_path=path, file_hash=file_hash, extracted_at=extracted_at, encoding="utf-8", synthetic=is_synthetic, strict=strict
+        rows,
+        issues,
+        source_path=path,
+        file_hash=file_hash,
+        extracted_at=extracted_at,
+        encoding="utf-8",
+        synthetic=is_synthetic,
+        strict=strict,
     )
 
 
@@ -562,15 +642,26 @@ def import_snapshot(
     """
     p = Path(path)
     if not p.is_file():
-        raise AgentError("E_INPUT_INVALID", f"입력 파일을 찾을 수 없습니다: {p.name}", details={"path": str(p)})
+        raise AgentError(
+            "E_INPUT_INVALID", f"입력 파일을 찾을 수 없습니다: {p.name}", details={"path": str(p)}
+        )
     file_hash = sha256_file(p)
     suffix = p.suffix.lower()
     if suffix == ".json":
-        return _import_json(p, field_mapping=field_mapping, strict=strict, synthetic=synthetic, file_hash=file_hash)
+        return _import_json(
+            p, field_mapping=field_mapping, strict=strict, synthetic=synthetic, file_hash=file_hash
+        )
     if suffix in (".csv", ".txt", ".tsv"):
         if suffix == ".tsv" and delimiter == ",":
             delimiter = "\t"
-        return _import_csv(p, field_mapping=field_mapping, delimiter=delimiter, strict=strict, synthetic=synthetic, file_hash=file_hash)
+        return _import_csv(
+            p,
+            field_mapping=field_mapping,
+            delimiter=delimiter,
+            strict=strict,
+            synthetic=synthetic,
+            file_hash=file_hash,
+        )
     raise AgentError(
         "E_INPUT_INVALID",
         f"지원되지 않는 snapshot 형식입니다: {p.suffix}",
@@ -597,7 +688,9 @@ def load_snapshot(path: str | Path) -> CadSnapshot:
         raise AgentError(
             "E_SCHEMA_INVALID",
             f"snapshot JSON 이 schema 와 일치하지 않습니다: {p.name}",
-            details={"errors": [f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()[:20]]},
+            details={
+                "errors": [f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()[:20]]
+            },
         ) from exc
 
 

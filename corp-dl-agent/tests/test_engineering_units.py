@@ -43,7 +43,9 @@ def test_convert_density(value: float, unit: str, expected: float) -> None:
     assert U.convert_density(value, unit) == pytest.approx(expected, rel=1e-12)
 
 
-@pytest.mark.parametrize(("value", "unit", "expected"), [(1000.0, "g", 1.0), (2.5, "kg", 2.5), (0.0, "g", 0.0)])
+@pytest.mark.parametrize(
+    ("value", "unit", "expected"), [(1000.0, "g", 1.0), (2.5, "kg", 2.5), (0.0, "g", 0.0)]
+)
 def test_convert_mass(value: float, unit: str, expected: float) -> None:
     assert U.convert_mass(value, unit) == pytest.approx(expected, rel=1e-12)
 
