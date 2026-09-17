@@ -42,7 +42,11 @@ def main() -> int:
     ap.add_argument("--lock", default=None, help="lock 파일 경로 (hash 기록)")
     ap.add_argument("--timeout", type=int, default=7200)
     ap.add_argument("--python-note", default=None, help="명령이 사용한 Python (예: 'CPython 3.12.3 (.venv)')")
-    ap.add_argument("--network-note", default="host network (no isolation)", help="예: 'unshare -n (no network namespace)'")
+    ap.add_argument(
+        "--network-note",
+        default="host network (no isolation)",
+        help="예: 'unshare -n (no network namespace)'",
+    )
     ap.add_argument("--user-note", default=None, help="예: 'non-root user tester'")
     ap.add_argument("cmd", nargs=argparse.REMAINDER)
     args = ap.parse_args()
@@ -58,16 +62,32 @@ def main() -> int:
     raw_dir = out_dir / "raw"
     out_dir.mkdir(parents=True, exist_ok=True)
     raw_dir.mkdir(parents=True, exist_ok=True)
-    started = dt.datetime.now(dt.timezone.utc)
+    started = dt.datetime.now(dt.UTC)
     t0 = time.monotonic()
     try:
-        proc = subprocess.run(cmd, cwd=args.cwd, capture_output=True, text=True, timeout=args.timeout, encoding="utf-8", errors="replace")
+        proc = subprocess.run(
+            cmd,
+            cwd=args.cwd,
+            capture_output=True,
+            text=True,
+            timeout=args.timeout,
+            encoding="utf-8",
+            errors="replace",
+        )
         code, stdout, stderr, timed_out = proc.returncode, proc.stdout, proc.stderr, False
     except subprocess.TimeoutExpired as exc:
-        code, stdout, stderr, timed_out = -1, (exc.stdout or "") if isinstance(exc.stdout, str) else "", (exc.stderr or "") if isinstance(exc.stderr, str) else "", True
+        code, stdout, stderr, timed_out = (
+            -1,
+            (exc.stdout or "") if isinstance(exc.stdout, str) else "",
+            (exc.stderr or "") if isinstance(exc.stderr, str) else "",
+            True,
+        )
     elapsed = round(time.monotonic() - t0, 2)
     raw_path = raw_dir / f"{args.name}.log"
-    raw_path.write_text(f"$ {' '.join(cmd)}\n[exit {code}]\n--- stdout ---\n{stdout}\n--- stderr ---\n{stderr}\n", encoding="utf-8")
+    raw_path.write_text(
+        f"$ {' '.join(cmd)}\n[exit {code}]\n--- stdout ---\n{stdout}\n--- stderr ---\n{stderr}\n",
+        encoding="utf-8",
+    )
     lock_hash = None
     if args.lock and Path(args.lock).is_file():
         lock_hash = hashlib.sha256(Path(args.lock).read_bytes()).hexdigest()
@@ -94,8 +114,12 @@ def main() -> int:
         "stderr_tail": normalize("\n".join(stderr.splitlines()[-args.tail :]), mapping),
         "raw_log": f"test-evidence/raw/{args.name}.log (개인 로컬 보관, 반입 제외)",
     }
-    (out_dir / f"{args.name}.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"[{record['status']}] {args.name} exit={code} elapsed={elapsed}s -> {out_dir / (args.name + '.json')}")
+    (out_dir / f"{args.name}.json").write_text(
+        json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    print(
+        f"[{record['status']}] {args.name} exit={code} elapsed={elapsed}s -> {out_dir / (args.name + '.json')}"
+    )
     return 0
 
 

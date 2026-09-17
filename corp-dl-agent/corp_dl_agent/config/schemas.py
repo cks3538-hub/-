@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import re
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
@@ -18,7 +18,7 @@ from corp_dl_agent.common import StrictModel
 SECRET_REF_RE = re.compile(r"^(env|file):.+$")
 
 
-class Profile(str, Enum):
+class Profile(StrEnum):
     PERSONAL_DEV = "personal-dev"
     TRANSFER_TEST = "transfer-test"
     CORP_OFFLINE = "corp-offline"
@@ -51,8 +51,16 @@ class MlConfig(StrictModel):
     device: Literal["cpu", "cuda"] = "cpu"
     num_workers: int = Field(0, ge=0, le=32)
     amp: bool = False
-    demo: BudgetConfig = Field(default_factory=lambda: BudgetConfig(max_candidates=2, max_epochs=10, patience=3, wall_time_seconds=300))
-    pilot: BudgetConfig = Field(default_factory=lambda: BudgetConfig(max_candidates=6, max_epochs=100, patience=10, wall_time_seconds=3600))
+    demo: BudgetConfig = Field(
+        default_factory=lambda: BudgetConfig(
+            max_candidates=2, max_epochs=10, patience=3, wall_time_seconds=300
+        )
+    )
+    pilot: BudgetConfig = Field(
+        default_factory=lambda: BudgetConfig(
+            max_candidates=6, max_epochs=100, patience=10, wall_time_seconds=3600
+        )
+    )
     oom_retries: int = Field(2, ge=0, le=2)
     nan_retries: int = Field(1, ge=0, le=1)
     allow_synthetic_models_in_production: bool = False
@@ -81,13 +89,17 @@ class GatewayConfig(StrictModel):
     @classmethod
     def _secret_ref_format(cls, v: str | None) -> str | None:
         if v is not None and not SECRET_REF_RE.match(v):
-            raise ValueError("secret_ref 는 'env:NAME' 또는 'file:<경로>' 형식이어야 합니다 (값 직접 입력 금지)")
+            raise ValueError(
+                "secret_ref 는 'env:NAME' 또는 'file:<경로>' 형식이어야 합니다 (값 직접 입력 금지)"
+            )
         return v
 
     @field_validator("base_url")
     @classmethod
     def _https_only(cls, v: str | None) -> str | None:
-        if v is not None and not (v.startswith("https://") or v.startswith("http://127.0.0.1") or v.startswith("http://localhost")):
+        if v is not None and not (
+            v.startswith("https://") or v.startswith("http://127.0.0.1") or v.startswith("http://localhost")
+        ):
             raise ValueError("base_url 은 https:// 이어야 합니다 (로컬 mock 은 http://127.0.0.1 허용)")
         return v
 
@@ -135,15 +147,17 @@ class AtlassianProductConfig(StrictModel):
 class IntegrationsConfig(StrictModel):
     write: bool = False  # 기본 off: preview/export 만
     approved_origins: list[str] = Field(default_factory=list)
-    bitbucket: AtlassianProductConfig = Field(default_factory=AtlassianProductConfig)
-    jira: AtlassianProductConfig = Field(default_factory=AtlassianProductConfig)
-    confluence: AtlassianProductConfig = Field(default_factory=AtlassianProductConfig)
-    bamboo: AtlassianProductConfig = Field(default_factory=AtlassianProductConfig)
+    bitbucket: AtlassianProductConfig = Field(default_factory=lambda: AtlassianProductConfig())
+    jira: AtlassianProductConfig = Field(default_factory=lambda: AtlassianProductConfig())
+    confluence: AtlassianProductConfig = Field(default_factory=lambda: AtlassianProductConfig())
+    bamboo: AtlassianProductConfig = Field(default_factory=lambda: AtlassianProductConfig())
 
 
 class CadConfig(StrictModel):
     adapter: Literal["csv_json", "catia_v5_com", "3dexperience"] = "csv_json"
-    field_mapping: dict[str, str] = Field(default_factory=dict, description="snapshot 필드 <- 회사 export 열 이름")
+    field_mapping: dict[str, str] = Field(
+        default_factory=dict, description="snapshot 필드 <- 회사 export 열 이름"
+    )
     default_density_policy: Literal["reject", "use_material_table"] = "reject"
     material_table: str | None = None  # 회사 재료표 CSV 경로
 
@@ -180,24 +194,31 @@ class LoggingConfig(StrictModel):
 class AppConfig(StrictModel):
     schema_version: str = "4.0"
     profile: Profile = Profile.CORP_OFFLINE
-    paths: PathsConfig = Field(default_factory=PathsConfig)
-    ml: MlConfig = Field(default_factory=MlConfig)
-    gateway: GatewayConfig = Field(default_factory=GatewayConfig)
-    integrations: IntegrationsConfig = Field(default_factory=IntegrationsConfig)
-    cad: CadConfig = Field(default_factory=CadConfig)
-    documents: DocumentsConfig = Field(default_factory=DocumentsConfig)
+    paths: PathsConfig = Field(default_factory=lambda: PathsConfig())
+    ml: MlConfig = Field(default_factory=lambda: MlConfig())
+    gateway: GatewayConfig = Field(default_factory=lambda: GatewayConfig())
+    integrations: IntegrationsConfig = Field(default_factory=lambda: IntegrationsConfig())
+    cad: CadConfig = Field(default_factory=lambda: CadConfig())
+    documents: DocumentsConfig = Field(default_factory=lambda: DocumentsConfig())
     extensions: list[ExtensionConfig] = Field(default_factory=list)
-    security: SecurityConfig = Field(default_factory=SecurityConfig)
-    logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    security: SecurityConfig = Field(default_factory=lambda: SecurityConfig())
+    logging: LoggingConfig = Field(default_factory=lambda: LoggingConfig())
 
     @model_validator(mode="after")
     def _profile_rules(self) -> AppConfig:
-        if self.profile in (Profile.CORP_OFFLINE, Profile.TRANSFER_TEST, Profile.PERSONAL_DEV) and self.gateway.enabled:
-            raise ValueError(f"프로파일 {self.profile.value} 에서는 gateway.enabled=true 를 허용하지 않습니다 (corp-gateway 전용)")
+        if (
+            self.profile in (Profile.CORP_OFFLINE, Profile.TRANSFER_TEST, Profile.PERSONAL_DEV)
+            and self.gateway.enabled
+        ):
+            raise ValueError(
+                f"프로파일 {self.profile.value} 에서는 gateway.enabled=true 를 허용하지 않습니다 (corp-gateway 전용)"
+            )
         if self.profile is Profile.CORP_GATEWAY and self.gateway.enabled:
             missing = self.gateway.missing_fields()
             if missing:
-                raise ValueError(f"corp-gateway 프로파일에 필수 gateway 설정이 없습니다: {', '.join(missing)}")
+                raise ValueError(
+                    f"corp-gateway 프로파일에 필수 gateway 설정이 없습니다: {', '.join(missing)}"
+                )
         return self
 
     def network_allowed(self) -> bool:

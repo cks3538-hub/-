@@ -9,8 +9,8 @@ import hashlib
 import json
 import os
 import tempfile
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Any, Literal
 
@@ -30,7 +30,7 @@ class LaxModel(BaseModel):
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -144,10 +144,10 @@ class Quantity(StrictModel):
         return cls(value=None, unit=unit, value_type="conflict", notes=notes)
 
 
-class Status(str, Enum):
+class Status(StrEnum):
     """검증/기능 상태 표시 (PASS/FAIL/NOT_RUN/BLOCKED/...)."""
 
-    PASS = "PASS"
+    PASS = "PASS"  # noqa: S105 - 상태 문자열이며 비밀값이 아님
     FAIL = "FAIL"
     NOT_RUN = "NOT_RUN"
     BLOCKED = "BLOCKED"

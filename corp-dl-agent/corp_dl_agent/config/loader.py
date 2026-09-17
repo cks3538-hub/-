@@ -43,7 +43,9 @@ def _set_dotted(d: dict[str, Any], dotted: str, value: Any) -> None:
     for p in parts[:-1]:
         cur = cur.setdefault(p, {})
         if not isinstance(cur, dict):
-            raise AgentError("E_CONFIG_INVALID", f"override 경로 '{dotted}' 가 dict 가 아닌 값을 가로지릅니다")
+            raise AgentError(
+                "E_CONFIG_INVALID", f"override 경로 '{dotted}' 가 dict 가 아닌 값을 가로지릅니다"
+            )
     cur[parts[-1]] = value
 
 
@@ -92,7 +94,9 @@ class ConfigLoader(StrictModel):
                 with open(p, encoding="utf-8") as f:
                     loaded = yaml.safe_load(f) or {}
             except yaml.YAMLError as exc:
-                raise AgentError("E_CONFIG_INVALID", f"YAML 파싱 실패: {p}", details={"error": str(exc)[:500]}) from exc
+                raise AgentError(
+                    "E_CONFIG_INVALID", f"YAML 파싱 실패: {p}", details={"error": str(exc)[:500]}
+                ) from exc
             if not isinstance(loaded, dict):
                 raise AgentError("E_CONFIG_INVALID", "설정 파일 최상위는 매핑(dict) 이어야 합니다")
             merged = _deep_merge(merged, loaded)
@@ -119,11 +123,16 @@ def _resolve_relative_paths(cfg: dict[str, Any], base: Path) -> dict[str, Any]:
     for key in ("input_roots", "sources_roots"):
         vals = paths.get(key)
         if isinstance(vals, list):
-            out["paths"][key] = [str((base / v).resolve()) if isinstance(v, str) and not Path(v).is_absolute() else v for v in vals]
+            out["paths"][key] = [
+                str((base / v).resolve()) if isinstance(v, str) and not Path(v).is_absolute() else v
+                for v in vals
+            ]
     return out
 
 
-def load_config(config_path: str | None = None, overrides: dict[str, str] | None = None, *, profile: str | None = None) -> AppConfig:
+def load_config(
+    config_path: str | None = None, overrides: dict[str, str] | None = None, *, profile: str | None = None
+) -> AppConfig:
     """CLI 진입점용. overrides 는 'a.b.c=value' 형태의 dict[str,str]."""
     ov: dict[str, Any] = {}
     for k, v in (overrides or {}).items():
@@ -132,7 +141,11 @@ def load_config(config_path: str | None = None, overrides: dict[str, str] | None
         try:
             Profile(profile)
         except ValueError as exc:
-            raise AgentError("E_CONFIG_INVALID", f"알 수 없는 profile: {profile}", details={"allowed": [p.value for p in Profile]}) from exc
+            raise AgentError(
+                "E_CONFIG_INVALID",
+                f"알 수 없는 profile: {profile}",
+                details={"allowed": [p.value for p in Profile]},
+            ) from exc
         ov["profile"] = profile
     return ConfigLoader(config_path=config_path, overrides=ov).build()
 
@@ -145,20 +158,31 @@ def resolve_secret(ref: str | None) -> str:
         name = ref[4:]
         val = os.environ.get(name)
         if not val:
-            raise AgentError("E_CONFIG_SECRET_MISSING", f"환경 변수 '{name}' 가 설정되어 있지 않습니다", details={"ref": ref})
+            raise AgentError(
+                "E_CONFIG_SECRET_MISSING",
+                f"환경 변수 '{name}' 가 설정되어 있지 않습니다",
+                details={"ref": ref},
+            )
         return val
     if ref.startswith("file:"):
         p = Path(ref[5:])
         if not p.is_file():
-            raise AgentError("E_CONFIG_SECRET_MISSING", "secret 파일이 없습니다", details={"ref": "file:<경로 생략>"})
+            raise AgentError(
+                "E_CONFIG_SECRET_MISSING", "secret 파일이 없습니다", details={"ref": "file:<경로 생략>"}
+            )
         return p.read_text(encoding="utf-8").strip()
-    raise AgentError("E_CONFIG_SECRET_MISSING", "지원되지 않는 secret 참조 형식", details={"ref": ref[:8] + "..."})
+    raise AgentError(
+        "E_CONFIG_SECRET_MISSING", "지원되지 않는 secret 참조 형식", details={"ref": ref[:8] + "..."}
+    )
 
 
 def mask_config(obj: Any) -> Any:
     """resolved config 출력용: secret 관련 키의 값을 마스킹."""
     if isinstance(obj, dict):
-        return {k: (MASK if any(s in k.lower() for s in SECRET_KEYS) and v not in (None, "") else mask_config(v)) for k, v in obj.items()}
+        return {
+            k: (MASK if any(s in k.lower() for s in SECRET_KEYS) and v not in (None, "") else mask_config(v))
+            for k, v in obj.items()
+        }
     if isinstance(obj, list):
         return [mask_config(x) for x in obj]
     return obj

@@ -1,0 +1,146 @@
+{
+  "synthetic": true,
+  "note": "합성 예시 값이다. 실제 사내 단가/설비율/금형비/생산량이 아니며 검증 시험 전용이다.",
+  "recipes": {
+    "injection_synthetic_pp": {
+      "recipe_type": "injection_molding",
+      "currency": "KRW",
+      "base_date": "2026-09-01",
+      "estimate_type": "manufacturing_estimate",
+      "material_price_per_kg": 2500,
+      "cycle_time_s": 30,
+      "cavities": 2,
+      "good_rate": 0.95,
+      "machine_rate_per_hour": 36000,
+      "runner_ratio": 0.1,
+      "regrind_allowed": false,
+      "apply_good_rate_to_material": false,
+      "post_process_cost": 50,
+      "assembly_cost": 30,
+      "purchased_items": [
+        {
+          "name": "clip",
+          "unit_price": 120,
+          "quantity": 2,
+          "currency": "KRW",
+          "base_date": "2026-09-01"
+        }
+      ],
+      "tooling_cost": 50000000,
+      "tooling_amortization_qty": 100000,
+      "other": [
+        {
+          "name": "포장",
+          "value": 15,
+          "unit": "per_unit"
+        }
+      ],
+      "production_volume": 100000,
+      "setup_cost_per_batch": 200000,
+      "batch_size": 5000,
+      "source": "synthetic example"
+    },
+    "injection_regrind": {
+      "recipe_type": "injection_molding",
+      "currency": "KRW",
+      "base_date": "2026-09-01",
+      "material_price_per_kg": 2500,
+      "cycle_time_s": 30,
+      "cavities": 2,
+      "good_rate": 0.95,
+      "machine_rate_per_hour": 36000,
+      "runner_ratio": 0.1,
+      "regrind_allowed": true,
+      "post_process_cost": 50,
+      "assembly_cost": 30,
+      "purchased_items": [],
+      "tooling_cost": 50000000,
+      "tooling_amortization_qty": 100000,
+      "other": [],
+      "production_volume": 100000,
+      "setup_cost_per_batch": 200000,
+      "batch_size": 5000
+    },
+    "injection_missing_price": {
+      "recipe_type": "injection_molding",
+      "currency": "KRW",
+      "base_date": "2026-09-01",
+      "material_price_per_kg": null,
+      "cycle_time_s": 30,
+      "cavities": 2,
+      "good_rate": 0.95,
+      "machine_rate_per_hour": 36000,
+      "runner_ratio": 0.1,
+      "regrind_allowed": false,
+      "post_process_cost": 50,
+      "assembly_cost": 30,
+      "purchased_items": [],
+      "tooling_cost": 50000000,
+      "tooling_amortization_qty": null,
+      "other": [],
+      "production_volume": null,
+      "setup_cost_per_batch": 200000,
+      "batch_size": 5000
+    },
+    "injection_usd_2025": {
+      "recipe_type": "injection_molding",
+      "currency": "USD",
+      "base_date": "2025-01-15",
+      "material_price_per_kg": 1.9,
+      "cycle_time_s": 30,
+      "cavities": 2,
+      "good_rate": 0.95,
+      "machine_rate_per_hour": 27.0,
+      "runner_ratio": 0.1,
+      "regrind_allowed": false,
+      "post_process_cost": 0.04,
+      "assembly_cost": 0.02,
+      "purchased_items": [],
+      "tooling_cost": 38000,
+      "tooling_amortization_qty": 100000,
+      "other": [],
+      "production_volume": 100000,
+      "setup_cost_per_batch": 150,
+      "batch_size": 5000
+    },
+    "purchased_clip_quote": {
+      "recipe_type": "purchased_part",
+      "currency": "KRW",
+      "base_date": "2026-09-01",
+      "estimate_type": "quote",
+      "unit_price": 120,
+      "quantity_basis": 1000,
+      "supplier": "SYN-SUPPLIER"
+    },
+    "purchased_missing_price": {
+      "recipe_type": "purchased_part",
+      "currency": "KRW",
+      "base_date": "2026-09-01",
+      "estimate_type": "quote",
+      "unit_price": null,
+      "quantity_basis": 1000
+    },
+    "generic_stamping": {
+      "recipe_type": "generic",
+      "currency": "KRW",
+      "base_date": "2026-09-01",
+      "lines": [
+        {
+          "name": "재료비",
+          "value": 3200,
+          "unit": "KRW/kg"
+        },
+        {
+          "name": "프레스 가공비",
+          "value": 85,
+          "unit": "KRW/unit"
+        },
+        {
+          "name": "도금",
+          "value": 40,
+          "unit": "KRW/unit"
+        }
+      ]
+    }
+  }
+}

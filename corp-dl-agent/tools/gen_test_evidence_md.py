@@ -16,8 +16,8 @@ def main() -> int:
     for p in sorted(Path(args.evidence_dir).glob("*.json")):
         try:
             recs.append(json.loads(p.read_text(encoding="utf-8")))
-        except Exception:
-            continue
+        except (OSError, ValueError) as exc:
+            print(f"skip {p.name}: {exc}")
     lines = [
         "# TEST_EVIDENCE",
         "",
@@ -28,7 +28,7 @@ def main() -> int:
     ]
     for r in recs:
         env = r.get("environment", {})
-        env_s = f"{env.get('os','')} {env.get('machine','')} / {env.get('command_python') or env.get('collector_python') or ''}"
+        env_s = f"{env.get('os', '')} {env.get('machine', '')} / {env.get('command_python') or env.get('collector_python') or ''}"
         if env.get("network_isolation") and "no isolation" not in str(env.get("network_isolation")):
             env_s += f" / {env['network_isolation']}"
         if env.get("user"):
@@ -36,7 +36,9 @@ def main() -> int:
         cmd = str(r.get("command", "")).replace("|", "\\|")
         if len(cmd) > 140:
             cmd = cmd[:137] + "..."
-        lines.append(f"| {r.get('name')} | {r.get('status')} | {r.get('exit_code')} | {r.get('elapsed_seconds')} | {env_s} | `{cmd}` |")
+        lines.append(
+            f"| {r.get('name')} | {r.get('status')} | {r.get('exit_code')} | {r.get('elapsed_seconds')} | {env_s} | `{cmd}` |"
+        )
     lines += ["", "각 항목의 stdout/stderr 꼬리와 lock hash 는 `test-evidence/<이름>.json` 에 있습니다."]
     Path(args.out).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"{len(recs)} records -> {args.out}")

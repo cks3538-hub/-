@@ -292,7 +292,7 @@ def _check_mismatch(kind: str, expected: str | None, actual: str | None, where: 
 
 
 def _fmt(x: float) -> str:
-    return f"{x:,.6g}"
+    return f"{x:,.12g}"
 
 
 def compute_cost(
