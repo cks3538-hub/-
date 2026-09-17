@@ -106,8 +106,19 @@ def child_env(install_root: Path, data_root: Path) -> dict[str, str]:
     return env
 
 
+USAGE_KO = (
+    "사용: python launch.py [--install-root DIR] [--data-root DIR] [--] <corp_dl_agent 인자...>\n"
+    "  active.json 의 venv Python 으로 `python -m corp_dl_agent <인자...>` 를 실행합니다 (Activate 불필요).\n"
+    "  인자가 없으면 menu 를 실행합니다. 앱 자체의 --help 는 `launch.py -- --help` 로 전달합니다.\n"
+    "  환경변수: DIA_INSTALL_ROOT, DIA_DATA_ROOT\n"
+)
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in ("-h", "--help"):
+        print(USAGE_KO, end="")
+        return c.EXIT_OK
     ir, dr, app_args = split_args(argv)
     install_root = Path(ir).expanduser() if ir else c.default_install_root()
     try:

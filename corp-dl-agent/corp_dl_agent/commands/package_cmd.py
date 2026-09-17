@@ -1,10 +1,15 @@
 """package 명령: 반입 패키지 빌드/검증/lock/inventory/타깃 프로파일.
 
-- package build   --profile win-x64-cp312-cpu --wheelhouse wheelhouse/<profile> --app-wheel dist/<wheel> [--evidence test-evidence] [--out dist]
+- package build   --profile <id|target_profile.json> --wheelhouse wheelhouse/<profile> --app-wheel dist/<wheel>
+                  [--out dist] [--evidence-dir test-evidence] [--package-kind SOURCE_ONLY|CPU_OFFLINE|GPU_OFFLINE]
+                  [--verification KEY=STATUS:사유]... [--project-root DIR] [--extra-doc FILE]... [--json]
 - package verify  --package <zip|dir> [--target-profile <json>] [--install-root DIR] [--json]
-- package lock    --profile ... --wheelhouse ... --app-wheel ... [--out locks]
-- package inventory --profile ... --wheelhouse ... --app-wheel ... --output dependency-inventory.json
-- package host-profile [--output target_profile.json] [--min-output target_profile.min.json]
+- package lock    --profile ... --wheelhouse ... [--app-wheel ...] [--out locks] [--json]
+- package inventory --profile ... [--wheelhouse ...] [--app-wheel ...] --output dependency-inventory.json [--json]
+- package host-profile [--output target_profile.json] [--min-output target_profile.min.json] [--json]
+
+exit code: 0 / 2 사용법 / 5 검증 실패(E_PACKAGE_INVALID) / 9 알 수 없는 프로파일.
+검증 로직은 corp_dl_agent.packaging.verifier_core (= scripts/_common.py) 와 동일하다.
 """
 
 from __future__ import annotations
@@ -14,8 +19,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from corp_dl_agent.common import atomic_write_json
+from corp_dl_agent.common import Status, StatusRecord, atomic_write_json, now_iso
 from corp_dl_agent.errors import EXIT_VALIDATION, AgentError
+
+PACKAGE_KINDS: tuple[str, ...] = ("SOURCE_ONLY", "CPU_OFFLINE", "GPU_OFFLINE")
 
 
 def register(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
@@ -32,8 +39,28 @@ def register(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     )
     b.add_argument("--wheelhouse", default=None, help="dependency wheel 폴더 (없으면 SOURCE_ONLY)")
     b.add_argument("--app-wheel", required=True, help="미리 빌드한 앱 wheel 경로")
-    b.add_argument("--evidence", default=None, help="test-evidence 폴더 (*.json 만 포장, raw/ 제외)")
+    b.add_argument(
+        "--evidence-dir",
+        "--evidence",
+        dest="evidence_dir",
+        default=None,
+        help="test-evidence 폴더 (*.json 만 포장, raw/ 제외). HOST_CORE_TESTED 판정 근거",
+    )
     b.add_argument("--out", default="dist", help="출력 폴더 (기본 dist)")
+    b.add_argument(
+        "--package-kind",
+        choices=PACKAGE_KINDS,
+        default=None,
+        help="기대하는 package kind. 실제 구성(wheelhouse 유무/프로파일 device)과 다르면 실패",
+    )
+    b.add_argument(
+        "--verification",
+        action="append",
+        default=[],
+        metavar="KEY=STATUS:사유",
+        help="manifest.verification 상태 지정 (예: TARGET_OFFLINE_TESTED=NOT_RUN:Windows 환경 없음). "
+        "CORP_INSTALLED/CORP_INTEGRATED/BUSINESS_VALIDATED 는 PASS 불가",
+    )
     b.add_argument("--project-root", default=None, help="프로젝트 루트 (기본: 현재 폴더)")
     b.add_argument("--extra-doc", action="append", default=[], help="docs/ 에 추가할 문서 파일")
     b.add_argument("--json", dest="json_output", action="store_true", help="결과를 JSON 으로 출력")
@@ -49,27 +76,27 @@ def register(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     v.set_defaults(handler=run_verify)
 
     lk = s.add_parser("lock", help="locks/<profile>.txt 생성 (wheelhouse + 앱 wheel, tag 호환 검사)")
-    lk.add_argument("--profile", required=True)
-    lk.add_argument("--wheelhouse", required=True)
-    lk.add_argument("--app-wheel", default=None)
+    lk.add_argument("--profile", required=True, help="타깃 프로파일 ID 또는 target_profile.json 경로")
+    lk.add_argument("--wheelhouse", required=True, help="dependency wheel 폴더")
+    lk.add_argument("--app-wheel", default=None, help="앱 wheel (lock 에 포함)")
     lk.add_argument("--out", default=None, help="출력 폴더 (기본 <wheelhouse>/../../locks)")
-    lk.add_argument("--json", dest="json_output", action="store_true")
+    lk.add_argument("--json", dest="json_output", action="store_true", help="결과를 JSON 으로 출력")
     lk.set_defaults(handler=run_lock)
 
     inv = s.add_parser(
         "inventory", help="dependency-inventory.json 생성 (wheel METADATA 라이선스/홈페이지/hash)"
     )
-    inv.add_argument("--profile", required=True)
-    inv.add_argument("--wheelhouse", default=None)
-    inv.add_argument("--app-wheel", default=None)
-    inv.add_argument("--output", required=True)
-    inv.add_argument("--json", dest="json_output", action="store_true")
+    inv.add_argument("--profile", required=True, help="타깃 프로파일 ID 또는 target_profile.json 경로")
+    inv.add_argument("--wheelhouse", default=None, help="dependency wheel 폴더")
+    inv.add_argument("--app-wheel", default=None, help="앱 wheel")
+    inv.add_argument("--output", required=True, help="출력 JSON 경로")
+    inv.add_argument("--json", dest="json_output", action="store_true", help="결과를 JSON 으로 출력")
     inv.set_defaults(handler=run_inventory)
 
     hp = s.add_parser("host-profile", help="현 호스트의 target_profile.json / target_profile.min.json 생성")
     hp.add_argument("--output", default=None, help="상세 프로파일 경로 (로컬 보관)")
     hp.add_argument("--min-output", default=None, help="최소 요약 경로 (허용 필드만)")
-    hp.add_argument("--json", dest="json_output", action="store_true")
+    hp.add_argument("--json", dest="json_output", action="store_true", help="결과를 JSON 으로 출력")
     hp.set_defaults(handler=run_host_profile)
 
     p.set_defaults(handler=lambda args: (p.print_help(), 2)[1])
@@ -83,19 +110,58 @@ def _resolve_profile(spec: str) -> Any:
     return get_profile(spec)
 
 
+def parse_verification_args(items: list[str]) -> dict[str, StatusRecord]:
+    """'KEY=STATUS:사유' 목록 → StatusRecord. 사내 3 상태의 PASS 는 거부 (개인 개발 단계)."""
+    from corp_dl_agent.packaging.manifest import CORP_ONLY_KEYS, VERIFICATION_KEYS
+
+    allowed_keys = (*VERIFICATION_KEYS, "TARGET_CONFIRMED")
+    out: dict[str, StatusRecord] = {}
+    for item in items:
+        if "=" not in item:
+            raise AgentError("E_USAGE", f"--verification 형식은 KEY=STATUS[:사유] 입니다: {item}")
+        key, rest = item.split("=", 1)
+        status_s, _, reason = rest.partition(":")
+        key = key.strip()
+        status_s = status_s.strip().upper()
+        if key not in allowed_keys:
+            raise AgentError(
+                "E_USAGE", f"알 수 없는 verification 키: {key}", details={"allowed": list(allowed_keys)}
+            )
+        try:
+            status = Status(status_s)
+        except ValueError as exc:
+            raise AgentError(
+                "E_USAGE",
+                f"알 수 없는 상태 값: {status_s}",
+                details={"allowed": [st.value for st in Status]},
+            ) from exc
+        if key in CORP_ONLY_KEYS and status is Status.PASS:
+            raise AgentError(
+                "E_PACKAGE_INVALID",
+                f"{key} 는 개인 개발 단계에서 PASS 로 표시할 수 없습니다 (사내에서 근거와 함께만 가능)",
+            )
+        out[key] = StatusRecord(
+            status=status, reason=reason.strip() or "사유 미기재", evidence=[], checked_at=now_iso()
+        )
+    return out
+
+
 def run_build(args: argparse.Namespace) -> int:
     from corp_dl_agent.packaging.release import build_release_detailed
 
     profile = _resolve_profile(args.profile)
     root = Path(args.project_root) if args.project_root else Path.cwd()
+    overrides = parse_verification_args(list(args.verification))
     result = build_release_detailed(
         root,
         profile=profile,
         wheelhouse_dir=args.wheelhouse,
         app_wheel=args.app_wheel,
         out_dir=args.out,
-        evidence_dir=args.evidence,
+        evidence_dir=args.evidence_dir,
         extra_docs=list(args.extra_doc),
+        verification_overrides=overrides or None,
+        package_kind=args.package_kind,
     )
     m = result.manifest
     info = {

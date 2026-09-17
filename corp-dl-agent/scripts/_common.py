@@ -833,8 +833,10 @@ def min_profile(
     if isinstance(ve, dict) and "bits" in ve:
         out["bits"] = ve["bits"]
     out["feature_status"] = dict(feature_status or {})
-    # 경로/호스트명 같은 값이 섞이지 않도록 문자열 필드를 한 번 더 검사한다
+    # 경로/호스트명 같은 값이 섞이지 않도록 문자열 필드를 한 번 더 검사한다 (format 은 고정 상수)
     for k, v in list(out.items()):
+        if k == "format":
+            continue
         if isinstance(v, str) and ("/" in v or "\\" in v or "://" in v):
             out[k] = "REDACTED"
     return out

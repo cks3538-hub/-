@@ -148,7 +148,9 @@ def binary_platform_tag(profile: Any) -> str:
     if first.startswith("win"):
         return first
     if first.startswith("manylinux"):
-        arch = first.rsplit("_", 1)[-1]
+        from corp_dl_agent.packaging import verifier_core as core
+
+        arch = core._parse_platform_tag(first)[2]  # manylinux_2_39_x86_64 -> x86_64
         return f"manylinux_2_17_{arch}"
     if first.startswith("macosx"):
         return first

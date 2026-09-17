@@ -15,9 +15,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _common as c  # noqa: E402
 import launch  # noqa: E402
 
+USAGE_KO = (
+    "사용: python selftest.py [--install-root DIR] [--data-root DIR] [--json] [-- 추가 인자...]\n"
+    "  설치된 release 의 venv Python 으로 `python -m corp_dl_agent self-test` 를 실행하고 결과를 <data_root>/logs/ 에 저장합니다.\n"
+)
+
 
 def main(argv: Optional[list[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in ("-h", "--help"):
+        print(USAGE_KO, end="")
+        return c.EXIT_OK
     ir, dr, rest = launch.split_args(argv)
     want_json = "--json" in rest
     rest = [a for a in rest if a != "--json"]
