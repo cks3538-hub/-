@@ -41,6 +41,9 @@ def main() -> int:
     ap.add_argument("--tail", type=int, default=120)
     ap.add_argument("--lock", default=None, help="lock 파일 경로 (hash 기록)")
     ap.add_argument("--timeout", type=int, default=7200)
+    ap.add_argument("--python-note", default=None, help="명령이 사용한 Python (예: 'CPython 3.12.3 (.venv)')")
+    ap.add_argument("--network-note", default="host network (no isolation)", help="예: 'unshare -n (no network namespace)'")
+    ap.add_argument("--user-note", default=None, help="예: 'non-root user tester'")
     ap.add_argument("cmd", nargs=argparse.REMAINDER)
     args = ap.parse_args()
     cmd = args.cmd[1:] if args.cmd and args.cmd[0] == "--" else args.cmd
@@ -81,8 +84,10 @@ def main() -> int:
             "os": platform.system(),
             "os_release": platform.release(),
             "machine": platform.machine(),
-            "python": platform.python_version(),
-            "python_implementation": platform.python_implementation(),
+            "collector_python": platform.python_version(),
+            "command_python": args.python_note,
+            "network_isolation": args.network_note,
+            "user": args.user_note,
         },
         "lock_sha256": lock_hash,
         "stdout_tail": normalize("\n".join(stdout.splitlines()[-args.tail :]), mapping),

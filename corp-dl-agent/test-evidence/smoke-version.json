@@ -2,7 +2,7 @@
   "name": "smoke-version",
   "command": ".venv/bin/python -m corp_dl_agent version",
   "cwd": "<PROJECT_ROOT>",
-  "started_at": "2026-09-17T00:23:21+00:00",
+  "started_at": "2026-09-17T00:29:42+00:00",
   "elapsed_seconds": 0.04,
   "exit_code": 0,
   "timed_out": false,
@@ -11,8 +11,10 @@
     "os": "Linux",
     "os_release": "6.18.44-fc-v33",
     "machine": "x86_64",
-    "python": "3.11.15",
-    "python_implementation": "CPython"
+    "collector_python": "3.11.15",
+    "command_python": "CPython 3.12.3 (.venv)",
+    "network_isolation": "host network (no isolation)",
+    "user": null
   },
   "lock_sha256": null,
   "stdout_tail": "corp-dl-agent 4.0.0 (schema 4.0, calc mass-cost-4.0, db 4)\nPython 3.12.3 CPython / Linux x86_64",
