@@ -10,8 +10,9 @@
 | M3 documents | DONE | 60 tests (색인/검색/payload/템플릿/검증; RENDER/RECALC NOT_RUN) |
 | M4 adapters | DONE | 110 tests (mock gateway/Atlassian, OutboundGuard, CATIA INACTIVE) |
 | M4b reporting/doctor/self-test/menu | DONE | 15 tests |
-| M5 packaging 코드·scripts | DONE(코드) | 59 tests (가짜 wheelhouse 로 lock/manifest/ZIP/verify/install/upgrade/rollback) |
-| 통합·demo | IN_PROGRESS | 전체 통합 수정 → demo 통합 시나리오 |
+| M5 packaging 코드·scripts | DONE(코드) | 59 tests (가짜 wheelhouse 로 lock/manifest/ZIP/verify/install/upgrade/rollback). Windows .cmd/.ps1 실행은 NOT_RUN(정적 검사만) |
+| 통합 수정 | DONE | 전체 pytest 통과, ruff/mypy 통과, CLI 실사용 점검, tools dispatch(train_model/predict) 실제 연결, config-examples YAML 수정, docs search --evidence-output 경로 수정 |
+| demo 통합 시나리오 | PENDING | corp_dl_agent/demo.py + commands/demo_cmd.py (CAD A/B → 중량/원가 → 회귀/분류 run → predict → docs → demo_manifest.json) |
 | M5 실제 wheel/lock/ZIP | PENDING | wheelhouse win/linux 준비됨(PyPI hash 대조 완료) |
 | M6 transfer-test | PENDING | Linux rehearsal(tools/transfer_test_linux.sh); Windows 는 사용자 PC 에서 NOT_RUN 상태로 인계 |
 | M7 upgrade/rollback·최종 ZIP·acceptance·문서 | PENDING | |

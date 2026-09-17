@@ -13,12 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # 최종 통합 시점에는 빈 목록이어야 한다. (구현 전 단계에서만 허용되는 모듈 목록)
 ALLOWED_MISSING_BEFORE_INTEGRATION = {
-    "corp_dl_agent.commands.demo_cmd",
-    "corp_dl_agent.commands.run_cmd",
-    "corp_dl_agent.commands.predict_cmd",
-    "corp_dl_agent.commands.integrations_cmd",
-    "corp_dl_agent.commands.package_cmd",
-    "corp_dl_agent.commands.upgrade_cmd",
+    "corp_dl_agent.commands.demo_cmd",  # demo 는 다음 단계(통합 시나리오)에서 구현
 }
 
 

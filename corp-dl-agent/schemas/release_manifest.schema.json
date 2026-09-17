@@ -1,0 +1,358 @@
+{
+  "$defs": {
+    "FileEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "size": {
+          "title": "Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "size",
+        "sha256"
+      ],
+      "title": "FileEntry",
+      "type": "object"
+    },
+    "Status": {
+      "description": "검증/기능 상태 표시 (PASS/FAIL/NOT_RUN/BLOCKED/...).",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "NOT_RUN",
+        "BLOCKED",
+        "PARTIAL",
+        "MOCK_TESTED",
+        "SOURCE_ONLY",
+        "TARGET_UNCONFIRMED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "StatusRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "checked_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Checked At"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "StatusRecord",
+      "type": "object"
+    },
+    "TargetProfile": {
+      "additionalProperties": false,
+      "description": "설치 대상 환경. target_confirmed=False 이면 임시 참조값이다.",
+      "properties": {
+        "profile_id": {
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "os": {
+          "title": "Os",
+          "type": "string"
+        },
+        "os_version": {
+          "default": "",
+          "title": "Os Version",
+          "type": "string"
+        },
+        "architecture": {
+          "title": "Architecture",
+          "type": "string"
+        },
+        "python_implementation": {
+          "default": "CPython",
+          "title": "Python Implementation",
+          "type": "string"
+        },
+        "python_version": {
+          "title": "Python Version",
+          "type": "string"
+        },
+        "python_abi": {
+          "title": "Python Abi",
+          "type": "string"
+        },
+        "platform_tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Platform Tags",
+          "type": "array"
+        },
+        "features": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Features",
+          "type": "array"
+        },
+        "device": {
+          "default": "cpu",
+          "enum": [
+            "cpu",
+            "gpu"
+          ],
+          "title": "Device",
+          "type": "string"
+        },
+        "gpu": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gpu"
+        },
+        "target_confirmed": {
+          "default": false,
+          "title": "Target Confirmed",
+          "type": "boolean"
+        },
+        "verified_environment": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified Environment"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "profile_id",
+        "os",
+        "architecture",
+        "python_version",
+        "python_abi",
+        "platform_tags"
+      ],
+      "title": "TargetProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "manifest_format": {
+      "default": "dia-release-manifest/1",
+      "title": "Manifest Format",
+      "type": "string"
+    },
+    "release_id": {
+      "title": "Release Id",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "profile_id": {
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "package_kind": {
+      "enum": [
+        "SOURCE_ONLY",
+        "CPU_OFFLINE",
+        "GPU_OFFLINE"
+      ],
+      "title": "Package Kind",
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/TargetProfile"
+    },
+    "features": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Features",
+      "type": "array"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "db_schema_version": {
+      "title": "Db Schema Version",
+      "type": "integer"
+    },
+    "calculation_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calculation Version"
+    },
+    "app_distribution": {
+      "title": "App Distribution",
+      "type": "string"
+    },
+    "app_module": {
+      "title": "App Module",
+      "type": "string"
+    },
+    "app_wheel": {
+      "title": "App Wheel",
+      "type": "string"
+    },
+    "lock_file": {
+      "title": "Lock File",
+      "type": "string"
+    },
+    "wheelhouse_dir": {
+      "title": "Wheelhouse Dir",
+      "type": "string"
+    },
+    "wheel_count": {
+      "default": 0,
+      "title": "Wheel Count",
+      "type": "integer"
+    },
+    "verification": {
+      "additionalProperties": {
+        "$ref": "#/$defs/StatusRecord"
+      },
+      "title": "Verification",
+      "type": "object"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/FileEntry"
+      },
+      "title": "Files",
+      "type": "array"
+    },
+    "file_count": {
+      "title": "File Count",
+      "type": "integer"
+    },
+    "total_bytes": {
+      "title": "Total Bytes",
+      "type": "integer"
+    },
+    "prerequisites": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Prerequisites",
+      "type": "array"
+    },
+    "hash_scope": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Hash Scope",
+      "type": "object"
+    },
+    "build_host": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Build Host",
+      "type": "object"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "release_id",
+    "version",
+    "profile_id",
+    "package_kind",
+    "target",
+    "features",
+    "schema_version",
+    "db_schema_version",
+    "app_distribution",
+    "app_module",
+    "app_wheel",
+    "lock_file",
+    "wheelhouse_dir",
+    "verification",
+    "files",
+    "file_count",
+    "total_bytes",
+    "prerequisites",
+    "created_at"
+  ],
+  "title": "ReleaseManifest",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

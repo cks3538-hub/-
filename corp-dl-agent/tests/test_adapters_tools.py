@@ -309,3 +309,111 @@ def test_tool_context_roots_from_config(tmp_path: Path) -> None:
     assert (tmp_path / "out").resolve() in ctx.output_roots
     ctx2 = ToolContext.from_config(ctx.cfg, extra_roots=[tmp_path / "extra"])
     assert (tmp_path / "extra").resolve() in ctx2.input_roots
+
+
+# --------------------------------------------------------------------------- train_model / predict (실제 ml.runner / ml.predict)
+
+
+def test_train_model_budget_override_rules(tmp_path: Path) -> None:
+    from corp_dl_agent.adapters.tools import TrainModelArgs, _train_budget_override
+    from corp_dl_agent.ml.taskspec import load_taskspec
+
+    ctx = make_ctx(tmp_path)
+    spec = load_taskspec(FIXTURES / "ml" / "task_regression.yaml")  # resource_budget.mode == demo
+    # mode 가 같고 상한이 없으면 runner 가 TaskSpec 예산을 그대로 쓰도록 None
+    assert _train_budget_override(TrainModelArgs(taskspec_path="t.yaml"), ctx, spec) is None
+    # mode 가 다르면 cfg.ml.pilot 예산
+    pilot = _train_budget_override(TrainModelArgs(taskspec_path="t.yaml", mode="pilot"), ctx, spec)
+    assert pilot is not None and pilot.mode == "pilot"
+    assert pilot.max_candidates == ctx.cfg.ml.pilot.max_candidates
+    assert pilot.max_epochs == ctx.cfg.ml.pilot.max_epochs
+    assert pilot.max_calls == 0 and pilot.max_tokens == 0  # corp-offline: 호출 0회
+    # 상한을 주면 cfg.ml.demo 에서 시작해 그 값만 덮어쓴다
+    small = _train_budget_override(
+        TrainModelArgs(taskspec_path="t.yaml", max_candidates=1, max_epochs=1, wall_time_seconds=60),
+        ctx,
+        spec,
+    )
+    assert small is not None and small.mode == "demo"
+    assert (small.max_candidates, small.max_epochs, small.wall_time_seconds) == (1, 1, 60)
+    assert small.patience == ctx.cfg.ml.demo.patience
+    # registry 상한 밖은 strict 검증에서 거부
+    with pytest.raises(AgentError) as ei:
+        validate_arguments("train_model", {"taskspec_path": "t.yaml", "max_candidates": 7})
+    assert ei.value.code == "E_SCHEMA_INVALID"
+    with pytest.raises(AgentError):
+        validate_arguments("train_model", {"taskspec_path": "t.yaml", "wall_time_seconds": 5})
+
+
+def test_train_model_rejects_non_cpu_config(tmp_path: Path) -> None:
+    pytest.importorskip("torch")
+    cfg = load_config(
+        overrides={
+            "paths.data_root": str(tmp_path / "ws"),
+            "paths.input_roots": f"[{FIXTURES}]",
+            "ml.device": "cuda",
+        }
+    )
+    ctx = ToolContext.from_config(cfg)
+    with pytest.raises(AgentError) as ei:
+        dispatch("train_model", {"taskspec_path": str(FIXTURES / "ml" / "task_regression.yaml")}, ctx)
+    assert ei.value.code == "E_NOT_SUPPORTED" and ei.value.details["config_device"] == "cuda"
+    assert not (tmp_path / "ws" / "runs").exists()
+
+
+@pytest.mark.torch
+def test_dispatch_train_model_then_predict_with_real_runner(tmp_path: Path) -> None:
+    pytest.importorskip("torch")
+    pytest.importorskip("sklearn")
+    ctx = make_ctx(tmp_path)
+    result = dispatch(
+        "train_model",
+        {
+            "taskspec_path": str(FIXTURES / "ml" / "task_regression.yaml"),
+            "run_id": "tool-train-1",
+            "max_candidates": 1,
+            "max_epochs": 1,
+            "wall_time_seconds": 60,
+        },
+        ctx,
+    )
+    assert result["tool"] == "train_model" and result["status"] == "COMPLETED"
+    assert result["run_id"] == "tool-train-1" and result["synthetic"] is True
+    assert result["mode"] == "demo" and result["summary"]["budget"]["mode"] == "demo"
+    assert (
+        result["summary"]["budget"]["max_epochs"] == 1 and result["summary"]["budget"]["max_candidates"] == 1
+    )
+    assert result["selected"] and result["selected_kind"] in ("sklearn", "mlp")
+    assert result["acceptance"]["state"] == "NEEDS_ACCEPTANCE_CRITERIA"
+    run_dir = Path(result["run_dir"])
+    assert run_dir == ctx.workspace.run_dir("tool-train-1")
+    for name in ("summary.json", "final_evaluation.json", "model_card.json", "split_manifest.json"):
+        assert (run_dir / name).is_file(), name
+    export_dir = result["export_dir"]
+    assert export_dir and Path(export_dir).is_dir() and (Path(export_dir) / "manifest.json").is_file()
+    assert read_json(run_dir / "model_card.json")["data_origin"] == "synthetic"
+
+    predict_args = {
+        "model_dir": export_dir,
+        "input_csv": str(FIXTURES / "ml" / "clip_regression.csv"),
+        "output_csv": str(tmp_path / "out" / "pred" / "predictions.csv"),
+    }
+    # synthetic 번들은 명시적 허용 없이는 운영 자동 채택 차단
+    with pytest.raises(AgentError) as ei:
+        dispatch("predict", predict_args, ctx)
+    assert ei.value.code == "E_ARTIFACT_SYNTHETIC"
+    assert not (tmp_path / "out" / "pred" / "predictions.csv").exists()
+
+    pred = dispatch("predict", {**predict_args, "allow_synthetic": True}, ctx)
+    assert pred["tool"] == "predict" and pred["synthetic"] is True and pred["n_rows"] == 600
+    out_csv = Path(pred["output_csv"])
+    assert out_csv.is_file() and out_csv == (tmp_path / "out" / "pred" / "predictions.csv").resolve()
+    header = out_csv.read_text(encoding="utf-8-sig").splitlines()[0].split(",")
+    assert (
+        header[:2] == ["id", "prediction"] and "in_train_range" in header
+    )  # 계약: id, prediction, [probability]
+    assert pred["result"]["model_name"] == result["selected"] and pred["result"]["run_id"] == "tool-train-1"
+    # 등록 도구 밖의 경로(승인 root 밖 번들)는 거부
+    with pytest.raises(AgentError) as ei2:
+        dispatch("predict", {**predict_args, "model_dir": "/definitely-not-approved/export"}, ctx)
+    assert ei2.value.code == "E_PATH_OUTSIDE_ROOT"

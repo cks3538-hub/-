@@ -1,7 +1,7 @@
 {
   "project": "corp-dl-agent",
   "version": "4.0.0",
-  "updated_at": "2026-09-17T10:37:47+00:00",
+  "updated_at": "2026-09-17T10:45:42+00:00",
   "host": {
     "os": "Linux x86_64 (cloud container)",
     "python_dev_venv": "CPython 3.12.3",
@@ -34,8 +34,8 @@
       "notes": "adapters+network 110 tests (LLM/Atlassian MOCK_TESTED, CATIA INACTIVE)"
     },
     "M5": {
-      "status": "IN_PROGRESS",
-      "notes": "packaging 코드/scripts 59 tests 완료; 실제 앱 wheel/lock/ZIP 빌드는 통합·demo 후 수행"
+      "status": "DONE(코드)",
+      "notes": "packaging 코드/scripts/.cmd/.ps1/.sh 완료 (59 tests: 합성 wheel 로 lock/manifest/ZIP/verify/install/upgrade/rollback). 실제 앱 wheel/lock/ZIP 빌드는 M7 에서 수행. Windows wrapper 실행은 NOT_RUN"
     },
     "M6": {
       "status": "PENDING",
@@ -58,9 +58,9 @@
     "CORP_INTEGRATED": "NOT_RUN",
     "BUSINESS_VALIDATED": "NOT_RUN"
   },
-  "resume_command": "cat NEXT_ACTION.md; .venv/bin/python -m pytest -q",
+  "resume_command": "cat NEXT_ACTION.md; timeout 1500 .venv/bin/python -m pytest -q tests",
   "integration": {
-    "status": "IN_PROGRESS",
-    "notes": "전체 통합 수정 → demo 통합 시나리오"
+    "status": "DONE(통합 수정)",
+    "notes": "전체 pytest 통과, ruff/mypy 통과, CLI 실사용 점검(cad/design/validate/run/predict/docs/integrations/package/upgrade/menu), tools dispatch train_model/predict 실제 연결. demo(demo_cmd/demo.py) 는 다음 단계"
   }
 }

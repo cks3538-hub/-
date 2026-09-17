@@ -1,0 +1,117 @@
+{
+  "additionalProperties": false,
+  "description": "설치 대상 환경. target_confirmed=False 이면 임시 참조값이다.",
+  "properties": {
+    "profile_id": {
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "os": {
+      "title": "Os",
+      "type": "string"
+    },
+    "os_version": {
+      "default": "",
+      "title": "Os Version",
+      "type": "string"
+    },
+    "architecture": {
+      "title": "Architecture",
+      "type": "string"
+    },
+    "python_implementation": {
+      "default": "CPython",
+      "title": "Python Implementation",
+      "type": "string"
+    },
+    "python_version": {
+      "title": "Python Version",
+      "type": "string"
+    },
+    "python_abi": {
+      "title": "Python Abi",
+      "type": "string"
+    },
+    "platform_tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Platform Tags",
+      "type": "array"
+    },
+    "features": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Features",
+      "type": "array"
+    },
+    "device": {
+      "default": "cpu",
+      "enum": [
+        "cpu",
+        "gpu"
+      ],
+      "title": "Device",
+      "type": "string"
+    },
+    "gpu": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gpu"
+    },
+    "target_confirmed": {
+      "default": false,
+      "title": "Target Confirmed",
+      "type": "boolean"
+    },
+    "verified_environment": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified Environment"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "profile_id",
+    "os",
+    "architecture",
+    "python_version",
+    "python_abi",
+    "platform_tags"
+  ],
+  "title": "TargetProfile",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -47,6 +47,7 @@ cad-windows = [
 ]
 dev = [
   "pytest>=8",
+  "pytest-timeout>=2.3",
   "ruff>=0.5",
   "mypy>=1.10",
   "build>=1.2",
@@ -99,7 +100,10 @@ exclude = ["^\\.venv/", "^dist/", "^build/", "^wheelhouse/", "^workspace/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
 addopts = "-q -p no:cacheprovider"
+# pytest-timeout (dev 의존성): 시험 하나당 상한. 무한 대기/폴링 시험을 실패로 드러낸다.
+timeout = 120
 filterwarnings = ["ignore::DeprecationWarning"]
 markers = [
   "slow: 느린 시험 (학습 등)",
