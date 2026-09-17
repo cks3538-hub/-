@@ -86,7 +86,7 @@ ignore = [
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
-python_version = "3.11"
+python_version = "3.12"  # numpy 2.5 stub 이 3.12 문법을 사용 (런타임 요구는 >=3.11)
 warn_unused_ignores = false
 warn_redundant_casts = true
 no_implicit_optional = true

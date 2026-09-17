@@ -85,6 +85,13 @@ def atomic_write_bytes(path: str | os.PathLike[str], data: bytes) -> None:
             f.write(data)
             f.flush()
             os.fsync(f.fileno())
+        # mkstemp 는 0600 으로 만들므로 일반 파일 권한(umask 적용) 으로 맞춘다 (Windows 에서는 no-op 에 가깝다)
+        try:
+            umask = os.umask(0)
+            os.umask(umask)
+            os.chmod(tmp, 0o666 & ~umask)
+        except OSError:
+            pass
         os.replace(tmp, path)
     except BaseException:
         try:
