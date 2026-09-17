@@ -27,6 +27,7 @@ from corp_dl_agent.documents.payload import (
     MISSING_TEXT,
     PayloadValidation,
     ReportPayload,
+    format_number,
     parse_number,
     validate_payload,
 )
@@ -120,6 +121,18 @@ def find_stale(texts: dict[str, str], stale_values: list[str]) -> list[tuple[str
 
 def _numbers_equal(a: float, b: float, *, rel: float = 1e-9, abs_tol: float = 1e-9) -> bool:
     return math.isclose(a, b, rel_tol=rel, abs_tol=abs_tol)
+
+
+def _rendered_matches(read_back: float, payload_value: float) -> bool:
+    """문서 텍스트에서 읽은 수치가 payload 값과 같은지.
+
+    PPTX 텍스트는 format_number(최대 소수 4자리) 로 렌더링되므로, 정확히 같거나 payload 값을 같은 규칙으로
+    렌더링한 값과 같으면 일치로 본다 (렌더링 정밀도 밖의 자릿수는 문서에 존재하지 않는다). 값 자체는 바꾸지 않는다.
+    """
+    if _numbers_equal(read_back, payload_value):
+        return True
+    rendered = parse_number(format_number(payload_value))
+    return rendered is not None and _numbers_equal(read_back, rendered)
 
 
 def _summarize(doc: DocumentValidation) -> DocumentValidation:
@@ -402,7 +415,7 @@ def validate_pptx(
                     continue
                 start = text.index(r.rendered)
                 read_back = parse_number(text[start : start + len(r.rendered)])
-                if read_back is None or not _numbers_equal(read_back, pv):
+                if read_back is None or not _rendered_matches(read_back, pv):
                     checks.append(
                         ValidationCheck(
                             check_id=f"pptx.numeric[{r.locator}:{r.key}]",

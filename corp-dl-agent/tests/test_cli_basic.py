@@ -11,10 +11,8 @@ from corp_dl_agent.cli import COMMAND_MODULES, build_parser, main
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# 최종 통합 시점에는 빈 목록이어야 한다. (구현 전 단계에서만 허용되는 모듈 목록)
-ALLOWED_MISSING_BEFORE_INTEGRATION = {
-    "corp_dl_agent.commands.demo_cmd",  # demo 는 다음 단계(통합 시나리오)에서 구현
-}
+# 최종 통합 시점에는 빈 집합이어야 한다 (모든 명령 모듈이 실제로 등록됨).
+ALLOWED_MISSING_BEFORE_INTEGRATION: set[str] = set()
 
 
 def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
@@ -138,6 +136,7 @@ def test_config_show_masks(tmp_path: Path) -> None:
 def test_menu_list_and_choice(tmp_path: Path) -> None:
     r = run_cli("menu", "--list")
     assert r.returncode == 0 and "설정 검사" in r.stdout and "0. 종료" in r.stdout
+    assert "1. demo" in r.stdout  # demo 통합 시나리오가 구현되어 메뉴에 노출된다
     r = run_cli("menu", "--choice", "6", "--set", f"paths.data_root={tmp_path}")
     assert "self-test" in r.stdout
     r = run_cli("menu", "--choice", "99")
