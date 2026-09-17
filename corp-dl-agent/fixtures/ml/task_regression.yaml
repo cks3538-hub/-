@@ -1,0 +1,40 @@
+# 합성 TaskSpec (synthetic). 이 데이터는 합성(synthetic) 데이터이며 실제 차량 부품·재료 물리를 대표하지 않습니다. 회사 자료를 이름만 바꾼 것이 아닙니다.
+task_id: clip_insertion_force
+task_type: regression
+data_path: clip_regression.csv
+target: insertion_force_n
+numeric_features:
+- thickness_mm
+- hole_diameter_mm
+- angle_deg
+- elastic_modulus_mpa
+- friction_coef
+- temperature_c
+- insertion_speed_mm_s
+categorical_features:
+- material_family
+- data_source
+units:
+  thickness_mm: mm
+  hole_diameter_mm: mm
+  angle_deg: deg
+  elastic_modulus_mpa: MPa
+  friction_coef: '1'
+  temperature_c: degC
+  insertion_speed_mm_s: mm/s
+  insertion_force_n: N
+id_column: specimen_id
+group_column: group_id
+split_policy: group
+time_column: measured_at
+seed: 42
+metric: mae
+direction: min
+acceptance: null
+resource_budget:
+  mode: demo
+data_origin: synthetic
+purpose: 합성 클립 삽입력 회귀 demo (실제 차량 물리 아님)
+excluded_columns:
+- post_retention_force_n
+- design_revision

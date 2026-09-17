@@ -118,9 +118,18 @@ def read_csv_text(path: Path, *, delimiter: str | None = None) -> tuple[Any, str
     text, enc, tried = detect_encoding(data)
     sep = delimiter or ("\t" if path.suffix.lower() == ".tsv" else ",")
     try:
-        df = pd.read_csv(io.StringIO(text), dtype=str, keep_default_na=False, na_filter=False, sep=sep, skipinitialspace=False)
+        df = pd.read_csv(
+            io.StringIO(text),
+            dtype=str,
+            keep_default_na=False,
+            na_filter=False,
+            sep=sep,
+            skipinitialspace=False,
+        )
     except (ValueError, pd.errors.ParserError) as exc:
-        raise AgentError("E_INPUT_INVALID", f"CSV 파싱 실패: {path.name}", details={"error": str(exc)[:500]}) from exc
+        raise AgentError(
+            "E_INPUT_INVALID", f"CSV 파싱 실패: {path.name}", details={"error": str(exc)[:500]}
+        ) from exc
     df.columns = [str(c).strip() for c in df.columns]
     return df, enc, tried, digest
 
@@ -138,7 +147,15 @@ def _rows(df_index: Iterable[int], ids: Any | None, values: Any | None = None) -
     return len(idx), refs
 
 
-def _issue(code: str, level: IssueLevel, message: str, *, column: str | None = None, count: int = 0, rows: list[RowRef] | None = None) -> DataIssue:
+def _issue(
+    code: str,
+    level: IssueLevel,
+    message: str,
+    *,
+    column: str | None = None,
+    count: int = 0,
+    rows: list[RowRef] | None = None,
+) -> DataIssue:
     return DataIssue(code=code, level=level, message=message, column=column, count=count, rows=rows or [])
 
 
@@ -151,16 +168,45 @@ def _numeric_column_issues(raw: Any, column: str, ids: Any | None) -> tuple[Any,
     empty = stripped == ""
     num = pd.to_numeric(stripped.where(~empty, other="nan"), errors="coerce").astype("float64")
     non_numeric = num.isna() & ~empty & ~stripped.str.lower().isin(["nan", "+nan", "-nan"])
-    non_finite = (~num.isna() & ~np.isfinite(num.to_numpy())) | (stripped.str.lower().isin(["nan", "+nan", "-nan"]))
+    non_finite = (~num.isna() & ~np.isfinite(num.to_numpy())) | (
+        stripped.str.lower().isin(["nan", "+nan", "-nan"])
+    )
     if empty.any():
         n, rows = _rows(raw.index[empty.to_numpy()], ids)
-        issues.append(_issue("MISSING_VALUE", "error", f"열 '{column}' 에 빈 값이 있습니다", column=column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "MISSING_VALUE",
+                "error",
+                f"열 '{column}' 에 빈 값이 있습니다",
+                column=column,
+                count=n,
+                rows=rows,
+            )
+        )
     if non_numeric.any():
         n, rows = _rows(raw.index[non_numeric.to_numpy()], ids, raw)
-        issues.append(_issue("NON_NUMERIC", "error", f"열 '{column}' 에 숫자가 아닌 값이 있습니다", column=column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "NON_NUMERIC",
+                "error",
+                f"열 '{column}' 에 숫자가 아닌 값이 있습니다",
+                column=column,
+                count=n,
+                rows=rows,
+            )
+        )
     if non_finite.any():
         n, rows = _rows(raw.index[non_finite.to_numpy()], ids, raw)
-        issues.append(_issue("NON_FINITE", "error", f"열 '{column}' 에 NaN/Inf 값이 있습니다", column=column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "NON_FINITE",
+                "error",
+                f"열 '{column}' 에 NaN/Inf 값이 있습니다",
+                column=column,
+                count=n,
+                rows=rows,
+            )
+        )
     return num, issues
 
 
@@ -175,7 +221,16 @@ def _classification_target(raw: Any, column: str, ids: Any | None) -> tuple[Any,
     bad = ~(is_true | is_false) & ~empty
     if empty.any():
         n, rows = _rows(raw.index[empty.to_numpy()], ids)
-        issues.append(_issue("MISSING_TARGET", "error", f"target '{column}' 이 비어 있는 행이 있습니다", column=column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "MISSING_TARGET",
+                "error",
+                f"target '{column}' 이 비어 있는 행이 있습니다",
+                column=column,
+                count=n,
+                rows=rows,
+            )
+        )
     if bad.any():
         n, rows = _rows(raw.index[bad.to_numpy()], ids, raw)
         issues.append(
@@ -249,13 +304,17 @@ def _build_report(
     )
 
 
-def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: bool = True) -> tuple[pd.DataFrame, DataReport]:
+def load_dataset(
+    spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: bool = True
+) -> tuple[pd.DataFrame, DataReport]:
     """TaskSpec 의 CSV 를 승인 root 안에서 읽고 검증한다. 오류가 있으면 E_INPUT_INVALID (details.issues, details.report)."""
     pd = _pd()
     np = _np()
     path = resolve_within(spec.data_path, roots, forbid_links=forbid_links)
     if not path.is_file():
-        raise AgentError("E_INPUT_INVALID", f"데이터 파일을 찾을 수 없습니다: {path.name}", details={"path": str(path)})
+        raise AgentError(
+            "E_INPUT_INVALID", f"데이터 파일을 찾을 수 없습니다: {path.name}", details={"path": str(path)}
+        )
     raw_df, enc, tried, digest = read_csv_text(path)
     issues: list[DataIssue] = []
 
@@ -266,10 +325,14 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
         issues.append(_issue("DUPLICATE_COLUMN", "error", f"CSV 헤더에 중복 열이 있습니다: {dup_cols}"))
     missing_cols = [c for c in spec.required_columns() if c not in columns]
     if missing_cols:
-        issues.append(_issue("MISSING_COLUMN", "error", f"TaskSpec 이 요구하는 열이 CSV 에 없습니다: {missing_cols}"))
+        issues.append(
+            _issue("MISSING_COLUMN", "error", f"TaskSpec 이 요구하는 열이 CSV 에 없습니다: {missing_cols}")
+        )
     absent_excluded = [c for c in spec.excluded_columns if c not in columns]
     if absent_excluded:
-        issues.append(_issue("EXCLUDED_ABSENT", "info", f"excluded_columns 중 CSV 에 없는 열: {absent_excluded}"))
+        issues.append(
+            _issue("EXCLUDED_ABSENT", "info", f"excluded_columns 중 CSV 에 없는 열: {absent_excluded}")
+        )
     referenced = set(spec.required_columns()) | set(spec.excluded_columns)
     unused = [c for c in columns if c not in referenced]
     if unused:
@@ -283,7 +346,17 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
     if raw_df.empty:
         issues.append(_issue("EMPTY", "error", "CSV 에 데이터 행이 없습니다"))
     if missing_cols or dup_cols or raw_df.empty:
-        report = _build_report(path=path, digest=digest, enc=enc, tried=tried, df=raw_df, spec=spec, issues=issues, target_stats={}, n_groups=0)
+        report = _build_report(
+            path=path,
+            digest=digest,
+            enc=enc,
+            tried=tried,
+            df=raw_df,
+            spec=spec,
+            issues=issues,
+            target_stats={},
+            n_groups=0,
+        )
         _raise_invalid(report)
 
     out = pd.DataFrame(index=raw_df.index)
@@ -295,17 +368,42 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
     empty_id = id_stripped == ""
     if empty_id.any():
         n, rows = _rows(raw_df.index[empty_id.to_numpy()], None)
-        issues.append(_issue("MISSING_ID", "error", f"ID 열 '{spec.id_column}' 이 비어 있는 행이 있습니다", column=spec.id_column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "MISSING_ID",
+                "error",
+                f"ID 열 '{spec.id_column}' 이 비어 있는 행이 있습니다",
+                column=spec.id_column,
+                count=n,
+                rows=rows,
+            )
+        )
     ws_id = (ids != id_stripped) & ~empty_id
     if ws_id.any():
         n, rows = _rows(raw_df.index[ws_id.to_numpy()], ids)
-        issues.append(_issue("ID_WHITESPACE", "warning", "ID 앞뒤에 공백이 있습니다 (값은 수정하지 않았습니다)", column=spec.id_column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "ID_WHITESPACE",
+                "warning",
+                "ID 앞뒤에 공백이 있습니다 (값은 수정하지 않았습니다)",
+                column=spec.id_column,
+                count=n,
+                rows=rows,
+            )
+        )
     dup_mask = ids.duplicated(keep=False) & ~empty_id
     if dup_mask.any():
         n, rows = _rows(raw_df.index[dup_mask.to_numpy()], ids)
         dup_values = sorted(set(ids[dup_mask].tolist()))[:10]
         issues.append(
-            _issue("DUPLICATE_ID", "error", f"ID 가 중복되었습니다 (예: {dup_values})", column=spec.id_column, count=n, rows=rows)
+            _issue(
+                "DUPLICATE_ID",
+                "error",
+                f"ID 가 중복되었습니다 (예: {dup_values})",
+                column=spec.id_column,
+                count=n,
+                rows=rows,
+            )
         )
 
     # 3) 그룹
@@ -314,7 +412,16 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
     empty_group = groups.str.strip() == ""
     if empty_group.any():
         n, rows = _rows(raw_df.index[empty_group.to_numpy()], ids)
-        issues.append(_issue("MISSING_GROUP", "error", f"그룹 열 '{spec.group_column}' 이 비어 있는 행이 있습니다", column=spec.group_column, count=n, rows=rows))
+        issues.append(
+            _issue(
+                "MISSING_GROUP",
+                "error",
+                f"그룹 열 '{spec.group_column}' 이 비어 있는 행이 있습니다",
+                column=spec.group_column,
+                count=n,
+                rows=rows,
+            )
+        )
     n_groups = int(groups[~empty_group].nunique())
 
     # 4) 시간 열
@@ -344,7 +451,9 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
         numeric_frames[col] = num
         out[col] = num
         if not col_issues and num.nunique(dropna=True) <= 1:
-            issues.append(_issue("CONSTANT_FEATURE", "warning", f"숫자 feature '{col}' 이 상수입니다", column=col))
+            issues.append(
+                _issue("CONSTANT_FEATURE", "warning", f"숫자 feature '{col}' 이 상수입니다", column=col)
+            )
 
     # 6) 범주 feature (빈 값은 오류; 값은 문자열 보존)
     for col in spec.categorical_features:
@@ -353,7 +462,16 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
         empty_cat = cat.str.strip() == ""
         if empty_cat.any():
             n, rows = _rows(raw_df.index[empty_cat.to_numpy()], ids)
-            issues.append(_issue("MISSING_VALUE", "error", f"범주 feature '{col}' 에 빈 값이 있습니다", column=col, count=n, rows=rows))
+            issues.append(
+                _issue(
+                    "MISSING_VALUE",
+                    "error",
+                    f"범주 feature '{col}' 에 빈 값이 있습니다",
+                    column=col,
+                    count=n,
+                    rows=rows,
+                )
+            )
         n_unique = int(cat.nunique())
         if len(cat) >= 20 and n_unique >= 20 and n_unique / max(len(cat), 1) > 0.5:
             issues.append(
@@ -371,29 +489,63 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
         y, t_issues = _numeric_column_issues(raw_df[spec.target], spec.target, ids)
         for it in t_issues:
             if it.code == "MISSING_VALUE":
-                it = it.model_copy(update={"code": "MISSING_TARGET", "message": f"target '{spec.target}' 이 비어 있는 행이 있습니다"})
+                it = it.model_copy(
+                    update={
+                        "code": "MISSING_TARGET",
+                        "message": f"target '{spec.target}' 이 비어 있는 행이 있습니다",
+                    }
+                )
             issues.append(it)
         if not t_issues and y.nunique() <= 1:
-            issues.append(_issue("CONSTANT_TARGET", "error", f"target '{spec.target}' 이 상수라 학습/평가가 불가능합니다", column=spec.target))
+            issues.append(
+                _issue(
+                    "CONSTANT_TARGET",
+                    "error",
+                    f"target '{spec.target}' 이 상수라 학습/평가가 불가능합니다",
+                    column=spec.target,
+                )
+            )
     else:
         y, t_issues = _classification_target(raw_df[spec.target], spec.target, ids)
         issues.extend(t_issues)
         if not t_issues and y.nunique() < 2:
-            issues.append(_issue("SINGLE_CLASS", "error", f"target '{spec.target}' 에 한 클래스만 있습니다 (0/1 모두 필요)", column=spec.target))
+            issues.append(
+                _issue(
+                    "SINGLE_CLASS",
+                    "error",
+                    f"target '{spec.target}' 에 한 클래스만 있습니다 (0/1 모두 필요)",
+                    column=spec.target,
+                )
+            )
     out[spec.target] = y
 
     # 8) feature == target (값 동일) → 누수
     y_arr = y.to_numpy().astype("float64")
     for col, num in numeric_frames.items():
         arr = num.to_numpy()
-        if arr.shape == y_arr.shape and not np.isnan(arr).any() and not np.isnan(y_arr).any() and np.allclose(arr, y_arr, rtol=0.0, atol=0.0):
+        if (
+            arr.shape == y_arr.shape
+            and not np.isnan(arr).any()
+            and not np.isnan(y_arr).any()
+            and np.allclose(arr, y_arr, rtol=0.0, atol=0.0)
+        ):
             issues.append(
-                _issue("FEATURE_EQUALS_TARGET", "error", f"feature '{col}' 의 값이 target '{spec.target}' 과 동일합니다 (누수)", column=col)
+                _issue(
+                    "FEATURE_EQUALS_TARGET",
+                    "error",
+                    f"feature '{col}' 의 값이 target '{spec.target}' 과 동일합니다 (누수)",
+                    column=col,
+                )
             )
     for col in spec.categorical_features:
         if out[col].astype(str).tolist() == raw_df[spec.target].astype(str).tolist():
             issues.append(
-                _issue("FEATURE_EQUALS_TARGET", "error", f"범주 feature '{col}' 의 값이 target '{spec.target}' 과 동일합니다 (누수)", column=col)
+                _issue(
+                    "FEATURE_EQUALS_TARGET",
+                    "error",
+                    f"범주 feature '{col}' 의 값이 target '{spec.target}' 과 동일합니다 (누수)",
+                    column=col,
+                )
             )
 
     # 9) 기타 열은 문자열로 보존 (excluded 포함; feature 로는 쓰지 않음)
@@ -404,7 +556,17 @@ def load_dataset(spec: TaskSpec, *, roots: Iterable[str | Path], forbid_links: b
 
     has_error = any(i.level == "error" for i in issues)
     t_stats = _target_stats(y, spec.task_type, unit) if not has_error else {}
-    report = _build_report(path=path, digest=digest, enc=enc, tried=tried, df=out, spec=spec, issues=issues, target_stats=t_stats, n_groups=n_groups)
+    report = _build_report(
+        path=path,
+        digest=digest,
+        enc=enc,
+        tried=tried,
+        df=out,
+        spec=spec,
+        issues=issues,
+        target_stats=t_stats,
+        n_groups=n_groups,
+    )
     if has_error:
         _raise_invalid(report)
     return out, report

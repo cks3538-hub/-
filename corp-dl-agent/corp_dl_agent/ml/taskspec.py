@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 import yaml
 from pydantic import Field, ValidationError, field_validator, model_validator
@@ -32,11 +32,13 @@ METRIC_DIRECTION: dict[str, str] = {
     "roc_auc": "max",
     "f1": "max",
 }
-NEEDS_ACCEPTANCE_CRITERIA = "NEEDS_ACCEPTANCE_CRITERIA"
+NEEDS_ACCEPTANCE_CRITERIA: Final = "NEEDS_ACCEPTANCE_CRITERIA"
 
 _TASK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]{0,63}$")
 # 명령 문자열/주입 의심 패턴: 줄바꿈, 쉘 메타문자, 치환식, 널 문자
-_COMMAND_RE = re.compile(r"[\r\n\x00;|&`<>]|\$\(|\$\{|\bsudo\b|\brm\s+-|\bdel\s+/|\bpowershell\b|\bcmd(\.exe)?\s*/c")
+_COMMAND_RE = re.compile(
+    r"[\r\n\x00;|&`<>]|\$\(|\$\{|\bsudo\b|\brm\s+-|\bdel\s+/|\bpowershell\b|\bcmd(\.exe)?\s*/c"
+)
 _CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _URL_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.\-]*://")
 
@@ -66,10 +68,14 @@ class Acceptance(StrictModel):
     def _direction_matches_metric(self) -> Acceptance:
         expected = METRIC_DIRECTION[self.metric]
         if self.direction != expected:
-            raise ValueError(f"acceptance.direction 은 metric '{self.metric}' 에 대해 '{expected}' 이어야 합니다")
+            raise ValueError(
+                f"acceptance.direction 은 metric '{self.metric}' 에 대해 '{expected}' 이어야 합니다"
+            )
         if self.threshold != self.threshold or self.threshold in (float("inf"), float("-inf")):
             raise ValueError("acceptance.threshold 는 유한한 수여야 합니다")
-        if self.metric in ("r2", "average_precision", "roc_auc", "f1") and not (-1.0 <= self.threshold <= 1.0):
+        if self.metric in ("r2", "average_precision", "roc_auc", "f1") and not (
+            -1.0 <= self.threshold <= 1.0
+        ):
             raise ValueError(f"acceptance.threshold 가 metric '{self.metric}' 의 범위(-1~1)를 벗어났습니다")
         if self.metric in ("mae", "rmse") and self.threshold < 0:
             raise ValueError("오차 metric 의 threshold 는 0 이상이어야 합니다")
@@ -88,9 +94,15 @@ class ResourceBudgetSpec(StrictModel):
     @model_validator(mode="after")
     def _custom_requires_all(self) -> ResourceBudgetSpec:
         if self.mode == "custom":
-            missing = [k for k in ("wall_time_seconds", "max_candidates", "max_epochs", "patience") if getattr(self, k) is None]
+            missing = [
+                k
+                for k in ("wall_time_seconds", "max_candidates", "max_epochs", "patience")
+                if getattr(self, k) is None
+            ]
             if missing:
-                raise ValueError(f"resource_budget.mode=custom 에는 다음 값이 필요합니다: {', '.join(missing)}")
+                raise ValueError(
+                    f"resource_budget.mode=custom 에는 다음 값이 필요합니다: {', '.join(missing)}"
+                )
         return self
 
 
@@ -190,7 +202,11 @@ class TaskSpec(StrictModel):
             raise ValueError("id_column 과 group_column 은 달라야 합니다 (그룹 분할이 행 분할로 퇴화)")
         if self.target in (self.id_column, self.group_column):
             raise ValueError("target 은 id_column/group_column 과 달라야 합니다")
-        if self.time_column is not None and self.time_column in (self.id_column, self.group_column, self.target):
+        if self.time_column is not None and self.time_column in (
+            self.id_column,
+            self.group_column,
+            self.target,
+        ):
             raise ValueError("time_column 은 id/group/target 과 달라야 합니다")
         leaked = sorted(set(self.excluded_columns) & set(features))
         if leaked:
@@ -201,11 +217,17 @@ class TaskSpec(StrictModel):
             raise ValueError("split_policy=time 에는 time_column 이 필요합니다")
         allowed = REGRESSION_METRICS if self.task_type == "regression" else CLASSIFICATION_METRICS
         if self.metric not in allowed:
-            raise ValueError(f"task_type '{self.task_type}' 에는 metric {list(allowed)} 만 허용됩니다 (입력: {self.metric})")
+            raise ValueError(
+                f"task_type '{self.task_type}' 에는 metric {list(allowed)} 만 허용됩니다 (입력: {self.metric})"
+            )
         if self.direction != METRIC_DIRECTION[self.metric]:
-            raise ValueError(f"direction 은 metric '{self.metric}' 에 대해 '{METRIC_DIRECTION[self.metric]}' 이어야 합니다")
+            raise ValueError(
+                f"direction 은 metric '{self.metric}' 에 대해 '{METRIC_DIRECTION[self.metric]}' 이어야 합니다"
+            )
         if self.acceptance is not None and self.acceptance.metric not in allowed:
-            raise ValueError(f"acceptance.metric '{self.acceptance.metric}' 은(는) task_type '{self.task_type}' 과 맞지 않습니다")
+            raise ValueError(
+                f"acceptance.metric '{self.acceptance.metric}' 은(는) task_type '{self.task_type}' 과 맞지 않습니다"
+            )
         unknown_units = sorted(k for k in self.units if k not in self.numeric_features and k != self.target)
         if unknown_units:
             raise ValueError(f"units 의 열이 numeric_features/target 에 없습니다: {unknown_units}")
@@ -251,7 +273,9 @@ def taskspec_from_dict(data: Any, *, source: str = "<dict>") -> TaskSpec:
             details={"errors": _format_errors(exc)},
         ) from exc
     except (TypeError, ValueError) as exc:  # canonical_json 직렬화 불가 등
-        raise AgentError("E_SCHEMA_INVALID", f"TaskSpec 을 해석할 수 없습니다: {source}", details={"error": str(exc)[:300]}) from exc
+        raise AgentError(
+            "E_SCHEMA_INVALID", f"TaskSpec 을 해석할 수 없습니다: {source}", details={"error": str(exc)[:300]}
+        ) from exc
     return spec
 
 
@@ -267,7 +291,11 @@ def load_taskspec(path: str | Path, *, resolve_relative: bool = True) -> TaskSpe
     try:
         text = p.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
-        raise AgentError("E_INPUT_INVALID", f"TaskSpec 파일은 UTF-8 이어야 합니다: {p.name}", details={"error": str(exc)[:200]}) from exc
+        raise AgentError(
+            "E_INPUT_INVALID",
+            f"TaskSpec 파일은 UTF-8 이어야 합니다: {p.name}",
+            details={"error": str(exc)[:200]},
+        ) from exc
     try:
         if suffix == ".json":
             data = json.loads(text)
@@ -276,7 +304,9 @@ def load_taskspec(path: str | Path, *, resolve_relative: bool = True) -> TaskSpe
         else:
             raise AgentError("E_INPUT_INVALID", f"TaskSpec 은 .yaml/.yml/.json 만 지원합니다: {p.name}")
     except (json.JSONDecodeError, yaml.YAMLError) as exc:
-        raise AgentError("E_SCHEMA_INVALID", f"TaskSpec 파싱 실패: {p.name}", details={"error": str(exc)[:500]}) from exc
+        raise AgentError(
+            "E_SCHEMA_INVALID", f"TaskSpec 파싱 실패: {p.name}", details={"error": str(exc)[:500]}
+        ) from exc
     spec = taskspec_from_dict(data, source=str(p))
     if resolve_relative and not Path(spec.data_path).is_absolute():
         resolved = (p.parent / spec.data_path).resolve()

@@ -36,6 +36,7 @@ ERROR_CATALOG: dict[str, tuple[str, str, int]] = {
     "E_REVISION_MISMATCH": ("설계안 비교 조건(revision/기준일/단위)이 일치하지 않습니다.", "동일 revision·기준일·단위로 정렬한 뒤 비교하세요.", EXIT_VALIDATION),
     "E_SPLIT_IMPOSSIBLE": ("유효한 그룹 분할을 만들 수 없습니다.", "group_column 값이 충분히 다양한지 확인하세요. 행 무작위 분할로 대체하지 않습니다.", EXIT_VALIDATION),
     "E_LEAKAGE": ("데이터 누수 위험이 감지되었습니다.", "ID/사후 결과/target 파생 열을 feature 에서 제외하세요.", EXIT_VALIDATION),
+    "E_MEMORY_LIMIT": ("dense 변환 결과가 메모리 상한을 초과합니다.", "행 수/feature 수(범주 수)를 줄이거나 max_dense_bytes 상한을 검토하세요.", EXIT_VALIDATION),
     "E_STATE_TRANSITION": ("허용되지 않은 상태 전이입니다.", "status 명령으로 현재 상태를 확인하세요.", EXIT_RUNTIME),
     "E_DB_LOCKED": ("상태 DB 가 다른 프로세스에 의해 잠겨 있습니다.", "동시에 실행 중인 다른 작업이 끝날 때까지 기다린 뒤 다시 시도하세요. 상태 DB 는 로컬 디스크에 두어야 합니다.", EXIT_RUNTIME),
     "E_LEASE_HELD": ("다른 worker 가 실행 중입니다.", "heartbeat 만료 후 다시 시도하거나 해당 worker 를 종료하세요.", EXIT_RUNTIME),

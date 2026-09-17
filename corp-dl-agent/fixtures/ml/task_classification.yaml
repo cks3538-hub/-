@@ -1,0 +1,39 @@
+# 합성 TaskSpec (synthetic). 이 데이터는 합성(synthetic) 데이터이며 실제 차량 부품·재료 물리를 대표하지 않습니다. 회사 자료를 이름만 바꾼 것이 아닙니다.
+task_id: clip_retention_pass
+task_type: binary_classification
+data_path: clip_classification.csv
+target: retention_pass
+numeric_features:
+- thickness_mm
+- hole_diameter_mm
+- angle_deg
+- elastic_modulus_mpa
+- friction_coef
+- temperature_c
+- insertion_speed_mm_s
+categorical_features:
+- material_family
+- data_source
+units:
+  thickness_mm: mm
+  hole_diameter_mm: mm
+  angle_deg: deg
+  elastic_modulus_mpa: MPa
+  friction_coef: '1'
+  temperature_c: degC
+  insertion_speed_mm_s: mm/s
+id_column: specimen_id
+group_column: group_id
+split_policy: time
+time_column: measured_at
+seed: 42
+metric: average_precision
+direction: max
+acceptance: null
+resource_budget:
+  mode: demo
+data_origin: synthetic
+purpose: 합성 클립 유지력 합격 분류 demo (실제 차량 물리 아님)
+excluded_columns:
+- post_retention_force_n
+- design_revision
