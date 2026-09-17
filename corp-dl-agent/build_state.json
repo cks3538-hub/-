@@ -1,7 +1,7 @@
 {
   "project": "corp-dl-agent",
   "version": "4.0.0",
-  "updated_at": "2026-09-17T10:45:42+00:00",
+  "updated_at": "2026-09-17T11:14:05+00:00",
   "host": {
     "os": "Linux x86_64 (cloud container)",
     "python_dev_venv": "CPython 3.12.3",
@@ -51,7 +51,7 @@
     }
   },
   "verification": {
-    "HOST_CORE_TESTED": "NOT_RUN",
+    "HOST_CORE_TESTED": "PASS",
     "TARGET_BUNDLE_PREPARED": "NOT_RUN",
     "TARGET_OFFLINE_TESTED": "NOT_RUN",
     "CORP_INSTALLED": "NOT_RUN",
@@ -60,7 +60,22 @@
   },
   "resume_command": "cat NEXT_ACTION.md; timeout 1500 .venv/bin/python -m pytest -q tests",
   "integration": {
-    "status": "DONE(통합 수정)",
-    "notes": "전체 pytest 통과, ruff/mypy 통과, CLI 실사용 점검(cad/design/validate/run/predict/docs/integrations/package/upgrade/menu), tools dispatch train_model/predict 실제 연결. demo(demo_cmd/demo.py) 는 다음 단계"
+    "status": "DONE(통합 수정 + demo)",
+    "notes": "전체 pytest 572 passed / 0 failed, ruff check/format 통과(166 files), mypy 통과(87 files). demo 통합 시나리오 구현 완료 (demo.py/demo_cmd.py/test_demo.py). demo --offline --device cpu --output-dir workspace/demo-full: 12/12 단계·16/16 검사 PASS, 7.5초, 산출물 33개, outbound 0회."
+  },
+  "demo": {
+    "status": "DONE",
+    "command": "timeout 900 .venv/bin/python -m corp_dl_agent demo --offline --device cpu --output-dir workspace/demo-full",
+    "manifest": "workspace/demo-full/demo_manifest.json",
+    "steps_pass": "12/12",
+    "checks_pass": "16/16",
+    "artifacts": 33,
+    "outbound_attempts": 0,
+    "elapsed_seconds_wall": 7.5,
+    "budget": "demo (후보 2 / 10 epochs / 300초, run 별 별도)",
+    "notes": "합성 fixture 읽기 전용, 산출물은 --output-dir 아래(run/상태 DB/색인은 <output-dir>/workspace). OutboundGuard 는 프로세스 내 socket 검사이며 OS 수준 격리가 아니다."
+  },
+  "verification_evidence": {
+    "HOST_CORE_TESTED": "pytest 572 passed (timeout 1500), ruff/mypy 통과, demo all_pass (Linux x86_64, CPython 3.12.3, CPU, offline 합성 데이터). GPU/AMP NOT_RUN, OOM MOCK_TESTED, Windows .cmd/.ps1 NOT_RUN(정적 검사만)"
   }
 }
