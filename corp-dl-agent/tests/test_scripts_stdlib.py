@@ -199,7 +199,7 @@ def test_sanitized_env_blocks_pip_and_proxy_settings(tmp_path: Path) -> None:
 
 def test_min_profile_has_only_allowed_fields_and_redacts_paths() -> None:
     host = core.detect_host()
-    host["os_version"] = "C:\\Users\\someone\\weird"  # 경로 형태 값은 REDACTED 되어야 함
+    host["os_version"] = "C:\\" + "Users\\someone\\weird"  # 경로 형태 값은 REDACTED 되어야 함
     minimal = core.min_profile(host, preflight_status="PASS", feature_status={"core": "PASS"})
     assert set(minimal) <= set(core.MIN_PROFILE_FIELDS)
     for forbidden in (

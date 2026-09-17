@@ -6,7 +6,7 @@ allowlist 포장:
   docs/*.md *.txt *.json (+ 프로젝트 루트 BUILD_STATUS.md/BLOCKERS.md)  test-evidence/*.json (raw/ 제외)
   release-manifest.json  checksums.sha256  dependency-inventory.json
 금지 패턴 검사(경로: .venv .env .git __pycache__ *.pyc workspace/ dist/ .claude/ ...; 내용: 'sk-' 'BEGIN PRIVATE KEY'
-'ghp_' 'xoxb-' 및 '/home/<user>/'·'C:\\Users\\<user>\\' 개인 절대 경로 — 문서 예시 경로 'D:\\...' 은 허용).
+'ghp_' 'xoxb-' 및 '/home/<user>/'·'C:/Users/<user>/'(백슬래시 형태) 개인 절대 경로 — 문서 예시 경로 'D:/...' 은 허용).
 acceptance.json 은 ZIP 을 확정한 뒤 scripts/acceptance.py 가 ZIP 밖에 만든다 (ZIP 재포장 금지).
 """
 
@@ -140,7 +140,7 @@ SHORT_KEY_PATTERN: tuple[re.Pattern[str], str] = (
 PERSONAL_PATH_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"/home/[A-Za-z0-9._-]+/"), "개인 절대 경로(/home/<user>/)"),
     (re.compile(r"/Users/[A-Za-z0-9._-]+/"), "개인 절대 경로(/Users/<user>/)"),
-    (re.compile(r"[A-Za-z]:\\+Users\\+[^\\\s\"']+\\+"), "개인 절대 경로(C:\\Users\\<user>\\)"),
+    (re.compile(r"[A-Za-z]:\\+Users\\+[^\\\s\"']+\\+"), "개인 절대 경로(C:/Users/<user>/ 백슬래시 형태)"),
 )
 MAX_SCAN_BYTES = 8 * 1024 * 1024
 

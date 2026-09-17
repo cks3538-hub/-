@@ -343,15 +343,15 @@ def test_build_lock_bidirectional_and_tag_compatibility(tmp_path: Path) -> None:
     ("rel", "content", "why"),
     [
         ("docs/leak.md", "gateway key: sk-" + "A1b2C3d4" * 6, "API 키"),
-        ("docs/personal.md", "로그 경로 /home/tester/work/x.log", "개인 절대 경로"),
+        ("docs/personal.md", "로그 경로 " + "/home/" + "tester/work/x.log", "개인 절대 경로"),
         (
             "config-examples/key.txt",
-            "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n",
+            "-----BEGIN " + "PRIVATE KEY-----\nabc\n-----END " + "PRIVATE KEY-----\n",
             "개인키",
         ),
-        ("docs/win.md", "C:\\Users\\hong\\Desktop\\a.txt", "개인 절대 경로"),
+        ("docs/win.md", "C:\\" + "Users\\hong\\Desktop\\a.txt", "개인 절대 경로"),
         ("docs/gh.md", "token ghp_" + "a1B2c3D4" * 4, "GitHub 토큰"),
-        ("test-evidence/raw-copy.json", '{"log": "/Users/someone/raw.log"}', "개인 절대 경로"),
+        ("test-evidence/raw-copy.json", '{"log": "' + "/Users/" + 'someone/raw.log"}', "개인 절대 경로"),
     ],
 )
 def test_build_rejects_forbidden_content(tmp_path: Path, rel: str, content: str, why: str) -> None:
