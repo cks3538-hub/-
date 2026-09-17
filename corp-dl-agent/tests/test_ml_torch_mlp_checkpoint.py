@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import random
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from test_ml_torch_common import cap_torch_threads, guarded
 
 from corp_dl_agent.errors import AgentError
 from corp_dl_agent.ml.checkpoint import (
@@ -29,6 +31,13 @@ from corp_dl_agent.ml.mlp import (
 )
 
 pytestmark = pytest.mark.torch
+
+
+@pytest.fixture(autouse=True)
+def _guard() -> Iterator[None]:
+    cap_torch_threads()
+    with guarded():
+        yield
 
 
 def _arch(task: str = "regression", in_dim: int = 5) -> MlpArch:
@@ -124,17 +133,31 @@ def test_checkpoint_roundtrip_restores_rng_and_states(tmp_path: Path) -> None:
         extra={"bad_epochs": 1},
     )
     assert meta.next_epoch == 3 and meta.has_optimizer and meta.has_scheduler and not meta.has_scaler
-    expected = (random.random(), float(np.random.rand()), torch.rand(1).item(), torch.rand(1, generator=gen).item())
+    expected = (
+        random.random(),
+        float(np.random.rand()),
+        torch.rand(1).item(),
+        torch.rand(1, generator=gen).item(),
+    )
     # 다른 값을 뽑아 상태를 흐트러뜨린 뒤 복원
     random.random()
     np.random.rand()
     torch.rand(3)
     torch.rand(2, generator=gen)
     ck = load_checkpoint(path, "cfg-1")
-    assert ck.meta.best_validation == 1.25 and ck.meta.extra == {"bad_epochs": 1} and ck.meta.metrics == {"mae": 1.25}
+    assert (
+        ck.meta.best_validation == 1.25
+        and ck.meta.extra == {"bad_epochs": 1}
+        and ck.meta.metrics == {"mae": 1.25}
+    )
     restored = restore_rng(ck.rng, gen)
     assert {"python", "numpy", "torch_cpu", "dataloader"} <= set(restored)
-    got = (random.random(), float(np.random.rand()), torch.rand(1).item(), torch.rand(1, generator=gen).item())
+    got = (
+        random.random(),
+        float(np.random.rand()),
+        torch.rand(1).item(),
+        torch.rand(1, generator=gen).item(),
+    )
     assert got == expected
     model2 = build_mlp(_arch())
     model2.load_state_dict(ck.model_state, strict=True)
@@ -155,8 +178,30 @@ def test_checkpoint_roundtrip_restores_rng_and_states(tmp_path: Path) -> None:
 def test_checkpoint_latest_and_best_are_separate(tmp_path: Path) -> None:
     model, opt, sched = _model_bundle()
     rng = capture_rng()
-    save_checkpoint(tmp_path / LATEST_NAME, model=model, optimizer=opt, scheduler=sched, scaler=None, rng_state=rng, next_epoch=4, best_validation=2.0, config_hash="c", metrics={})
-    save_checkpoint(tmp_path / BEST_NAME, model=model, optimizer=opt, scheduler=sched, scaler=None, rng_state=rng, next_epoch=2, best_validation=2.0, config_hash="c", metrics={})
+    save_checkpoint(
+        tmp_path / LATEST_NAME,
+        model=model,
+        optimizer=opt,
+        scheduler=sched,
+        scaler=None,
+        rng_state=rng,
+        next_epoch=4,
+        best_validation=2.0,
+        config_hash="c",
+        metrics={},
+    )
+    save_checkpoint(
+        tmp_path / BEST_NAME,
+        model=model,
+        optimizer=opt,
+        scheduler=sched,
+        scaler=None,
+        rng_state=rng,
+        next_epoch=2,
+        best_validation=2.0,
+        config_hash="c",
+        metrics={},
+    )
     index = read_index(tmp_path)
     assert set(index["files"]) == {LATEST_NAME, BEST_NAME}
     assert load_checkpoint(tmp_path / LATEST_NAME, "c").meta.next_epoch == 4
@@ -167,7 +212,18 @@ def test_checkpoint_latest_and_best_are_separate(tmp_path: Path) -> None:
 def test_checkpoint_config_hash_mismatch_rejected(tmp_path: Path) -> None:
     model, opt, sched = _model_bundle()
     path = tmp_path / LATEST_NAME
-    save_checkpoint(path, model=model, optimizer=opt, scheduler=sched, scaler=None, rng_state=capture_rng(), next_epoch=1, best_validation=None, config_hash="hash-A", metrics={})
+    save_checkpoint(
+        path,
+        model=model,
+        optimizer=opt,
+        scheduler=sched,
+        scaler=None,
+        rng_state=capture_rng(),
+        next_epoch=1,
+        best_validation=None,
+        config_hash="hash-A",
+        metrics={},
+    )
     with pytest.raises(AgentError) as ei:
         load_checkpoint(path, "hash-B")
     assert ei.value.code == "E_FINGERPRINT_CHANGED"
@@ -179,7 +235,18 @@ def test_checkpoint_corruption_detected(tmp_path: Path) -> None:
 
     model, opt, sched = _model_bundle()
     path = tmp_path / LATEST_NAME
-    save_checkpoint(path, model=model, optimizer=opt, scheduler=sched, scaler=None, rng_state=capture_rng(), next_epoch=1, best_validation=None, config_hash="c", metrics={})
+    save_checkpoint(
+        path,
+        model=model,
+        optimizer=opt,
+        scheduler=sched,
+        scaler=None,
+        rng_state=capture_rng(),
+        next_epoch=1,
+        best_validation=None,
+        config_hash="c",
+        metrics={},
+    )
     good = path.read_bytes()
     path.write_bytes(good[: len(good) // 2])  # 잘린 파일
     with pytest.raises(AgentError) as ei:

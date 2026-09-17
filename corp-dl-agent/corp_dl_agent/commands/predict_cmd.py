@@ -33,8 +33,12 @@ def register(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
         action="store_true",
         help="합성(synthetic) 데이터로 학습한 모델 허용 (운영 자동 채택 금지 — demo/검증 용도)",
     )
-    p.add_argument("--app-config", dest="config_path", default=None, help="회사 설정 YAML 경로 (없으면 package defaults)")
-    p.add_argument("--profile", default=None, help="personal-dev | transfer-test | corp-offline | corp-gateway")
+    p.add_argument(
+        "--app-config", dest="config_path", default=None, help="회사 설정 YAML 경로 (없으면 package defaults)"
+    )
+    p.add_argument(
+        "--profile", default=None, help="personal-dev | transfer-test | corp-offline | corp-gateway"
+    )
     p.add_argument(
         "--set",
         dest="overrides",

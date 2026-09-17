@@ -3,7 +3,7 @@
 사용: python launch.py [--install-root DIR] [--data-root DIR] [--] <corp_dl_agent 인자...>
   예: python launch.py -- demo --offline --device cpu --output-dir "D:/설계 자동화/workspace/outputs/demo"
 - <install_root>/company/config/company_config.yaml 이 있고 사용자가 --config 를 주지 않았으면 설정을 받는 명령에
-  `--config <그 경로>` 를 자동으로 덧붙인다 (version/validate/run 등 자체 --config 의미가 다른 명령은 제외).
+  `--config <그 경로>` 를 자동으로 덧붙인다 (version/validate/run/package 등 설정을 받지 않거나 --config 의미가 다른 명령은 제외).
 - 환경변수 DIA_INSTALL_ROOT/DIA_DATA_ROOT 를 자식 프로세스에 전달한다. 사용자 환경(secret env 참조 등)은 그대로 둔다.
 """
 
@@ -29,11 +29,11 @@ CONFIG_COMMANDS = frozenset(
         "docs",
         "integrations",
         "menu",
-        "package",
         "upgrade",
         "rollback",
     }
 )
+# package build/verify 는 회사 설정을 받지 않으므로 --config 를 붙이지 않는다.
 COMPANY_CONFIG_REL = Path("company") / "config" / "company_config.yaml"
 
 

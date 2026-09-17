@@ -5,10 +5,23 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+from test_ml_torch_common import (
+    FIXTURES,
+    FakeClock,
+    budget,
+    cap_torch_threads,
+    guarded,
+    make_cfg,
+    read_jsonl,
+    small_task,
+    tracker,
+    workspace,
+)
 
 from corp_dl_agent.common import read_json, sha256_file
 from corp_dl_agent.errors import AgentError
@@ -20,9 +33,16 @@ from corp_dl_agent.ml.trainer import HookContext, SimulatedCrash, TrainerHooks
 from corp_dl_agent.state.coordinator import Coordinator
 from corp_dl_agent.state.db import StateDB
 from corp_dl_agent.state.machine import RunStatus, TrialStatus
-from test_ml_torch_common import FIXTURES, FakeClock, budget, make_cfg, read_jsonl, small_task, tracker, workspace
 
 pytestmark = pytest.mark.torch
+
+
+@pytest.fixture(autouse=True)
+def _guard() -> Iterator[None]:
+    cap_torch_threads()
+    with guarded():
+        yield
+
 
 RUN_FILES = (
     "taskspec.json",
@@ -34,11 +54,13 @@ RUN_FILES = (
     "plan.json",
     "events.jsonl",
     "epoch_metrics.jsonl",
+    "checkpoints",
     "metrics.csv",
     "final_evaluation.json",
     "model_card.json",
     "model_card.md",
     "report_ko.md",
+    "report_ko.html",
     "summary.json",
     "export/manifest.json",
 )
@@ -68,10 +90,18 @@ def test_regression_run_on_fixture_completes_with_all_artifacts(tmp_path: Path) 
     assert s.status == "COMPLETED" and s.synthetic and s.data_origin == "synthetic"
     run_dir = ws.run_dir("reg-1")
     for name in RUN_FILES:
-        assert (run_dir / name).is_file(), name
+        assert (run_dir / name).exists(), name
+    assert (run_dir / "checkpoints").is_dir() and list((run_dir / "checkpoints").glob("*/best.pt"))
+    html = (run_dir / "report_ko.html").read_text(encoding="utf-8")
+    assert "합성" in html and s.selected in html
+    assert (
+        "<script src" not in html and "http://" not in html and "https://" not in html
+    )  # 외부 CDN/리소스 없음
     assert [c.name for c in s.candidates][:3] == ["DummyRegressor", "Ridge", "HistGradientBoostingRegressor"]
     assert [c.kind for c in s.candidates] == ["sklearn"] * 3 + ["mlp"] * 2
-    assert all(c.status == "COMPLETED" for c in s.candidates) and all(c.epochs == 2 for c in s.candidates if c.kind == "mlp")
+    assert all(c.status == "COMPLETED" for c in s.candidates) and all(
+        c.epochs == 2 for c in s.candidates if c.kind == "mlp"
+    )
     assert is_finite_metrics({k: s.final_evaluation[k] for k in ("mae", "rmse", "r2", "p95_abs_error")})
     assert s.final_evaluation["unit"] == "N" and s.selected in {c.name for c in s.candidates}
     assert s.acceptance["state"] == "NEEDS_ACCEPTANCE_CRITERIA"
@@ -80,12 +110,21 @@ def test_regression_run_on_fixture_completes_with_all_artifacts(tmp_path: Path) 
     card = read_json(run_dir / "model_card.json")
     assert card["data_origin"] == "synthetic" and card["production_auto_select"] is False
     env = read_json(run_dir / "environment.json")
-    assert env["device"] == "cpu" and env["num_workers"] == 0 and env["seed"] == 42 and "torch" in env["versions"]
+    assert (
+        env["device"] == "cpu"
+        and env["num_workers"] == 0
+        and env["seed"] == 42
+        and "torch" in env["versions"]
+    )
     assert "hostname" not in json.dumps(env)
     plan = read_json(run_dir / "plan.json")
     assert len(plan["mlp_candidates"]) == 2 and plan["max_epochs"] == 2
     events = [e["event"] for e in read_jsonl(run_dir / "events.jsonl")]
-    assert "run_completed" in events and "final_evaluation_written" in events and events.count("epoch_completed") == 4
+    assert (
+        "run_completed" in events
+        and "final_evaluation_written" in events
+        and events.count("epoch_completed") == 4
+    )
     assert _db_status(ws, "reg-1") is RunStatus.COMPLETED
     assert all(t.status is TrialStatus.COMPLETED for t in _trials(ws, "reg-1"))
     bundle = load_bundle(run_dir / "export", allow_synthetic=True)
@@ -93,7 +132,9 @@ def test_regression_run_on_fixture_completes_with_all_artifacts(tmp_path: Path) 
     report = (run_dir / "report_ko.md").read_text(encoding="utf-8")
     assert "합성" in report and s.selected in report
     manifest = read_json(run_dir / "manifest.json")
-    assert "final_evaluation.json" in manifest["files"] and manifest["files"]["final_evaluation.json"]["sha256"] == sha256_file(run_dir / FINAL_EVAL_NAME)
+    assert "final_evaluation.json" in manifest["files"] and manifest["files"]["final_evaluation.json"][
+        "sha256"
+    ] == sha256_file(run_dir / FINAL_EVAL_NAME)
     metrics_csv = (run_dir / "metrics.csv").read_text(encoding="utf-8").splitlines()
     assert metrics_csv[0].startswith("name,kind,trial_id,status") and len(metrics_csv) == 6
 
@@ -105,7 +146,9 @@ def test_classification_run_selects_threshold_and_exports(tmp_path: Path) -> Non
     s = run_task(spec, cfg, ws, run_id="cls-1", budget_override=budget(epochs=2, cands=1))
     assert s.status == "COMPLETED" and s.threshold is not None and 0.0 <= s.threshold <= 1.0
     fe = s.final_evaluation
-    assert is_finite_metrics({k: fe[k] for k in ("average_precision", "roc_auc", "f1", "precision", "recall")})
+    assert is_finite_metrics(
+        {k: fe[k] for k in ("average_precision", "roc_auc", "f1", "precision", "recall")}
+    )
     assert set(fe["confusion_matrix"]) == {"tn", "fp", "fn", "tp"} and fe["threshold"] == s.threshold
     bundle = load_bundle(ws.run_dir("cls-1") / "export", allow_synthetic=True)
     assert bundle.manifest.threshold == s.threshold
@@ -114,6 +157,38 @@ def test_classification_run_selects_threshold_and_exports(tmp_path: Path) -> Non
     df = pd.read_csv(spec.data_path, dtype=str, keep_default_na=False)
     out = predict(bundle, df.head(10))
     assert {"probability", "label"} <= set(out.columns) and len(out) == 10
+
+
+def test_classification_fixture_run_with_time_split(tmp_path: Path) -> None:
+    """fixtures/ml 분류 CSV(UTF-8-SIG, time split) 로 run 완료 — 미래 누수 없는 분할과 threshold/metrics 유한성."""
+    cfg = make_cfg(tmp_path)
+    ws = workspace(cfg)
+    spec = load_taskspec(FIXTURES / "task_classification.yaml")
+    s = run_task(spec, cfg, ws, run_id="cls-fx", budget_override=budget(epochs=2, cands=1))
+    assert s.status == "COMPLETED" and s.synthetic and s.split["policy"] == "time"
+    assert s.data_report["encoding_detected"] == "utf-8-sig"
+    run_dir = ws.run_dir("cls-fx")
+    for name in RUN_FILES:
+        assert (run_dir / name).exists(), name
+    split = read_json(run_dir / "split_manifest.json")
+    assert split["time_boundaries"]["train_time_max"] <= split["time_boundaries"]["val_time_max"]
+    assert split["hashes"]["lock"] == "UNLOCKED" and split["overlap_checked"] is True
+    fe = s.final_evaluation
+    assert is_finite_metrics(
+        {k: fe[k] for k in ("average_precision", "roc_auc", "f1", "precision", "recall")}
+    )
+    assert s.threshold is not None and fe["threshold"] == s.threshold
+    assert [c.kind for c in s.candidates] == ["sklearn"] * 3 + ["mlp"]
+    mlp = next(c for c in s.candidates if c.kind == "mlp")
+    assert (
+        mlp.status == "COMPLETED"
+        and mlp.epochs == 2
+        and is_finite_metrics({"ap": mlp.metrics["average_precision"]})
+    )
+    assert s.acceptance["state"] == "NEEDS_ACCEPTANCE_CRITERIA"
+    plan = read_json(run_dir / "plan.json")
+    assert plan["acceptance"] == "NEEDS_ACCEPTANCE_CRITERIA" and plan["synthetic"] is True
+    assert _db_status(ws, "cls-fx") is RunStatus.COMPLETED
 
 
 def test_final_evaluation_locked_on_resume_of_completed_run(tmp_path: Path) -> None:
@@ -126,7 +201,10 @@ def test_final_evaluation_locked_on_resume_of_completed_run(tmp_path: Path) -> N
     export_before = sha256_file(ws.run_dir("lock-1") / "export" / "manifest.json")
     s2 = run_task(spec, cfg, ws, run_id="lock-1", resume=True, budget_override=budget(epochs=2, cands=1))
     assert s2.status == "COMPLETED" and s2.test_locked is True and s2.final_evaluation == s1.final_evaluation
-    assert sha256_file(fe_path) == before and sha256_file(ws.run_dir("lock-1") / "export" / "manifest.json") == export_before
+    assert (
+        sha256_file(fe_path) == before
+        and sha256_file(ws.run_dir("lock-1") / "export" / "manifest.json") == export_before
+    )
     events = [e["event"] for e in read_jsonl(ws.run_dir("lock-1") / "events.jsonl")]
     assert events.count("final_evaluation_written") == 1 and "resume_noop_completed" in events
     with pytest.raises(AgentError) as ei:  # 같은 run_id 로 새로 시작할 수 없다
@@ -150,14 +228,18 @@ def test_completed_trials_are_skipped_in_a_new_run(tmp_path: Path) -> None:
     assert not (ws.run_dir("skip-2") / "epoch_metrics.jsonl").exists()  # 학습을 하지 않았다
     trials = {t.trial_id: t for t in _trials(ws, "skip-2")}
     assert all(t.status is TrialStatus.SKIPPED and t.reason.startswith("reused:") for t in trials.values())
-    assert load_bundle(ws.run_dir("skip-2") / "export", allow_synthetic=True).manifest.model_name == s1.selected
+    assert (
+        load_bundle(ws.run_dir("skip-2") / "export", allow_synthetic=True).manifest.model_name == s1.selected
+    )
     # 산출물이 훼손된 완료 trial 은 재사용하지 않는다 (다시 학습)
     sel = next(c for c in s1.candidates if c.kind == "mlp")
     best = ws.run_dir("skip-1") / "checkpoints" / sel.trial_id / "best.pt"
     best.write_bytes(best.read_bytes() + b"\x00")
     s3 = run_task(spec, cfg, ws, run_id="skip-3", budget_override=budget(epochs=2, cands=1))
     statuses = {c.name: c.status for c in s3.candidates}
-    assert statuses[sel.name] == "COMPLETED" and all(v == "SKIPPED" for k, v in statuses.items() if k != sel.name)
+    assert statuses[sel.name] == "COMPLETED" and all(
+        v == "SKIPPED" for k, v in statuses.items() if k != sel.name
+    )
 
 
 class PauseAtFirstEpoch(TrainerHooks):
@@ -190,7 +272,14 @@ def test_pause_then_resume_rejects_changed_config_or_lock(tmp_path: Path) -> Non
         run_task(spec, cfg, ws, run_id="pr-1", resume=True, budget_override=budget(epochs=5, cands=1))
     assert ei.value.code == "E_FINGERPRINT_CHANGED"
     with pytest.raises(AgentError) as ei2:
-        run_task(spec, make_cfg(tmp_path, **{"ml.device": "cuda"}), ws, run_id="pr-1", resume=True, budget_override=b)
+        run_task(
+            spec,
+            make_cfg(tmp_path, **{"ml.device": "cuda"}),
+            ws,
+            run_id="pr-1",
+            resume=True,
+            budget_override=b,
+        )
     assert ei2.value.code == "E_FINGERPRINT_CHANGED"
     with pytest.raises(AgentError) as ei3:
         run_task(spec, cfg, ws, run_id="pr-1", resume=True, budget_override=b, lock_hash="lock-B")
@@ -217,7 +306,16 @@ def test_forced_kill_then_resume_by_other_worker_after_lease_expiry(tmp_path: Pa
     spec = small_task(tmp_path, "regression")
     b = budget(epochs=3, cands=1)
     with pytest.raises(SimulatedCrash):
-        run_task(spec, cfg, ws, run_id="kill-1", budget_override=b, hooks=PauseAtFirstEpoch("crash"), worker_id="worker-A", lease_ttl_seconds=0.5)
+        run_task(
+            spec,
+            cfg,
+            ws,
+            run_id="kill-1",
+            budget_override=b,
+            hooks=PauseAtFirstEpoch("crash"),
+            worker_id="worker-A",
+            lease_ttl_seconds=0.5,
+        )
     assert _db_status(ws, "kill-1") is RunStatus.RUNNING
     with pytest.raises(AgentError) as ei:
         run_task(spec, cfg, ws, run_id="kill-1", resume=True, budget_override=b, worker_id="worker-B")
@@ -251,10 +349,19 @@ def test_budget_exceeded_then_resume_with_new_budget(tmp_path: Path) -> None:
     ws = workspace(cfg)
     spec = small_task(tmp_path, "regression")
     clock = FakeClock()
-    s = run_task(spec, cfg, ws, run_id="bud-1", budget_override=tracker(epochs=3, wall=100, clock=clock), hooks=AdvanceClock(clock, 200.0))
+    s = run_task(
+        spec,
+        cfg,
+        ws,
+        run_id="bud-1",
+        budget_override=tracker(epochs=3, wall=100, clock=clock),
+        hooks=AdvanceClock(clock, 200.0),
+    )
     assert s.status == "BUDGET_EXCEEDED" and _db_status(ws, "bud-1") is RunStatus.BUDGET_EXCEEDED
     assert s.budget["exceeded"] and s.budget["guarantee"] == "none" and "완료 보증" in s.message
-    s2 = run_task(spec, cfg, ws, run_id="bud-1", resume=True, budget_override=budget(epochs=3, cands=1, wall=300))
+    s2 = run_task(
+        spec, cfg, ws, run_id="bud-1", resume=True, budget_override=budget(epochs=3, cands=1, wall=300)
+    )
     assert s2.status == "COMPLETED"
     assert next(c for c in s2.candidates if c.kind == "mlp").epochs == 3
     # 기준 모델 단계에서 이미 초과한 경우도 BUDGET_EXCEEDED 로 안전 종료한다
@@ -269,7 +376,14 @@ def test_cancel_request_stops_run(tmp_path: Path) -> None:
     cfg = make_cfg(tmp_path)
     ws = workspace(cfg)
     spec = small_task(tmp_path, "regression")
-    s = run_task(spec, cfg, ws, run_id="can-1", budget_override=budget(epochs=3, cands=1), hooks=PauseAtFirstEpoch("cancel"))
+    s = run_task(
+        spec,
+        cfg,
+        ws,
+        run_id="can-1",
+        budget_override=budget(epochs=3, cands=1),
+        hooks=PauseAtFirstEpoch("cancel"),
+    )
     assert s.status == "CANCELLED" and _db_status(ws, "can-1") is RunStatus.CANCELLED
     with pytest.raises(AgentError) as ei:
         run_task(spec, cfg, ws, run_id="can-1", resume=True, budget_override=budget(epochs=3, cands=1))
@@ -279,10 +393,24 @@ def test_cancel_request_stops_run(tmp_path: Path) -> None:
 def test_acceptance_defined_pass_and_fail(tmp_path: Path) -> None:
     cfg = make_cfg(tmp_path)
     ws = workspace(cfg)
-    spec_pass = small_task(tmp_path, "regression", acceptance={"metric": "mae", "threshold": 1e6, "direction": "min"}, task_id="acc_pass")
+    spec_pass = small_task(
+        tmp_path,
+        "regression",
+        acceptance={"metric": "mae", "threshold": 1e6, "direction": "min"},
+        task_id="acc_pass",
+    )
     s = run_task(spec_pass, cfg, ws, run_id="acc-1", budget_override=budget(epochs=2, cands=1))
-    assert s.status == "COMPLETED" and s.acceptance["state"] == "PASS" and s.acceptance["observed"] == s.final_evaluation["mae"]
-    spec_fail = small_task(tmp_path, "regression", acceptance={"metric": "mae", "threshold": 0.0, "direction": "min"}, task_id="acc_fail")
+    assert (
+        s.status == "COMPLETED"
+        and s.acceptance["state"] == "PASS"
+        and s.acceptance["observed"] == s.final_evaluation["mae"]
+    )
+    spec_fail = small_task(
+        tmp_path,
+        "regression",
+        acceptance={"metric": "mae", "threshold": 0.0, "direction": "min"},
+        task_id="acc_fail",
+    )
     s2 = run_task(spec_fail, cfg, ws, run_id="acc-2", budget_override=budget(epochs=2, cands=1))
     assert s2.status == "COMPLETED" and s2.acceptance["state"] == "FAIL"
     card = read_json(ws.run_dir("acc-2") / "model_card.json")

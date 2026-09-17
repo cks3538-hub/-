@@ -1,8 +1,17 @@
-"""ml-torch 시험 공통 helper (시험 함수 없음). 작은 합성 데이터·설정·coordinator 를 만든다."""
+"""ml-torch 시험 공통 helper (시험 함수 없음). 작은 합성 데이터·설정·coordinator 를 만든다.
+
+- `guarded()`: 각 시험을 벽시계 제한(기본 60초) 안에 끝내도록 감시한다 (SIGALRM 이 있는 플랫폼에서만; Windows 는 감시 없음).
+  무한 대기/폴링 회귀가 생기면 멈추지 않고 TimeoutError 로 실패한다.
+- `cap_torch_threads()`: 작은 MLP 학습에서 코어 수만큼 스레드를 쓰면 (다른 프로세스와 경쟁 시) 오히려 수십 배 느려지므로
+  시험 프로세스의 torch 스레드 수를 제한한다. 제품 코드의 기본값은 바꾸지 않는다.
+"""
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import os
+import signal
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +41,37 @@ from corp_dl_agent.state.machine import RunStatus
 from corp_dl_agent.workspace import Workspace
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "ml"
+TEST_DEADLINE_SECONDS = 60.0
+TEST_TORCH_THREADS = 2
+
+
+@contextmanager
+def guarded(seconds: float = TEST_DEADLINE_SECONDS) -> Iterator[None]:
+    """시험 하나의 벽시계 상한. 초과 시 TimeoutError (SIGALRM 이 없는 Windows 에서는 감시하지 않는다)."""
+    if not hasattr(signal, "SIGALRM") or not hasattr(signal, "setitimer"):
+        yield
+        return
+
+    def _timeout(signum: int, frame: Any) -> None:
+        raise TimeoutError(f"시험이 {seconds:.0f}초 안에 끝나지 않았습니다 (무한 대기/폴링 의심)")
+
+    previous = signal.signal(signal.SIGALRM, _timeout)
+    signal.setitimer(signal.ITIMER_REAL, float(seconds))
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0.0)
+        signal.signal(signal.SIGALRM, previous)
+
+
+def cap_torch_threads(n: int = TEST_TORCH_THREADS) -> int:
+    """시험 프로세스의 torch intra-op 스레드 수를 제한한다. 반환: 적용된 스레드 수."""
+    import torch
+
+    threads = max(1, min(int(n), os.cpu_count() or 1))
+    if torch.get_num_threads() != threads:
+        torch.set_num_threads(threads)
+    return threads
 
 
 class FakeClock:
@@ -94,10 +134,18 @@ def small_task(
 
 
 def budget(epochs: int = 3, cands: int = 1, patience: int = 3, wall: int = 300) -> ResourceBudget:
-    return ResourceBudget.demo(max_epochs=epochs, max_candidates=cands, patience=patience, wall_time_seconds=wall)
+    return ResourceBudget.demo(
+        max_epochs=epochs, max_candidates=cands, patience=patience, wall_time_seconds=wall
+    )
 
 
-def tracker(epochs: int = 3, cands: int = 1, patience: int = 3, wall: int = 300, clock: Callable[[], float] | None = None) -> BudgetTracker:
+def tracker(
+    epochs: int = 3,
+    cands: int = 1,
+    patience: int = 3,
+    wall: int = 300,
+    clock: Callable[[], float] | None = None,
+) -> BudgetTracker:
     t = BudgetTracker(budget(epochs, cands, patience, wall), clock=clock, label="test")
     t.start()
     return t
@@ -125,7 +173,9 @@ def prepared_data(spec: TaskSpec, cfg: AppConfig) -> tuple[TrainingData, FittedP
     return data, fp, train, val, test
 
 
-def running_coordinator(tmp_path: Path, run_id: str = "run-t", worker_id: str = "aaaaaaaa-1-0a0a0a0a") -> tuple[StateDB, Coordinator]:
+def running_coordinator(
+    tmp_path: Path, run_id: str = "run-t", worker_id: str = "aaaaaaaa-1-0a0a0a0a"
+) -> tuple[StateDB, Coordinator]:
     db = StateDB(tmp_path / "상태" / "agent_state.sqlite")
     coord = Coordinator(db, worker_id)
     coord.create_run(run_id, "fp", "cfg", "regression")

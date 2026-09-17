@@ -101,7 +101,10 @@ def make_wheel(
     entries: dict[str, str | bytes] = dict(files)
     entries[f"{dist_info}/METADATA"] = "\n".join(meta) + "\n"
     entries[f"{dist_info}/WHEEL"] = "\n".join(wheel)
-    top = sorted({p.split("/")[0] for p in files if "/" in p} | {p[:-3] for p in files if "/" not in p and p.endswith(".py")})
+    top = sorted(
+        {p.split("/")[0] for p in files if "/" in p}
+        | {p[:-3] for p in files if "/" not in p and p.endswith(".py")}
+    )
     entries[f"{dist_info}/top_level.txt"] = "\n".join(top) + "\n"
     record: list[str] = []
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -110,11 +113,15 @@ def make_wheel(
             zf.writestr(zipfile.ZipInfo(rel, date_time=(2020, 1, 1, 0, 0, 0)), data)
             record.append(f"{rel},sha256={_b64(hashlib.sha256(data).digest())},{len(data)}")
         record.append(f"{dist_info}/RECORD,,")
-        zf.writestr(zipfile.ZipInfo(f"{dist_info}/RECORD", date_time=(2020, 1, 1, 0, 0, 0)), "\n".join(record) + "\n")
+        zf.writestr(
+            zipfile.ZipInfo(f"{dist_info}/RECORD", date_time=(2020, 1, 1, 0, 0, 0)), "\n".join(record) + "\n"
+        )
     return path
 
 
-def make_fake_app_wheel(dest_dir: Path, version: str, *, selftest_ok: bool = True, requires: tuple[str, ...] = ()) -> Path:
+def make_fake_app_wheel(
+    dest_dir: Path, version: str, *, selftest_ok: bool = True, requires: tuple[str, ...] = ()
+) -> Path:
     main_src = FAKE_APP_MAIN.format(version=version, selftest_ok="True" if selftest_ok else "False")
     return make_wheel(
         dest_dir,
@@ -180,26 +187,42 @@ def make_fake_project(root: Path, *, extra_files: dict[str, str] | None = None) 
     (root / FAKE_MODULE / "__pycache__" / "x.cpython-312.pyc").write_bytes(b"\x00")
     (root / "tests").mkdir(exist_ok=True)
     (root / "tests" / "test_dummy.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
-    (root / "pyproject.toml").write_text('[project]\nname = "fake-app"\nversion = "0.0.0"\n', encoding="utf-8")
+    (root / "pyproject.toml").write_text(
+        '[project]\nname = "fake-app"\nversion = "0.0.0"\n', encoding="utf-8"
+    )
     (root / "README.md").write_text("# fake project (synthetic)\n", encoding="utf-8")
     (root / "CLAUDE.md").write_text("# rules\n", encoding="utf-8")
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs" / "CONTRACT.md").write_text("# contract\n", encoding="utf-8")
-    (root / "docs" / "INSTALL_KO.md").write_text("설치 폴더 예시: D:\\설계 자동화\\DIA (허용되는 예시 경로)\n", encoding="utf-8")
+    (root / "docs" / "INSTALL_KO.md").write_text(
+        "설치 폴더 예시: D:\\설계 자동화\\DIA (허용되는 예시 경로)\n", encoding="utf-8"
+    )
     (root / "docs" / "NOTICES.txt").write_text("notices\n", encoding="utf-8")
     shutil.copytree(SCRIPTS_DIR, root / "scripts", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     (root / "config-examples").mkdir(exist_ok=True)
-    (root / "config-examples" / "company_config.example.yaml").write_text("profile: corp-offline\ngateway:\n  secret_ref: null\n", encoding="utf-8")
+    (root / "config-examples" / "company_config.example.yaml").write_text(
+        "profile: corp-offline\ngateway:\n  secret_ref: null\n", encoding="utf-8"
+    )
     (root / "fixtures").mkdir(exist_ok=True)
     (root / "fixtures" / "README.md").write_text("synthetic: true\n", encoding="utf-8")
     (root / "schemas").mkdir(exist_ok=True)
     (root / "schemas" / "x.schema.json").write_text("{}\n", encoding="utf-8")
     (root / "test-evidence" / "raw").mkdir(parents=True, exist_ok=True)
     (root / "test-evidence" / "pytest-core.json").write_text(
-        json.dumps({"name": "pytest-core", "command": "python -m pytest -q", "cwd": "<PROJECT_ROOT>", "exit_code": 0, "status": "PASS"}),
+        json.dumps(
+            {
+                "name": "pytest-core",
+                "command": "python -m pytest -q",
+                "cwd": "<PROJECT_ROOT>",
+                "exit_code": 0,
+                "status": "PASS",
+            }
+        ),
         encoding="utf-8",
     )
-    (root / "test-evidence" / "raw" / "pytest-core.log").write_text("raw log with personal path /ho" + "me/tester/x\n", encoding="utf-8")
+    (root / "test-evidence" / "raw" / "pytest-core.log").write_text(
+        "raw log with personal path /ho" + "me/tester/x\n", encoding="utf-8"
+    )
     (root / ".venv").mkdir(exist_ok=True)
     (root / ".venv" / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
     (root / ".env").write_text("SECRET=1\n", encoding="utf-8")
@@ -252,7 +275,9 @@ def script_env(**extra: str) -> dict[str, str]:
     return env
 
 
-def run_script(name: str, *args: str, cwd: Path | None = None, env: dict[str, str] | None = None, timeout: int = 300) -> subprocess.CompletedProcess[str]:
+def run_script(
+    name: str, *args: str, cwd: Path | None = None, env: dict[str, str] | None = None, timeout: int = 300
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / name), *args],
         capture_output=True,

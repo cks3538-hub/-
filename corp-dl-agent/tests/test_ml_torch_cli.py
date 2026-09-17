@@ -3,18 +3,34 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+from test_ml_torch_common import (
+    FIXTURES,
+    budget,
+    cap_torch_threads,
+    guarded,
+    make_cfg,
+    small_task,
+    workspace,
+)
 
 from corp_dl_agent.cli import main
 from corp_dl_agent.errors import EXIT_RUNTIME, EXIT_VALIDATION
 from corp_dl_agent.ml.runner import run_task
 from corp_dl_agent.ml.trainer import HookContext, TrainerHooks
-from test_ml_torch_common import FIXTURES, budget, make_cfg, small_task, workspace
 
 pytestmark = pytest.mark.torch
+
+
+@pytest.fixture(autouse=True)
+def _guard() -> Iterator[None]:
+    cap_torch_threads()
+    with guarded():
+        yield
 
 
 def _out(capsys: pytest.CaptureFixture[str]) -> dict[str, Any]:
@@ -24,17 +40,35 @@ def _out(capsys: pytest.CaptureFixture[str]) -> dict[str, Any]:
 def test_run_fast_status_report_predict_cli(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     data_root = tmp_path / "작업 공간"
     common = ["--set", f"paths.data_root={data_root}"]
-    code = main(["run", "--config", str(FIXTURES / "task_regression.yaml"), *common, "--run-id", "cli-1", "--fast", "--json"])
+    code = main(
+        [
+            "run",
+            "--config",
+            str(FIXTURES / "task_regression.yaml"),
+            *common,
+            "--run-id",
+            "cli-1",
+            "--fast",
+            "--json",
+        ]
+    )
     assert code == 0
     payload = _out(capsys)
     assert payload["ok"] is True and payload["status"] == "COMPLETED" and payload["synthetic"] is True
-    assert len([c for c in payload["candidates"] if c["kind"] == "mlp"]) == 1 and payload["acceptance"]["state"] == "NEEDS_ACCEPTANCE_CRITERIA"
+    assert (
+        len([c for c in payload["candidates"] if c["kind"] == "mlp"]) == 1
+        and payload["acceptance"]["state"] == "NEEDS_ACCEPTANCE_CRITERIA"
+    )
     run_dir = Path(payload["run_dir"])
     assert (run_dir / "final_evaluation.json").is_file() and (run_dir / "export" / "manifest.json").is_file()
 
     assert main(["status", "--run-id", "cli-1", *common, "--json"]) == 0
     st = _out(capsys)
-    assert st["run"]["status"] == "COMPLETED" and len(st["trials"]) == 4 and st["summary"]["selected"] == payload["selected"]
+    assert (
+        st["run"]["status"] == "COMPLETED"
+        and len(st["trials"]) == 4
+        and st["summary"]["selected"] == payload["selected"]
+    )
     assert main(["status", "--run-id", "cli-1", *common]) == 0
     text = capsys.readouterr().out
     assert "COMPLETED" in text and "선택:" in text and "test 1회" in text
@@ -42,19 +76,57 @@ def test_run_fast_status_report_predict_cli(tmp_path: Path, capsys: pytest.Captu
     assert main(["report", "--run-id", "cli-1", *common, "--json"]) == 0
     rep = _out(capsys)
     assert Path(rep["report_md"]).is_file()
+    assert rep["html_status"] == "PASS" and Path(rep["report_html"]).is_file()
+    html = Path(rep["report_html"]).read_text(encoding="utf-8")
+    assert "합성" in html and "http://" not in html and "https://" not in html  # 외부 CDN 없음
 
     csv_out = data_root / "outputs" / "pred.csv"
-    code = main(["predict", "--model", str(run_dir / "export"), "--input", str(FIXTURES / "clip_regression.csv"), "--output", str(csv_out), *common, "--json"])
+    code = main(
+        [
+            "predict",
+            "--model",
+            str(run_dir / "export"),
+            "--input",
+            str(FIXTURES / "clip_regression.csv"),
+            "--output",
+            str(csv_out),
+            *common,
+            "--json",
+        ]
+    )
     assert code == EXIT_VALIDATION
     err = _out(capsys)
     assert err["ok"] is False and err["error"]["code"] == "E_ARTIFACT_SYNTHETIC"
-    code = main(["predict", "--model", str(run_dir / "export"), "--input", str(FIXTURES / "clip_regression.csv"), "--output", str(csv_out), *common, "--allow-synthetic"])
+    code = main(
+        [
+            "predict",
+            "--model",
+            str(run_dir / "export"),
+            "--input",
+            str(FIXTURES / "clip_regression.csv"),
+            "--output",
+            str(csv_out),
+            *common,
+            "--allow-synthetic",
+        ]
+    )
     assert code == 0
     text = capsys.readouterr().out
     assert "예측 완료: 600행" in text and "합성" in text and csv_out.is_file()
 
     # 같은 run_id 로 다시 run → 오류 (resume 안내)
-    code = main(["run", "--config", str(FIXTURES / "task_regression.yaml"), *common, "--run-id", "cli-1", "--fast", "--json"])
+    code = main(
+        [
+            "run",
+            "--config",
+            str(FIXTURES / "task_regression.yaml"),
+            *common,
+            "--run-id",
+            "cli-1",
+            "--fast",
+            "--json",
+        ]
+    )
     assert code == EXIT_VALIDATION and _out(capsys)["error"]["code"] == "E_INPUT_INVALID"
     # 완료 run 의 resume 은 재평가 없이 요약을 돌려준다
     assert main(["resume", "--run-id", "cli-1", *common, "--fast", "--json"]) == 0
@@ -76,7 +148,15 @@ def test_pause_resume_cancel_cli(tmp_path: Path, capsys: pytest.CaptureFixture[s
     ws = workspace(cfg)
     common = ["--set", f"paths.data_root={cfg.paths.data_root}"]
     spec = small_task(tmp_path, "regression")
-    fast = {"wall_time_seconds": 120, "max_candidates": 1, "max_epochs": 2, "patience": 2, "max_calls": 0, "max_tokens": 0, "mode": "custom"}
+    fast = {
+        "wall_time_seconds": 120,
+        "max_candidates": 1,
+        "max_epochs": 2,
+        "patience": 2,
+        "max_calls": 0,
+        "max_tokens": 0,
+        "mode": "custom",
+    }
     s = run_task(spec, cfg, ws, run_id="cli-p", budget_override=fast, hooks=PauseOnce())
     assert s.status == "PAUSED"
     assert main(["status", "--run-id", "cli-p", *common, "--json"]) == 0
@@ -90,7 +170,9 @@ def test_pause_resume_cancel_cli(tmp_path: Path, capsys: pytest.CaptureFixture[s
     mlp = next(c for c in res["candidates"] if c["kind"] == "mlp")
     assert mlp["epochs"] == 2 and mlp["attempts"] == 2
 
-    s2 = run_task(spec, cfg, ws, run_id="cli-c", budget_override=fast, hooks=PauseOnce())
+    # 같은 fingerprint 의 완료 trial 은 재사용(SKIPPED)되어 epoch hook 이 실행되지 않으므로 다른 task_id 로 새 실험을 만든다
+    spec_c = small_task(tmp_path, "regression", task_id="small_regression_cancel")
+    s2 = run_task(spec_c, cfg, ws, run_id="cli-c", budget_override=fast, hooks=PauseOnce())
     assert s2.status == "PAUSED"
     assert main(["cancel", "--run-id", "cli-c", *common, "--json"]) == 0
     can = _out(capsys)
@@ -127,7 +209,15 @@ def test_fast_budget_override_matches_config_hash_for_resume(tmp_path: Path) -> 
     cfg = make_cfg(tmp_path)
     ws = workspace(cfg)
     spec = small_task(tmp_path, "regression")
-    fast = {"wall_time_seconds": 120, "max_candidates": 1, "max_epochs": 2, "patience": 2, "max_calls": 0, "max_tokens": 0, "mode": "custom"}
+    fast = {
+        "wall_time_seconds": 120,
+        "max_candidates": 1,
+        "max_epochs": 2,
+        "patience": 2,
+        "max_calls": 0,
+        "max_tokens": 0,
+        "mode": "custom",
+    }
     s = run_task(spec, cfg, ws, run_id="fast-1", budget_override=fast, hooks=PauseOnce())
     assert s.status == "PAUSED"
     from corp_dl_agent.errors import AgentError

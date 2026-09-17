@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+from test_ml_torch_common import cap_torch_threads, guarded, make_cfg, prepared_data, small_task
 
 from corp_dl_agent.errors import AgentError
 from corp_dl_agent.ml.export import (
@@ -22,10 +24,16 @@ from corp_dl_agent.ml.export import (
 from corp_dl_agent.ml.mlp import arch_from_candidate, build_mlp
 from corp_dl_agent.ml.predict import predict_cli
 from corp_dl_agent.ml.registry import demo_candidates
-from test_ml_torch_common import make_cfg, prepared_data, small_task
 
 pytestmark = pytest.mark.torch
 ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(autouse=True)
+def _guard() -> Iterator[None]:
+    cap_torch_threads()
+    with guarded():
+        yield
 
 
 @pytest.fixture(scope="module")
@@ -34,7 +42,16 @@ def prepared(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
     spec = small_task(tmp, "regression")
     cfg = make_cfg(tmp)
     data, fp, train, val, test = prepared_data(spec, cfg)
-    return {"tmp": tmp, "spec": spec, "cfg": cfg, "data": data, "fp": fp, "train": train, "val": val, "test": test}
+    return {
+        "tmp": tmp,
+        "spec": spec,
+        "cfg": cfg,
+        "data": data,
+        "fp": fp,
+        "train": train,
+        "val": val,
+        "test": test,
+    }
 
 
 def _ranges(spec: Any, train: Any) -> dict[str, dict[str, float]]:
@@ -84,7 +101,9 @@ def _export_mlp(prepared: dict[str, Any], out: Path) -> Any:
 
     spec, fp, train, data = prepared["spec"], prepared["fp"], prepared["train"], prepared["data"]
     cand = demo_candidates("regression", 42, 1)[0]
-    arch = arch_from_candidate(cand, task_type="regression", in_dim=fp.n_features, feature_names=list(fp.feature_names))
+    arch = arch_from_candidate(
+        cand, task_type="regression", in_dim=fp.n_features, feature_names=list(fp.feature_names)
+    )
     torch.manual_seed(11)
     model = build_mlp(arch)
     manifest = export_bundle(
@@ -139,13 +158,21 @@ def test_mlp_bundle_reloads_in_new_process_with_identical_predictions(prepared: 
         "df = pd.read_csv(sys.argv[2], dtype=str, keep_default_na=False)\n"
         "predict(b, df).to_csv(sys.argv[3], index=False)\n"
     )
-    r = subprocess.run([sys.executable, "-c", script, str(out), str(csv_in), str(csv_out)], capture_output=True, text=True, cwd=ROOT, encoding="utf-8")
+    r = subprocess.run(
+        [sys.executable, "-c", script, str(out), str(csv_in), str(csv_out)],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        encoding="utf-8",
+    )
     assert r.returncode == 0, r.stderr
     import pandas as pd
 
     sub = pd.read_csv(csv_out, dtype={"id": str})
     assert sub["id"].tolist() == in_proc["id"].tolist()
-    np.testing.assert_allclose(sub["prediction"].to_numpy(), in_proc["prediction"].to_numpy(), rtol=0, atol=1e-6)
+    np.testing.assert_allclose(
+        sub["prediction"].to_numpy(), in_proc["prediction"].to_numpy(), rtol=0, atol=1e-6
+    )
     # 회귀 역변환: 표준화 공간 출력이 원단위로 돌아왔는지 (train target 범위 근처)
     assert in_proc["prediction"].abs().max() < 10 * float(np.abs(prepared["data"].y_train).max() + 1)
 
@@ -170,7 +197,9 @@ def test_untrusted_bundles_rejected(prepared: dict[str, Any], monkeypatch: pytes
     (out / MODEL_JOBLIB_NAME).write_bytes((out / MODEL_JOBLIB_NAME).read_bytes() + b"x")
     with pytest.raises(AgentError) as ei:
         load_bundle(out, allow_synthetic=True)
-    assert ei.value.code == "E_ARTIFACT_UNTRUSTED" and ei.value.details["files"] == {MODEL_JOBLIB_NAME: "mismatch"}
+    assert ei.value.code == "E_ARTIFACT_UNTRUSTED" and ei.value.details["files"] == {
+        MODEL_JOBLIB_NAME: "mismatch"
+    }
     # created_by 표시가 바뀐 manifest
     out2 = prepared["tmp"] / "foreign_marker"
     _export_sklearn(prepared, out2)
@@ -199,7 +228,9 @@ def test_untrusted_bundles_rejected(prepared: dict[str, Any], monkeypatch: pytes
     (out3 / "preprocessor.npz").unlink()
     with pytest.raises(AgentError) as ei4:
         load_bundle(out3, allow_synthetic=True)
-    assert ei4.value.code == "E_ARTIFACT_UNTRUSTED" and ei4.value.details["files"] == {"preprocessor.npz": "missing"}
+    assert ei4.value.code == "E_ARTIFACT_UNTRUSTED" and ei4.value.details["files"] == {
+        "preprocessor.npz": "missing"
+    }
     with pytest.raises(AgentError):
         read_manifest(prepared["tmp"] / "does-not-exist")
 
@@ -220,11 +251,20 @@ def test_classification_bundle_probability_and_label(tmp_path: Path) -> None:
         **_common(spec, fp, train, "LogisticRegression"),
     )
     with pytest.raises(AgentError):  # 분류는 threshold 필수
-        export_bundle(tmp_path / "bad", model_kind="sklearn", model=est, target_inverse={"kind": "identity"}, threshold=None, **_common(spec, fp, train, "LogisticRegression"))
+        export_bundle(
+            tmp_path / "bad",
+            model_kind="sklearn",
+            model=est,
+            target_inverse={"kind": "identity"},
+            threshold=None,
+            **_common(spec, fp, train, "LogisticRegression"),
+        )
     bundle = load_bundle(out, allow_synthetic=True)
     res = predict(bundle, test)
     assert list(res.columns) == ["id", "probability", "label", "prediction", "threshold", "in_train_range"]
-    assert ((res["probability"] >= 0.4).astype("int64") == res["label"]).all() and (res["threshold"] == 0.4).all()
+    assert ((res["probability"] >= 0.4).astype("int64") == res["label"]).all() and (
+        res["threshold"] == 0.4
+    ).all()
     assert set(res["label"].unique()) <= {0, 1}
 
 
@@ -244,7 +284,11 @@ def test_predict_cli_writes_csv_and_sidecar(prepared: dict[str, Any]) -> None:
         predict_cli(out, csv_in, csv_out, cfg)
     assert ei.value.code == "E_ARTIFACT_SYNTHETIC"
     result = predict_cli(out, csv_in, csv_out, cfg, allow_synthetic=True)
-    assert result["n_rows"] == len(test) and result["imputed_values"] == {"thickness_mm": 1} and result["synthetic"] is True
+    assert (
+        result["n_rows"] == len(test)
+        and result["imputed_values"] == {"thickness_mm": 1}
+        and result["synthetic"] is True
+    )
     assert result["input_encoding"] == "utf-8-sig" and result["value_type"] == "predicted"
     raw = csv_out.read_bytes()
     assert raw.startswith(b"\xef\xbb\xbf") and b"in_train_range" in raw
