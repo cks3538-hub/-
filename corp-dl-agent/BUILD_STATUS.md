@@ -1,6 +1,6 @@
 # BUILD_STATUS
 
-갱신: 2026-09-17 (세션 1, 패키징·rehearsal 단계)
+갱신: 2026-09-17 (세션 1 완료)
 
 | 단계 | 상태 | 비고 |
 |---|---|---|
@@ -12,15 +12,15 @@
 | M4b reporting/doctor/self-test/menu | DONE | 15 tests |
 | M5 packaging·scripts | DONE | 59 tests(가짜 release 로 verify/install/upgrade/rollback/acceptance) + 실제 앱 wheel·wheelhouse(win 38/linux 56 wheel, PyPI sha256 대조)·lock·inventory·manifest·ZIP |
 | 통합·demo(J) | DONE | 전체 572 tests, ruff/mypy 통과, demo 12/12 단계·16/16 검사 PASS, outbound 0, 산출물 33개 |
-| M6 transfer-test | IN_PROGRESS | Linux rehearsal(비관리자 tester, 한글/공백 경로, CWD=/tmp, unshare -n). Windows: NOT_RUN(사용자 Windows PC 에서 00~04 실행 필요) |
-| M7 upgrade/rollback·최종 ZIP·acceptance·문서 | IN_PROGRESS | upgrade/rollback 은 scripts 시험으로 검증(가짜 회사 설정/템플릿/DB 보존, 실패 시 old active 유지, --restore-db) |
+| M6 transfer-test | DONE(Linux) / NOT_RUN(Windows) | Linux rehearsal 12 단계 PASS: ZIP 만으로 sha256→extract→preflight→verify→변조 거부→install(--no-index --require-hashes, 107s)→active.json→self-test→doctor→demo(12/12)→변조 설치 시 active 유지→pip index 미사용. 비관리자 tester, 한글/공백 경로, CWD=/tmp, unshare -n, PIP_INDEX_URL 오염. Windows: 사용자 PC 에서 00~04 실행 필요 |
+| M7 upgrade/rollback·최종 ZIP·acceptance·문서 | DONE | upgrade/rollback 은 scripts 시험(가짜 release, 회사 설정/템플릿/DB 보존, 실패 시 old active 유지, --restore-db) 로 검증; 최종 ZIP 2종 + 외부 .sha256 + .acceptance.json 생성 |
 
 ## 검증 상태
 | 상태 | 값 | 근거 |
 |---|---|---|
 | HOST_CORE_TESTED | PASS | test-evidence/host-01~07 (pytest 572, ruff, mypy, wheel, demo, self-test) |
 | TARGET_BUNDLE_PREPARED | PASS | wheelhouse/win-x64-cp312-cpu 38 wheel + locks/win-x64-cp312-cpu.txt(hash) + release-manifest; requirements/download_provenance.json |
-| TARGET_OFFLINE_TESTED | NOT_RUN(Windows) / Linux rehearsal 은 acceptance.json 참조 | 빌드 호스트에 Windows 없음 |
+| TARGET_OFFLINE_TESTED | NOT_RUN(Windows 참조 타깃) / PASS(Linux rehearsal 프로파일) | Windows ZIP SHA-256 397e7ea19e14064b… 는 정적 검증만(host-10); Linux ZIP d037dfe1c9753178… 는 test-evidence/transfer-* 12 단계 PASS |
 | CORP_INSTALLED | NOT_RUN | 사내 PC 에서만 |
 | CORP_INTEGRATED | NOT_RUN | 사내 PC 에서만 |
 | BUSINESS_VALIDATED | NOT_RUN | 실데이터·업무 허용오차 필요 |

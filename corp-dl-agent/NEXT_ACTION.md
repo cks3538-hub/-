@@ -1,8 +1,8 @@
-# NEXT_ACTION
+# NEXT_ACTION (세션 1 완료 후)
 
-1. (완료) 통합 수정: `timeout 1500 .venv/bin/python -m pytest -q tests` 전체 통과, `ruff check .`/`ruff format --check .`/`mypy corp_dl_agent` 통과, CLI 실사용 점검 완료. packaging 코드 완료(M5 코드 DONE).
-1b. (완료) demo 통합 시나리오 구현 (pytest 572 passed, demo 12/12 단계·16/16 검사 PASS, workspace/demo-full/demo_manifest.json): `corp_dl_agent/demo.py` + `commands/demo_cmd.py` (tests/test_cli_basic.py 의 ALLOWED_MISSING_BEFORE_INTEGRATION 에서 demo_cmd 제거) → `python -m corp_dl_agent demo --offline --device cpu --output-dir workspace/demo-full`.
-2. 앱 wheel: `.venv/bin/python -m build --wheel` → dist/corp_dl_agent-4.0.0-py3-none-any.whl
-3. ZIP: `python -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse/win-x64-cp312-cpu --app-wheel dist/... --evidence-dir test-evidence --out dist` (linux 프로파일도 동일)
-4. Linux rehearsal: `sudo bash tools/transfer_test_linux.sh dist/DIA_4.0.0_linux-x64-cp312-cpu.zip linux-x64-cp312-cpu` → acceptance.py
-5. 문서 갱신(TEST_EVIDENCE.md, BUILD_STATUS, BLOCKERS, TRANSFER_CONTENTS), git commit/push, 최종 보고.
+빌드·검증은 완료되었다. 다음은 사용자/사내 단계다.
+
+1. Windows 개인 PC 에서 TARGET_OFFLINE_TESTED 수행: `DIA_4.0.0_win-x64-cp312-cpu.zip` (SHA-256 397e7ea19e14064b04de5d3440313e88c9c23bdb7b382cb46e62dd6778f1afe7) 을 새 폴더에 풀고 `scripts\00_Preflight.cmd → 01_Verify.cmd → 02_Install.cmd → 04_SelfTest.cmd → launch.cmd demo --offline --device cpu` 실행. 결과 JSON 을 `python scripts\acceptance.py --zip <zip> --evidence-dir <폴더> --out <폴더> --status TARGET_OFFLINE_TESTED=PASS=...` 로 기록.
+2. ZIP 을 직접 받지 못했으면 docs/PERSONAL_BUILD_KO.md §2b 로 재현 (tools/reproduce_wheelhouse.py).
+3. 사내: docs/COMPANY_INSTALL_KO.md 순서. 사내 AI 인계문: docs/CORPORATE_AI_HANDOFF.txt.
+4. 다음 버전 개발 재개: `.venv/bin/python -m pytest -q tests` (575 tests), CLAUDE.md 의 실행 명령.

@@ -1,0 +1,23 @@
+{
+  "name": "transfer-09-install-tampered-keeps-active",
+  "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-09-install-tampered-keeps-active.sh\"'",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-17T11:46:24+00:00",
+  "elapsed_seconds": 0.21,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+    "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+    "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-09-install-tampered-keeps-active.sh"
+  },
+  "lock_sha256": null,
+  "stdout_tail": "{\n  \"ok\": false,\n  \"error\": {\n    \"code\": \"E_PACKAGE_INVALID\",\n    \"message\": \"패키지 검증 실패: manifest_schema: manifest 필수 필드 누락: version\",\n    \"hint\": \"verify.py 로 상세를 확인하세요. 설치는 시작하지 않았고 기존 활성 버전은 그대로입니다.\",\n    \"details\": {\n      \"failed\": [\n        \"manifest_schema: manifest 필수 필드 누락: version\"\n      ]\n    },\n    \"exit_code\": 5\n  }\n}\nexit=5",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/transfer-09-install-tampered-keeps-active.log (개인 로컬 보관, 반입 제외)"
+}

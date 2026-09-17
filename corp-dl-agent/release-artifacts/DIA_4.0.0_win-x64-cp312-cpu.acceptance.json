@@ -1,0 +1,492 @@
+{
+  "format": "dia-acceptance/1",
+  "created_at": "2026-09-17T11:47:16+00:00",
+  "zip": {
+    "name": "DIA_4.0.0_win-x64-cp312-cpu.zip",
+    "sha256": "397e7ea19e14064b04de5d3440313e88c9c23bdb7b382cb46e62dd6778f1afe7",
+    "size_bytes": 219755193,
+    "sha256_file": "DIA_4.0.0_win-x64-cp312-cpu.zip.sha256",
+    "sha256_file_match": true
+  },
+  "manifest": {
+    "release_id": "4.0.0",
+    "profile_id": "win-x64-cp312-cpu",
+    "package_kind": "CPU_OFFLINE",
+    "schema_version": "4.0",
+    "db_schema_version": 4,
+    "file_count": 257,
+    "created_at": "2026-09-17T11:42:42+00:00"
+  },
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "architecture": "x86_64",
+    "python_implementation": "CPython",
+    "python_version": "3.12.3",
+    "network_isolation": "정적 검증만 (설치 미실행)",
+    "user_privilege": "root",
+    "user_note": "root (빌드 호스트)"
+  },
+  "evidence_dir_summary": {
+    "count": 24,
+    "pass": 23,
+    "fail": 0
+  },
+  "evidence": [
+    {
+      "file": "host-01-pytest-all.json",
+      "name": "host-01-pytest-all",
+      "command": ".venv/bin/python -m pytest -q tests -p no:cacheprovider",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:40:45+00:00",
+      "elapsed_seconds": 101.26,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-02-ruff-check.json",
+      "name": "host-02-ruff-check",
+      "command": ".venv/bin/python -m ruff check .",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:26+00:00",
+      "elapsed_seconds": 0.03,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-03-ruff-format.json",
+      "name": "host-03-ruff-format",
+      "command": ".venv/bin/python -m ruff format --check .",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:26+00:00",
+      "elapsed_seconds": 0.03,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-04-mypy.json",
+      "name": "host-04-mypy",
+      "command": ".venv/bin/python -m mypy corp_dl_agent",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:26+00:00",
+      "elapsed_seconds": 1.42,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-05-build-wheel.json",
+      "name": "host-05-build-wheel",
+      "command": ".venv/bin/python -m build --wheel --no-isolation -o dist",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:28+00:00",
+      "elapsed_seconds": 0.72,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-06-demo-offline-cpu.json",
+      "name": "host-06-demo-offline-cpu",
+      "command": ".venv/bin/python -m corp_dl_agent demo --offline --device cpu --output-dir workspace/demo-evidence --json",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:29+00:00",
+      "elapsed_seconds": 7.46,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-07-selftest.json",
+      "name": "host-07-selftest",
+      "command": ".venv/bin/python -m corp_dl_agent self-test --set paths.data_root=workspace/selftest-ws",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:36+00:00",
+      "elapsed_seconds": 3.17,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-08-package-build-win.json",
+      "name": "host-08-package-build-win",
+      "command": ".venv/bin/python -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse/win-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:빌드 호스트가 Linux 이므로 Windows 실행 시험 없음. 사용자 Windows PC 에서 00~04 스크립트로 수행 --json",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:39+00:00",
+      "elapsed_seconds": 4.54,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-09-package-build-linux.json",
+      "name": "host-09-package-build-linux",
+      "command": ".venv/bin/python -m corp_dl_agent package build --profile linux-x64-cp312-cpu --wheelhouse wheelhouse/linux-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:포장 시점에는 미실행. 외부 acceptance.json 에 Linux rehearsal 결과 기록 --json",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:42:44+00:00",
+      "elapsed_seconds": 56.52,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython-3.12.3-(.venv)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-10-verify-win-zip-static.json",
+      "name": "host-10-verify-win-zip-static",
+      "command": "/usr/bin/python3.12 scripts/verify.py --package dist/DIA_4.0.0_win-x64-cp312-cpu.zip --target-profile /tmp/claude-0/-home-user/bb3392bd-2f9a-5ef4-b734-9884221b4d4f/scratchpad/win_target_profile.json --json",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:43:41+00:00",
+      "elapsed_seconds": 0.77,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 표준 라이브러리 verifier)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "host-11-verify-linux-zip.json",
+      "name": "host-11-verify-linux-zip",
+      "command": "/usr/bin/python3.12 scripts/verify.py --package dist/DIA_4.0.0_linux-x64-cp312-cpu.zip --json",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:43:41+00:00",
+      "elapsed_seconds": 9.41,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 표준 라이브러리 verifier)",
+        "network_isolation": "host network (no isolation)",
+        "user": null
+      }
+    },
+    {
+      "file": "transfer-00-sha256.json",
+      "name": "transfer-00-sha256",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-00-sha256.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:43:58+00:00",
+      "elapsed_seconds": 8.33,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-00-sha256.sh"
+      }
+    },
+    {
+      "file": "transfer-01-extract.json",
+      "name": "transfer-01-extract",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-01-extract.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:44:06+00:00",
+      "elapsed_seconds": 3.48,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-01-extract.sh"
+      }
+    },
+    {
+      "file": "transfer-02-preflight.json",
+      "name": "transfer-02-preflight",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-02-preflight.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:44:10+00:00",
+      "elapsed_seconds": 2.01,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-02-preflight.sh"
+      }
+    },
+    {
+      "file": "transfer-03-verify.json",
+      "name": "transfer-03-verify",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-03-verify.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:44:12+00:00",
+      "elapsed_seconds": 9.39,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-03-verify.sh"
+      }
+    },
+    {
+      "file": "transfer-03b-verify-tampered-must-fail.json",
+      "name": "transfer-03b-verify-tampered-must-fail",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-03b-verify-tampered-must-fail.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:44:21+00:00",
+      "elapsed_seconds": 0.18,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-03b-verify-tampered-must-fail.sh"
+      }
+    },
+    {
+      "file": "transfer-04-install.json",
+      "name": "transfer-04-install",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-04-install.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:44:22+00:00",
+      "elapsed_seconds": 107.32,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-04-install.sh"
+      }
+    },
+    {
+      "file": "transfer-05-active.json",
+      "name": "transfer-05-active",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-05-active.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:46:09+00:00",
+      "elapsed_seconds": 0.1,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-05-active.sh"
+      }
+    },
+    {
+      "file": "transfer-06-selftest.json",
+      "name": "transfer-06-selftest",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-06-selftest.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:46:09+00:00",
+      "elapsed_seconds": 3.38,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-06-selftest.sh"
+      }
+    },
+    {
+      "file": "transfer-07-doctor.json",
+      "name": "transfer-07-doctor",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-07-doctor.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:46:12+00:00",
+      "elapsed_seconds": 3.29,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-07-doctor.sh"
+      }
+    },
+    {
+      "file": "transfer-08-demo.json",
+      "name": "transfer-08-demo",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-08-demo.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:46:16+00:00",
+      "elapsed_seconds": 7.87,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-08-demo.sh"
+      }
+    },
+    {
+      "file": "transfer-09-install-tampered-keeps-active.json",
+      "name": "transfer-09-install-tampered-keeps-active",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-09-install-tampered-keeps-active.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:46:24+00:00",
+      "elapsed_seconds": 0.21,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-09-install-tampered-keeps-active.sh"
+      }
+    },
+    {
+      "file": "transfer-10-no-pip-index.json",
+      "name": "transfer-10-no-pip-index",
+      "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-10-no-pip-index.sh\"'",
+      "exit_code": 0,
+      "status": "PASS",
+      "started_at": "2026-09-17T11:46:24+00:00",
+      "elapsed_seconds": 0.1,
+      "environment": {
+        "os": "Linux",
+        "os_release": "6.18.44-fc-v33",
+        "machine": "x86_64",
+        "collector_python": "3.11.15",
+        "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+        "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+        "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-10-no-pip-index.sh"
+      }
+    },
+    {
+      "file": "transfer-target_profile.min.json",
+      "name": "transfer-target_profile.min",
+      "command": null,
+      "exit_code": null,
+      "status": "UNKNOWN",
+      "started_at": null,
+      "elapsed_seconds": null,
+      "environment": null
+    }
+  ],
+  "verification": {
+    "HOST_CORE_TESTED": {
+      "status": "PASS",
+      "reason": "개인 빌드 호스트(Linux): pytest 575 통과, ruff/mypy 통과, demo 12/12·16/16 PASS"
+    },
+    "TARGET_BUNDLE_PREPARED": {
+      "status": "PASS",
+      "reason": "win_amd64/cp312 wheel 38 + lock(hash) + manifest + inventory, PyPI sha256 대조; 표준 라이브러리 verifier 로 Windows target profile 대비 정적 검증 PASS(host-10)"
+    },
+    "TARGET_OFFLINE_TESTED": {
+      "status": "NOT_RUN",
+      "reason": "빌드 호스트에 Windows 없음. 사용자 Windows PC 또는 사내 PC 에서 00_Preflight→01_Verify→02_Install→04_SelfTest→demo 실행 필요. 동일 소스의 Linux 프로파일 rehearsal 은 PASS(별도 acceptance)"
+    },
+    "CORP_INSTALLED": {
+      "status": "NOT_RUN",
+      "reason": "사내 PC 미접속"
+    },
+    "CORP_INTEGRATED": {
+      "status": "NOT_RUN",
+      "reason": "사내 PC 미접속"
+    },
+    "BUSINESS_VALIDATED": {
+      "status": "NOT_RUN",
+      "reason": "실데이터·업무 허용오차 없음"
+    }
+  },
+  "notes": [
+    "이 파일은 ZIP 밖에 있으며 ZIP 은 수정되지 않았다 (ZIP 재포장 금지).",
+    "zip.sha256 은 무결성 확인이며 배포자 진위 확인이 아니다.",
+    "TARGET_CONFIRMED=TARGET_UNCONFIRMED: Windows x64 / CPython 3.12 / CPU 는 임시 참조 프로파일"
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "project": "corp-dl-agent",
   "version": "4.0.0",
-  "updated_at": "2026-09-17T11:24:27+00:00",
+  "updated_at": "2026-09-17T11:48:03+00:00",
   "host": {
     "os": "Linux x86_64 (cloud container)",
     "python_dev_venv": "CPython 3.12.3",
@@ -38,12 +38,12 @@
       "notes": "앱 wheel + win/linux wheelhouse(PyPI hash 대조) + lock/inventory/manifest + DIA_4.0.0_<profile>.zip"
     },
     "M6": {
-      "status": "IN_PROGRESS",
-      "notes": "Linux rehearsal(tools/transfer_test_linux.sh): 비관리자·한글/공백 경로·다른 CWD·netns. Windows 는 NOT_RUN(사용자 PC 에서 수행)"
+      "status": "DONE(Linux)/NOT_RUN(Windows)",
+      "notes": "Linux rehearsal 12 단계 PASS (test-evidence/transfer-*). Windows 는 사용자 PC 에서 수행"
     },
     "M7": {
-      "status": "IN_PROGRESS",
-      "notes": "upgrade/rollback 은 scripts 시험(가짜 release)으로 검증; 최종 ZIP·외부 acceptance·문서"
+      "status": "DONE",
+      "notes": "최종 ZIP 2종, 외부 sha256, acceptance.json, 문서 12종"
     },
     "M0b": {
       "status": "DONE",
@@ -53,12 +53,12 @@
   "verification": {
     "HOST_CORE_TESTED": "PASS",
     "TARGET_BUNDLE_PREPARED": "PASS",
-    "TARGET_OFFLINE_TESTED": "NOT_RUN(Windows)/IN_PROGRESS(Linux rehearsal)",
+    "TARGET_OFFLINE_TESTED": "NOT_RUN(win-x64-cp312-cpu) / PASS(linux-x64-cp312-cpu rehearsal)",
     "CORP_INSTALLED": "NOT_RUN",
     "CORP_INTEGRATED": "NOT_RUN",
     "BUSINESS_VALIDATED": "NOT_RUN"
   },
-  "resume_command": "cat NEXT_ACTION.md; timeout 1500 .venv/bin/python -m pytest -q tests",
+  "resume_command": "cat NEXT_ACTION.md; .venv/bin/python -m pytest -q tests",
   "integration": {
     "status": "DONE",
     "notes": "전체 572 tests 통과, ruff/mypy 통과, demo 12/12 단계·16/16 검사 PASS"
@@ -77,5 +77,19 @@
   },
   "verification_evidence": {
     "HOST_CORE_TESTED": "pytest 572 passed (timeout 1500), ruff/mypy 통과, demo all_pass (Linux x86_64, CPython 3.12.3, CPU, offline 합성 데이터). GPU/AMP NOT_RUN, OOM MOCK_TESTED, Windows .cmd/.ps1 NOT_RUN(정적 검사만)"
+  },
+  "artifacts": {
+    "win_zip": "dist/DIA_4.0.0_win-x64-cp312-cpu.zip",
+    "win_zip_sha256": "397e7ea19e14064b04de5d3440313e88c9c23bdb7b382cb46e62dd6778f1afe7",
+    "win_zip_bytes": 219755193,
+    "linux_zip": "dist/DIA_4.0.0_linux-x64-cp312-cpu.zip",
+    "linux_zip_sha256": "d037dfe1c9753178dc272d10f8925d2e2da29a60a3cb4c655699a34961814cde",
+    "linux_zip_bytes": 3101955188,
+    "app_wheel": "dist/corp_dl_agent-4.0.0-py3-none-any.whl",
+    "acceptance": [
+      "dist/DIA_4.0.0_win-x64-cp312-cpu.acceptance.json",
+      "dist/DIA_4.0.0_linux-x64-cp312-cpu.acceptance.json"
+    ],
+    "note": "dist/ 와 wheelhouse/ 는 git 에 없음(용량). release-artifacts/ 에 sha256·acceptance·앱 wheel 사본"
   }
 }

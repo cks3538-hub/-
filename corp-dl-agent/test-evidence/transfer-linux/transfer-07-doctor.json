@@ -1,0 +1,23 @@
+{
+  "name": "transfer-07-doctor",
+  "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-07-doctor.sh\"'",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-17T11:46:12+00:00",
+  "elapsed_seconds": 3.29,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+    "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+    "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-07-doctor.sh"
+  },
+  "lock_sha256": null,
+  "stdout_tail": "{\n  \"generated_at\": \"2026-09-17T11:46:15+00:00\",\n  \"app\": {\n    \"version\": \"4.0.0\",\n    \"schema_version\": \"4.0\",\n    \"db_schema_version\": 4\n  },\n  \"host\": {\n    \"os\": \"Linux\",\n    \"os_version\": \"#1 SMP PREEMPT_DYNAMIC @0\",\n    \"os_release\": \"6.18.44-fc-v33\",\n    \"architecture\": \"x86_64\",\n    \"python_implementation\": \"CPython\",\n    \"python_version\": \"3.12.3\",\n    \"python_abi\": \"cp312\",\n    \"python_executable\": \"<TEST_ROOT>/DIA 설치/releases/4.0.0/linux-x64-cp312-cpu/.venv/bin/python\",\n    \"in_virtualenv\": true,\n    \"platform_tag\": \"linux-x86_64\",\n    \"cpu_count\": 4\n  },\n  \"packages\": {\n    \"pydantic\": {\n      \"feature\": \"core\",\n      \"installed\": true,\n      \"version\": \"2.13.5\",\n      \"error\": null\n    },\n    \"PyYAML\": {\n      \"feature\": \"core\",\n      \"installed\": true,\n      \"version\": \"6.0.3\",\n      \"error\": null\n    },\n    \"httpx\": {\n      \"feature\": \"core\",\n      \"installed\": true,\n      \"version\": \"0.28.1\",\n      \"error\": null\n    },\n    \"python-pptx\": {\n      \"feature\": \"documents\",\n      \"installed\": true,\n      \"version\": \"1.0.2\",\n      \"error\": null\n    },\n    \"openpyxl\": {\n      \"feature\": \"documents\",\n      \"installed\": true,\n      \"version\": \"3.1.5\",\n      \"error\": null\n    },\n    \"numpy\": {\n      \"feature\": \"ml-cpu\",\n      \"installed\": true,\n      \"version\": \"2.5.3\",\n      \"error\": null\n    },\n    \"pandas\": {\n      \"feature\": \"ml-cpu\",\n      \"installed\": true,\n      \"version\": \"3.0.5\",\n      \"error\": null\n    },\n    \"scikit-learn\": {\n      \"feature\": \"ml-cpu\",\n      \"installed\": true,\n      \"version\": \"1.9.1\",\n      \"error\": null\n    },\n    \"torch\": {\n      \"feature\": \"ml-cpu\",\n      \"installed\": true,\n      \"version\": \"2.14.0+cu130\",\n      \"error\": null\n    },\n    \"pywin32\": {\n      \"feature\": \"cad-windows\",\n      \"installed\": false,\n      \"version\": null,\n      \"error\": \"ModuleNotFoundError: No module named 'win32com'\"\n    }\n  },\n  \"features\": {\n    \"core\": true,\n    \"documents\": true,\n    \"ml-cpu\": true,\n    \"cad-windows\": false\n  },\n  \"torch\": {\n    \"status\": \"OK\",\n    \"version\": \"2.14.0+cu130\",\n    \"cuda_available\": false,\n    \"cuda_version\": \"13.0\",\n    \"device_default\": \"cpu\",\n    \"gpu_names\": []\n  },\n  \"profile\": {\n    \"name\": \"corp-offline\",\n    \"policy\": {\n      \"data\": \"사내 로컬 파일\",\n      \"network\": \"API 호출 0회 (outbound guard 활성)\",\n      \"llm\": \"규칙 기반 offline planner\"\n    },\n    \"network_allowed\": false\n  },\n  \"gateway\": {\n    \"enabled\": false,\n    \"base_url\": null,",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/transfer-07-doctor.log (개인 로컬 보관, 반입 제외)"
+}
