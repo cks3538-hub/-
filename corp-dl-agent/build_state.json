@@ -1,18 +1,54 @@
 {
   "project": "corp-dl-agent",
   "version": "4.0.0",
-  "updated_at": "2026-09-17T00:30:00Z",
-  "host": {"os": "Linux x86_64 (cloud container)", "python_dev_venv": "CPython 3.12.3", "gpu": "none", "user_pc": "Windows (사용자 진술)"},
-  "reference_target": {"profile_id": "win-x64-cp312-cpu", "target_confirmed": false},
+  "updated_at": "2026-09-17T10:37:47+00:00",
+  "host": {
+    "os": "Linux x86_64 (cloud container)",
+    "python_dev_venv": "CPython 3.12.3",
+    "gpu": "none",
+    "user_pc": "Windows (사용자 진술)"
+  },
+  "reference_target": {
+    "profile_id": "win-x64-cp312-cpu",
+    "target_confirmed": false
+  },
   "milestones": {
-    "M0": {"status": "DONE", "notes": "환경 진단, 스켈레톤(pyproject/errors/common/config/cli/workspace/security), CONTRACT.md, CLAUDE.md"},
-    "M1": {"status": "IN_PROGRESS", "notes": "engineering 구현 (병렬 wave 1)"},
-    "M2": {"status": "IN_PROGRESS", "notes": "ml-core (wave 1) -> ml-torch (wave 2)"},
-    "M3": {"status": "IN_PROGRESS", "notes": "documents (wave 1)"},
-    "M4": {"status": "IN_PROGRESS", "notes": "adapters/security.network (wave 1)"},
-    "M5": {"status": "IN_PROGRESS", "notes": "packaging/scripts 코드 (wave 1); wheelhouse/lock 은 wave 이후"},
-    "M6": {"status": "PENDING", "notes": "새 환경 transfer-test (Linux rehearsal); Windows 는 사용자 PC 에서 NOT_RUN 상태로 인계"},
-    "M7": {"status": "PENDING", "notes": "upgrade/rollback 시험, 최종 ZIP/hash/acceptance/문서"}
+    "M0": {
+      "status": "DONE",
+      "notes": "환경 진단, 스켈레톤(pyproject/errors/common/config/cli/workspace/security), CONTRACT.md, CLAUDE.md"
+    },
+    "M1": {
+      "status": "DONE",
+      "notes": "engineering 101 tests"
+    },
+    "M2": {
+      "status": "DONE",
+      "notes": "ml-core 98 tests + ml-torch 40 tests (CUDA/AMP NOT_RUN, OOM MOCK_TESTED)"
+    },
+    "M3": {
+      "status": "DONE",
+      "notes": "documents 60 tests (RENDER/RECALC NOT_RUN)"
+    },
+    "M4": {
+      "status": "DONE",
+      "notes": "adapters+network 110 tests (LLM/Atlassian MOCK_TESTED, CATIA INACTIVE)"
+    },
+    "M5": {
+      "status": "IN_PROGRESS",
+      "notes": "packaging 코드/scripts 59 tests 완료; 실제 앱 wheel/lock/ZIP 빌드는 통합·demo 후 수행"
+    },
+    "M6": {
+      "status": "PENDING",
+      "notes": "새 환경 transfer-test (Linux rehearsal); Windows 는 사용자 PC 에서 NOT_RUN 상태로 인계"
+    },
+    "M7": {
+      "status": "PENDING",
+      "notes": "upgrade/rollback 시험, 최종 ZIP/hash/acceptance/문서"
+    },
+    "M0b": {
+      "status": "DONE",
+      "notes": "reporting/doctor/self-test/menu 15 tests"
+    }
   },
   "verification": {
     "HOST_CORE_TESTED": "NOT_RUN",
@@ -22,5 +58,9 @@
     "CORP_INTEGRATED": "NOT_RUN",
     "BUSINESS_VALIDATED": "NOT_RUN"
   },
-  "resume_command": "cat NEXT_ACTION.md; .venv/bin/python -m pytest -q"
+  "resume_command": "cat NEXT_ACTION.md; .venv/bin/python -m pytest -q",
+  "integration": {
+    "status": "IN_PROGRESS",
+    "notes": "전체 통합 수정 → demo 통합 시나리오"
+  }
 }

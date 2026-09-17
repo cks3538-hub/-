@@ -1,7 +1,7 @@
 # NEXT_ACTION
 
-1. wave 1 구현 완료 확인: `.venv/bin/python -m pytest -q` 전체 통과, `ruff check .`, `mypy corp_dl_agent`.
-2. wave 2: ml-torch(mlp/checkpoint/trainer/export/runner), demo.py 통합.
-3. app wheel 빌드 → win-x64-cp312 wheelhouse cross-download + linux-x64-cp312 wheelhouse → lock/inventory → ZIP.
-4. Linux 새 경로 transfer-test (한글/공백 경로, 다른 CWD, 비관리자, 네트워크 차단) → acceptance.
-5. 문서 12종 작성, BUILD_STATUS/BLOCKERS 갱신, git commit/push.
+1. 통합/demo 워크플로 완료 확인: `timeout 1500 .venv/bin/python -m pytest -q tests`, `ruff check .`, `mypy corp_dl_agent`, `python -m corp_dl_agent demo --offline --device cpu --output-dir workspace/demo-full`.
+2. 앱 wheel: `.venv/bin/python -m build --wheel` → dist/corp_dl_agent-4.0.0-py3-none-any.whl
+3. ZIP: `python -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse/win-x64-cp312-cpu --app-wheel dist/... --evidence-dir test-evidence --out dist` (linux 프로파일도 동일)
+4. Linux rehearsal: `sudo bash tools/transfer_test_linux.sh dist/DIA_4.0.0_linux-x64-cp312-cpu.zip linux-x64-cp312-cpu` → acceptance.py
+5. 문서 갱신(TEST_EVIDENCE.md, BUILD_STATUS, BLOCKERS, TRANSFER_CONTENTS), git commit/push, 최종 보고.
