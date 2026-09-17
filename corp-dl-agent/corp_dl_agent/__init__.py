@@ -4,6 +4,6 @@
 (표준 라이브러리 preflight/verifier 및 doctor가 torch/pandas 없이도 동작해야 한다.)
 """
 
-from corp_dl_agent.version import __version__, SCHEMA_VERSION, CALCULATION_VERSION
+from corp_dl_agent.version import CALCULATION_VERSION, SCHEMA_VERSION, __version__
 
 __all__ = ["__version__", "SCHEMA_VERSION", "CALCULATION_VERSION"]

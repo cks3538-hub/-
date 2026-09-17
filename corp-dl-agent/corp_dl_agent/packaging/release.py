@@ -244,7 +244,9 @@ def build_release_detailed(
     notes: list[str] | None = None,
     db_schema_version: int | None = None,
     schema_version: str | None = None,
+    package_kind: PackageKind | None = None,
 ) -> ReleaseBuildResult:
+    """반입 ZIP 빌드. package_kind 를 지정하면 wheelhouse 유무/프로파일 device 와 일치해야 한다 (불일치 → E_PACKAGE_INVALID)."""
     root = Path(project_root).resolve()
     out = Path(out_dir).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -262,6 +264,13 @@ def build_release_detailed(
         raise AgentError("E_PACKAGE_INVALID", f"app_module 이름 오류: {app_module}")
     wh = Path(wheelhouse_dir).resolve() if wheelhouse_dir is not None else None
     kind = _package_kind(profile, wh)
+    if package_kind is not None and package_kind != kind:
+        raise AgentError(
+            "E_PACKAGE_INVALID",
+            f"요청한 package_kind {package_kind} 가 실제 구성({kind}) 과 다릅니다",
+            hint="SOURCE_ONLY 는 wheelhouse 없이, CPU_OFFLINE 은 cpu 프로파일 + wheelhouse, GPU_OFFLINE 은 gpu 프로파일(검증된 드라이버/torch 조합) + wheelhouse 로만 만들 수 있습니다.",
+            details={"requested": package_kind, "derived": kind, "wheelhouse": str(wh) if wh else None},
+        )
     warnings: list[str] = []
     skipped: list[str] = []
     for k, rec in (verification_overrides or {}).items():

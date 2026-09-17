@@ -80,6 +80,9 @@ ignore = [
   "UP007", "UP045",  # X | None style is fine either way
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = ["corp_dl_agent"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S", "B011"]
 "scripts/*" = ["S"]
