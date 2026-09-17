@@ -229,12 +229,10 @@ def _stale_and_placeholder_checks(
     return out
 
 
-def _conflict_after_revalidation(
-    prefix: str, locator: str, key: str, rendered: str, notes: str | None
-) -> ValidationCheck:
+def _conflict_after_revalidation(check_id: str, locator: str, rendered: str, notes: str | None) -> ValidationCheck:
     """문서에는 값이 기록되었으나 payload 재검증(합계/차이) 에서 해당 항목이 CONFLICT 로 바뀐 경우."""
     return ValidationCheck(
-        check_id=f"{prefix}.conflict[{locator}:{key}]",
+        check_id=check_id,
         category="numeric",
         status=Status.FAIL,
         locator=locator,
@@ -244,10 +242,10 @@ def _conflict_after_revalidation(
     )
 
 
-def _value_without_payload(prefix: str, locator: str, key: str, rendered: str) -> ValidationCheck:
+def _value_without_payload(check_id: str, locator: str, rendered: str) -> ValidationCheck:
     """문서에는 값이 있으나 payload 에는 값이 없는(MISSING) 경우 — 근거 없는 숫자."""
     return ValidationCheck(
-        check_id=f"{prefix}.numeric[{locator}:{key}]",
+        check_id=check_id,
         category="numeric",
         status=Status.FAIL,
         locator=locator,
@@ -388,11 +386,17 @@ def validate_pptx(
                 item = payload.items.get(r.key)
                 pq = item.quantity if item else None
                 if pq is not None and pq.value_type == "conflict":
-                    checks.append(_conflict_after_revalidation("pptx", r.locator, r.key, r.rendered, pq.notes))
+                    checks.append(
+                        _conflict_after_revalidation(
+                            f"pptx.conflict[{r.locator}:{r.key}]", r.locator, r.rendered, pq.notes
+                        )
+                    )
                     continue
                 pv = pq.value if pq else None
                 if pv is None:
-                    checks.append(_value_without_payload("pptx", r.locator, r.key, r.rendered))
+                    checks.append(
+                        _value_without_payload(f"pptx.numeric[{r.locator}:{r.key}]", r.locator, r.rendered)
+                    )
                     continue
                 start = text.index(r.rendered)
                 read_back = parse_number(text[start : start + len(r.rendered)])
@@ -611,10 +615,12 @@ def validate_xlsx(
                 elif r.key in payload.tables and r.attr is not None:
                     pq = _table_cell_quantity(payload, r.key, r.attr, r.locator)
                 if pq is not None and pq.value_type == "conflict":
-                    checks.append(_conflict_after_revalidation("xlsx", r.locator, r.key, r.rendered, pq.notes))
+                    checks.append(
+                        _conflict_after_revalidation(f"xlsx.conflict[{r.locator}]", r.locator, r.rendered, pq.notes)
+                    )
                     continue
                 if pq is None or pq.value is None:
-                    checks.append(_value_without_payload("xlsx", r.locator, r.key, r.rendered))
+                    checks.append(_value_without_payload(f"xlsx.numeric[{r.locator}]", r.locator, r.rendered))
                     continue
                 ok = (
                     isinstance(actual, (int, float))
@@ -694,7 +700,8 @@ def validate_xlsx(
         )
     checks.extend(_hash_checks(p, manifest, "xlsx"))
     engine_checks = _engine_status_checks("xlsx", renderer=renderer, recalc_engine=recalc_engine)
-    engine_checks[0].actual = f"formula_cells={len(formulas)}, recalc_engine={recalc_engine}"
+    n_formula_cells = sum(1 for k in formulas if k.startswith("sheet:"))
+    engine_checks[0].actual = f"formula_cells={n_formula_cells}, recalc_engine={recalc_engine}"
     checks.extend(engine_checks)
     return _summarize(doc)
 
