@@ -86,6 +86,7 @@ class ConfigLoader(StrictModel):
 
     def build(self) -> AppConfig:
         merged = copy.deepcopy(DEFAULT_CONFIG)
+        merged = _deep_merge(merged, installation_defaults())
         if self.config_path:
             p = Path(self.config_path)
             if not p.is_file():
@@ -109,6 +110,26 @@ class ConfigLoader(StrictModel):
         except ValidationError as exc:
             code, details = _format_validation_error(exc)
             raise AgentError(code, "설정 검증 실패", details=details) from exc
+
+
+def installation_defaults(environ: dict[str, str] | None = None) -> dict[str, Any]:
+    """설치기/실행기(scripts/launch.py)가 넘기는 설치 위치를 '설치 기본값' 으로 반영한다.
+
+    우선순위: package defaults < 설치 기본값(DIA_INSTALL_ROOT/DIA_DATA_ROOT 환경변수) < company config < CLI --set.
+    환경변수가 없으면 아무것도 바꾸지 않는다. secret 은 이 경로로 들어오지 않는다.
+    """
+    env = os.environ if environ is None else environ
+    paths: dict[str, Any] = {}
+    install_root = (env.get("DIA_INSTALL_ROOT") or "").strip()
+    data_root = (env.get("DIA_DATA_ROOT") or "").strip()
+    if install_root:
+        paths["install_root"] = str(Path(install_root).expanduser().resolve())
+        paths["company_root"] = str((Path(install_root).expanduser() / "company").resolve())
+        if not data_root:
+            data_root = str(Path(install_root).expanduser() / "workspace")
+    if data_root:
+        paths["data_root"] = str(Path(data_root).expanduser().resolve())
+    return {"paths": paths} if paths else {}
 
 
 def _resolve_relative_paths(cfg: dict[str, Any], base: Path) -> dict[str, Any]:

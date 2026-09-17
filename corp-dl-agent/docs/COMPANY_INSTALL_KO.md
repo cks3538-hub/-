@@ -79,6 +79,7 @@ PowerShell 실행 정책·인증서·GPO·백신을 해제하지 않습니다. `
 
 ## 4. 회사 설정 입력
 
+0. 설정 우선순위: package defaults < 설치 기본값(`03_Start.cmd`/`launch.py` 가 넘기는 `DIA_INSTALL_ROOT`/`DIA_DATA_ROOT`) < 회사 설정(company config) < 명령줄 `--set`. 회사 설정이 없어도 설치 폴더의 `workspace\`·`company\` 가 기본 경로로 잡힙니다.
 1. `config-examples\company_config.example.yaml` 을 `<install_root>\company\config\company_config.yaml` 로 복사합니다.
 2. 메모장으로 열어 `paths.sources_roots`(PPT/Excel 자료 폴더), `cad.field_mapping`, `documents.approved_fonts` 를 채웁니다. **secret 값은 넣지 않습니다**(`env:` / `file:` 참조만).
 3. 확인: `03_Start.cmd` → 메뉴 "설정 검사" 또는
