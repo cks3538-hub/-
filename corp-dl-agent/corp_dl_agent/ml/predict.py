@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -86,9 +87,13 @@ def predict_cli(
     cfg: AppConfig,
     *,
     allow_synthetic: bool | None = None,
+    extra_roots: Iterable[str | Path] = (),
 ) -> dict[str, Any]:
-    """번들 로드 → 예측 → CSV/sidecar 작성. 반환: 요약 dict (JSON 가능)."""
-    roots = predict_roots(cfg)
+    """번들 로드 → 예측 → CSV/sidecar 작성. 반환: 요약 dict (JSON 가능).
+
+    extra_roots: 호출자(도구 dispatch 등)가 이미 승인한 추가 root. 기본 root(작업 폴더/workspace/설정 root) 에 더해진다.
+    """
+    roots = predict_roots(cfg, *[Path(r) for r in extra_roots])
     forbid = cfg.security.forbid_symlinks
     model_path = resolve_within(model_dir, roots, forbid_links=forbid)
     input_path = resolve_within(input_csv, roots, forbid_links=forbid)

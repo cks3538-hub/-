@@ -72,17 +72,29 @@ class CalculateMassCostArgs(StrictModel):
 
 
 class TrainModelArgs(StrictModel):
+    """train_model 인자. mode 는 cfg.ml.demo / cfg.ml.pilot 예산을 고른다 (demo: 후보 2·10 epochs·300초 기본).
+
+    max_candidates/max_epochs/patience/wall_time_seconds 를 주면 그 예산 안에서만 줄이거나 늘린다 (registry 상한 이내).
+    """
+
     taskspec_path: str = Field(min_length=1, max_length=MAX_PATH_CHARS)
     mode: Literal["demo", "pilot"] = "demo"
     run_id: str | None = Field(default=None, max_length=120, pattern=r"^[A-Za-z0-9._-]+$")
     resume: bool = False
     device: Literal["cpu"] = "cpu"  # cuda 는 설정+드라이버 확인 후 CLI 에서만
+    max_candidates: int | None = Field(default=None, ge=1, le=6)
+    max_epochs: int | None = Field(default=None, ge=1, le=100)
+    patience: int | None = Field(default=None, ge=1, le=100)
+    wall_time_seconds: int | None = Field(default=None, ge=10, le=3600)
+    lock_hash: str | None = Field(default=None, max_length=128)
 
 
 class PredictArgs(StrictModel):
     model_dir: str = Field(min_length=1, max_length=MAX_PATH_CHARS)
     input_csv: str = Field(min_length=1, max_length=MAX_PATH_CHARS)
     output_csv: str = Field(min_length=1, max_length=MAX_PATH_CHARS)
+    # synthetic 번들은 명시적으로만 허용 (운영 자동 채택 금지). False 면 cfg.ml.allow_synthetic_models_in_production 을 따른다.
+    allow_synthetic: bool = False
 
 
 class SearchDocumentsArgs(StrictModel):
@@ -341,6 +353,31 @@ def run_calculate_mass_cost(args: CalculateMassCostArgs, ctx: ToolContext) -> di
     return result
 
 
+def _train_budget_override(args: TrainModelArgs, ctx: ToolContext, spec: Any) -> Any:
+    """도구 인자의 mode/상한을 ResourceBudget 으로 변환한다.
+
+    - mode 가 TaskSpec.resource_budget.mode 와 같고 별도 상한이 없으면 None (runner 가 TaskSpec 의 예산을 그대로 적용).
+    - 그 외에는 cfg.ml.<mode> 예산에서 시작해 인자로 준 상한만 덮어쓴 ResourceBudget 을 만든다 (값을 만들어내지 않는다).
+    """
+    updates = {
+        k: v
+        for k, v in (
+            ("max_candidates", args.max_candidates),
+            ("max_epochs", args.max_epochs),
+            ("patience", args.patience),
+            ("wall_time_seconds", args.wall_time_seconds),
+        )
+        if v is not None
+    }
+    spec_mode = getattr(getattr(spec, "resource_budget", None), "mode", None)
+    if not updates and spec_mode == args.mode:
+        return None
+    budget_mod = _lazy("corp_dl_agent.state.budget", "train_model")
+    budget_cls = _attr(budget_mod, "ResourceBudget", "train_model")
+    base = budget_cls.from_app_config(ctx.cfg, args.mode)
+    return base.model_copy(update=updates) if updates else base
+
+
 def run_train_model(args: TrainModelArgs, ctx: ToolContext) -> dict[str, Any]:
     feature = "train_model"
     runner = _lazy("corp_dl_agent.ml.runner", feature)
@@ -348,8 +385,40 @@ def run_train_model(args: TrainModelArgs, ctx: ToolContext) -> dict[str, Any]:
     ts_path = ctx.resolve_input(args.taskspec_path)
     spec = _attr(taskspec_mod, "load_taskspec", feature)(ts_path)
     run_task = _attr(runner, "run_task", feature)
-    summary = run_task(spec, ctx.cfg, ctx.workspace, run_id=args.run_id, resume=args.resume)
-    return {"tool": feature, "task_id": spec.task_id, "mode": args.mode, "summary": _dump(summary)}
+    if ctx.cfg.ml.device != args.device:
+        raise AgentError(
+            "E_NOT_SUPPORTED",
+            f"train_model 도구는 device={args.device} 만 지원합니다 (설정 ml.device={ctx.cfg.ml.device}). cuda 는 CLI 에서 설정·드라이버 확인 후 사용하세요.",
+            details={"tool": feature, "device": args.device, "config_device": ctx.cfg.ml.device},
+        )
+    summary = run_task(
+        spec,
+        ctx.cfg,
+        ctx.workspace,
+        run_id=args.run_id,
+        resume=args.resume,
+        budget_override=_train_budget_override(args, ctx, spec),
+        lock_hash=args.lock_hash,
+    )
+    run_dir = Path(str(getattr(summary, "run_dir", "")))
+    export_dir = run_dir / "export"
+    return {
+        "tool": feature,
+        "task_id": spec.task_id,
+        "task_type": spec.task_type,
+        "mode": args.mode,
+        "run_id": getattr(summary, "run_id", None),
+        "status": getattr(summary, "status", None),
+        "synthetic": bool(getattr(summary, "synthetic", spec.data_origin == "synthetic")),
+        "data_origin": spec.data_origin,
+        "selected": getattr(summary, "selected", None),
+        "selected_kind": getattr(summary, "selected_kind", None),
+        "final_evaluation": dict(getattr(summary, "final_evaluation", {}) or {}),
+        "acceptance": dict(getattr(summary, "acceptance", {}) or {}),
+        "run_dir": str(run_dir),
+        "export_dir": str(export_dir) if export_dir.is_dir() else None,
+        "summary": _dump(summary),
+    }
 
 
 def run_predict(args: PredictArgs, ctx: ToolContext) -> dict[str, Any]:
@@ -358,8 +427,23 @@ def run_predict(args: PredictArgs, ctx: ToolContext) -> dict[str, Any]:
     model_dir = ctx.resolve_input(args.model_dir)
     input_csv = ctx.resolve_input(args.input_csv)
     output_csv = ctx.resolve_output_file(args.output_csv)
-    result = _attr(predict_mod, "predict_cli", feature)(model_dir, input_csv, output_csv, ctx.cfg)
-    return {"tool": feature, "output_csv": str(output_csv), "result": _dump(result)}
+    result = _attr(predict_mod, "predict_cli", feature)(
+        model_dir,
+        input_csv,
+        output_csv,
+        ctx.cfg,
+        allow_synthetic=True if args.allow_synthetic else None,
+        extra_roots=[*ctx.input_roots, *ctx.output_roots],
+    )
+    result_d = _dump(result)
+    return {
+        "tool": feature,
+        "output_csv": str(output_csv),
+        "n_rows": result_d.get("n_rows") if isinstance(result_d, dict) else None,
+        "synthetic": bool(result_d.get("synthetic", False)) if isinstance(result_d, dict) else None,
+        "model_kind": result_d.get("model_kind") if isinstance(result_d, dict) else None,
+        "result": result_d,
+    }
 
 
 def run_search_documents(args: SearchDocumentsArgs, ctx: ToolContext) -> dict[str, Any]:

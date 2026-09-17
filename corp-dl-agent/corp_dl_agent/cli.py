@@ -45,8 +45,12 @@ class KoreanArgumentParser(argparse.ArgumentParser):
 
 def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     """모든 명령에 공통인 설정 관련 인자."""
-    parser.add_argument("--config", dest="config_path", default=None, help="회사 설정 YAML 경로 (없으면 package defaults)")
-    parser.add_argument("--profile", default=None, help="personal-dev | transfer-test | corp-offline | corp-gateway")
+    parser.add_argument(
+        "--config", dest="config_path", default=None, help="회사 설정 YAML 경로 (없으면 package defaults)"
+    )
+    parser.add_argument(
+        "--profile", default=None, help="personal-dev | transfer-test | corp-offline | corp-gateway"
+    )
     parser.add_argument(
         "--set",
         dest="overrides",
@@ -111,13 +115,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(exc.format_ko(), file=sys.stderr)
         return exc.exit_code
     except KeyboardInterrupt:
-        print("중단되었습니다 (KeyboardInterrupt). 실행 중이던 run 은 status 명령으로 확인하세요.", file=sys.stderr)
+        print(
+            "중단되었습니다 (KeyboardInterrupt). 실행 중이던 run 은 status 명령으로 확인하세요.",
+            file=sys.stderr,
+        )
         return EXIT_RUNTIME
     except Exception as exc:  # noqa: BLE001 - 최종 안전망
         print(f"오류 E_INTERNAL: 예기치 않은 오류: {type(exc).__name__}: {exc}", file=sys.stderr)
         if getattr(args, "debug", False):
             traceback.print_exc()
-        print("해결 방법: 재현 가능한 합성 입력과 함께 보고하세요. (--debug 로 상세 traceback)", file=sys.stderr)
+        print(
+            "해결 방법: 재현 가능한 합성 입력과 함께 보고하세요. (--debug 로 상세 traceback)", file=sys.stderr
+        )
         return EXIT_RUNTIME
 
 

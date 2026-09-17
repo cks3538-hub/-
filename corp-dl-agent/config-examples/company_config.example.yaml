@@ -45,7 +45,7 @@ integrations:
   approved_origins: []
   bitbucket: { enabled: false, base_url: null, deployment: datacenter, secret_ref: null }
   jira:      { enabled: false, base_url: null, deployment: datacenter, secret_ref: null, project_key: null }
-  confluence:{ enabled: false, base_url: null, deployment: datacenter, secret_ref: null, space_key: null }
+  confluence: { enabled: false, base_url: null, deployment: datacenter, secret_ref: null, space_key: null }
   bamboo:    { enabled: false, base_url: null, deployment: datacenter, secret_ref: null }
 
 cad:

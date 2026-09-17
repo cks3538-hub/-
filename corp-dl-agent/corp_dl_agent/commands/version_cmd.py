@@ -28,6 +28,8 @@ def run(args: argparse.Namespace) -> int:
     if args.json_output:
         print(json.dumps(info, ensure_ascii=False, indent=2))
     else:
-        print(f"corp-dl-agent {__version__} (schema {SCHEMA_VERSION}, calc {CALCULATION_VERSION}, db {DB_SCHEMA_VERSION})")
+        print(
+            f"corp-dl-agent {__version__} (schema {SCHEMA_VERSION}, calc {CALCULATION_VERSION}, db {DB_SCHEMA_VERSION})"
+        )
         print(f"Python {info['python']} {info['implementation']} / {info['platform']} {info['machine']}")
     return 0

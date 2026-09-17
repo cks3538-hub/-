@@ -39,7 +39,9 @@ def has_link_component(path: Path, stop_at: Path | None = None) -> bool:
     return False
 
 
-def resolve_within(path: str | os.PathLike[str], roots: Iterable[str | os.PathLike[str]], *, forbid_links: bool = True) -> Path:
+def resolve_within(
+    path: str | os.PathLike[str], roots: Iterable[str | os.PathLike[str]], *, forbid_links: bool = True
+) -> Path:
     """path 를 resolve 하여 roots 중 하나의 하위인지 확인한다. 아니면 E_PATH_OUTSIDE_ROOT."""
     p = Path(path).expanduser()
     resolved = p.resolve()
@@ -76,11 +78,15 @@ def safe_member_path(member_name: str) -> str:
     return name
 
 
-def check_zip_safety(zf: zipfile.ZipFile, *, max_members: int = 20000, max_ratio: int = 200, max_total_bytes: int | None = None) -> list[str]:
+def check_zip_safety(
+    zf: zipfile.ZipFile, *, max_members: int = 20000, max_ratio: int = 200, max_total_bytes: int | None = None
+) -> list[str]:
     """ZIP 의 traversal/symlink/zip-bomb 검사. 통과한 member 이름 목록을 반환."""
     infos = zf.infolist()
     if len(infos) > max_members:
-        raise AgentError("E_PACKAGE_INVALID", f"archive 항목 수가 상한을 초과합니다: {len(infos)} > {max_members}")
+        raise AgentError(
+            "E_PACKAGE_INVALID", f"archive 항목 수가 상한을 초과합니다: {len(infos)} > {max_members}"
+        )
     names: list[str] = []
     total = 0
     for info in infos:
@@ -88,7 +94,11 @@ def check_zip_safety(zf: zipfile.ZipFile, *, max_members: int = 20000, max_ratio
         mode = (info.external_attr >> 16) & 0xFFFF
         if stat.S_ISLNK(mode):
             raise AgentError("E_PACKAGE_INVALID", f"archive 에 symlink 항목이 있습니다: {info.filename}")
-        if info.compress_size and info.file_size / max(info.compress_size, 1) > max_ratio and info.file_size > 1_000_000:
+        if (
+            info.compress_size
+            and info.file_size / max(info.compress_size, 1) > max_ratio
+            and info.file_size > 1_000_000
+        ):
             raise AgentError("E_PACKAGE_INVALID", f"압축 확대 비율이 비정상입니다: {info.filename}")
         total += info.file_size
         if max_total_bytes is not None and total > max_total_bytes:
@@ -131,4 +141,6 @@ def assert_managed_delete(path: Path, managed_roots: Iterable[Path]) -> Path:
             return resolved
         except ValueError:
             continue
-    raise AgentError("E_PATH_OUTSIDE_ROOT", "관리 폴더 밖의 파일은 삭제하지 않습니다", details={"path": str(resolved)})
+    raise AgentError(
+        "E_PATH_OUTSIDE_ROOT", "관리 폴더 밖의 파일은 삭제하지 않습니다", details={"path": str(resolved)}
+    )

@@ -31,7 +31,9 @@ class Workspace:
         return cls(
             data_root=Path(cfg.paths.data_root).expanduser().resolve(),
             company_root=Path(cfg.paths.company_root).expanduser().resolve(),
-            install_root=Path(cfg.paths.install_root).expanduser().resolve() if cfg.paths.install_root else None,
+            install_root=Path(cfg.paths.install_root).expanduser().resolve()
+            if cfg.paths.install_root
+            else None,
         )
 
     # workspace

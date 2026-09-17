@@ -53,14 +53,27 @@ def check_input_path(cfg: AppConfig, path: str) -> Path:
     return p
 
 
-def check_output_dir(cfg: AppConfig, path: str) -> Path:
+def _resolve_output_parent(cfg: AppConfig, path: str) -> tuple[Path, str]:
+    """출력 경로의 부모를 승인 root 안에서 확인한 뒤에만 폴더를 만든다 (검사 전 mkdir 금지)."""
     p = Path(path).expanduser()
     parent = p.parent if str(p.parent) not in ("", ".") else Path.cwd()
-    parent.mkdir(parents=True, exist_ok=True)
     resolved_parent = resolve_within(parent, _output_roots(cfg), forbid_links=cfg.security.forbid_symlinks)
-    out = resolved_parent / p.name
+    resolved_parent.mkdir(parents=True, exist_ok=True)
+    return resolved_parent, p.name
+
+
+def check_output_dir(cfg: AppConfig, path: str) -> Path:
+    """출력 폴더 (부모가 승인 root 안이어야 함). 폴더를 만들어 반환."""
+    resolved_parent, name = _resolve_output_parent(cfg, path)
+    out = resolved_parent / name
     out.mkdir(parents=True, exist_ok=True)
     return out
+
+
+def check_output_file(cfg: AppConfig, path: str) -> Path:
+    """출력 파일 (부모 폴더가 승인 root 안이어야 함). 부모 폴더만 만들고 파일 경로를 반환."""
+    resolved_parent, name = _resolve_output_parent(cfg, path)
+    return resolved_parent / name
 
 
 def resolve_db_path(cfg: AppConfig, db: str | None) -> Path:
@@ -68,11 +81,7 @@ def resolve_db_path(cfg: AppConfig, db: str | None) -> Path:
     if not db:
         ws.indexes.mkdir(parents=True, exist_ok=True)
         return ws.index_db
-    p = Path(db).expanduser()
-    parent = p.parent if str(p.parent) not in ("", ".") else Path.cwd()
-    parent.mkdir(parents=True, exist_ok=True)
-    resolved_parent = resolve_within(parent, _output_roots(cfg), forbid_links=cfg.security.forbid_symlinks)
-    return resolved_parent / p.name
+    return check_output_file(cfg, db)
 
 
 def resolve_index_roots(cfg: AppConfig, roots_arg: list[str]) -> list[Path]:
@@ -289,7 +298,7 @@ def run_search(args: argparse.Namespace) -> int:
             query=args.query,
             allow_hidden=include_hidden and cfg.documents.allow_hidden_content_to_llm,
         )
-        out = check_output_dir(cfg, str(Path(args.evidence_output).parent)) / Path(args.evidence_output).name
+        out = check_output_file(cfg, args.evidence_output)
         write_evidence(ev, out)
         payload["evidence_output"] = str(out)
         payload["evidence"] = ev.model_dump(mode="json")
