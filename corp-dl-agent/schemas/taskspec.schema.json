@@ -1,0 +1,264 @@
+{
+  "$defs": {
+    "Acceptance": {
+      "additionalProperties": false,
+      "description": "업무 허용 기준. 사용자가 입력한 값만 사용한다.",
+      "properties": {
+        "metric": {
+          "enum": [
+            "mae",
+            "rmse",
+            "r2",
+            "average_precision",
+            "roc_auc",
+            "f1"
+          ],
+          "title": "Metric",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "min",
+            "max"
+          ],
+          "title": "Direction",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric",
+        "threshold",
+        "direction"
+      ],
+      "title": "Acceptance",
+      "type": "object"
+    },
+    "ResourceBudgetSpec": {
+      "additionalProperties": false,
+      "description": "자원 예산. demo/pilot 은 AppConfig.ml 의 상한을 쓰고 custom 은 모든 값을 명시해야 한다.",
+      "properties": {
+        "mode": {
+          "default": "demo",
+          "enum": [
+            "demo",
+            "pilot",
+            "custom"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "wall_time_seconds": {
+          "anyOf": [
+            {
+              "maximum": 604800,
+              "minimum": 10,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wall Time Seconds"
+        },
+        "max_candidates": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Candidates"
+        },
+        "max_epochs": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Epochs"
+        },
+        "patience": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Patience"
+        }
+      },
+      "title": "ResourceBudgetSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_type": {
+      "enum": [
+        "regression",
+        "binary_classification"
+      ],
+      "title": "Task Type",
+      "type": "string"
+    },
+    "data_path": {
+      "title": "Data Path",
+      "type": "string"
+    },
+    "target": {
+      "title": "Target",
+      "type": "string"
+    },
+    "numeric_features": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Numeric Features",
+      "type": "array"
+    },
+    "categorical_features": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Categorical Features",
+      "type": "array"
+    },
+    "units": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Units",
+      "type": "object"
+    },
+    "id_column": {
+      "title": "Id Column",
+      "type": "string"
+    },
+    "group_column": {
+      "title": "Group Column",
+      "type": "string"
+    },
+    "split_policy": {
+      "default": "group",
+      "enum": [
+        "group",
+        "time"
+      ],
+      "title": "Split Policy",
+      "type": "string"
+    },
+    "time_column": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Time Column"
+    },
+    "seed": {
+      "default": 42,
+      "maximum": 2147483647,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "metric": {
+      "enum": [
+        "mae",
+        "rmse",
+        "r2",
+        "average_precision",
+        "roc_auc",
+        "f1"
+      ],
+      "title": "Metric",
+      "type": "string"
+    },
+    "direction": {
+      "enum": [
+        "min",
+        "max"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "acceptance": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Acceptance"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "resource_budget": {
+      "$ref": "#/$defs/ResourceBudgetSpec"
+    },
+    "data_origin": {
+      "enum": [
+        "synthetic",
+        "corporate"
+      ],
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "purpose": {
+      "default": "",
+      "title": "Purpose",
+      "type": "string"
+    },
+    "excluded_columns": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Columns",
+      "type": "array"
+    }
+  },
+  "required": [
+    "task_id",
+    "task_type",
+    "data_path",
+    "target",
+    "numeric_features",
+    "id_column",
+    "group_column",
+    "metric",
+    "direction",
+    "data_origin"
+  ],
+  "title": "TaskSpec",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

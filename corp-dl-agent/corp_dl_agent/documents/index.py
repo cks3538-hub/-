@@ -57,6 +57,31 @@ _DATE_RES = (
 )
 _REV_RE = re.compile(r"(?i)(?:^|[_\-\s(\[])(?:rev|r|v)[\-_ ]?(\d+[a-z]?)(?=$|[_\-\s)\].])")
 _NUMBER_FORMAT_UNIT_RE = re.compile(r'"([^"]+)"')
+# OOXML 관계(.rels) 파일: 실행하지 않고 <Relationship .../> 의 Type/TargetMode 속성만 읽는다
+_REL_TAG_RE = re.compile(r"<Relationship\b([^>]*)/?>", re.IGNORECASE)
+_REL_ATTR_RE = re.compile(r'([A-Za-z:]+)\s*=\s*"([^"]*)"')
+# 관계 Type 의 마지막 경로 구분(소문자) -> flag. 전체 URI 이든 축약형이든 마지막 구분만 본다.
+_REL_TYPE_FLAGS: dict[str, str] = {
+    "oleobject": "ole",  # ('package' 관계는 차트의 내장 데이터 통합문서 등 정상 요소이므로 flag 하지 않는다)
+    "vbaproject": "macro",
+    "hyperlink": "hyperlink",
+    "externallink": "external_link",
+    "externallinkpath": "external_link",
+}
+
+
+def relationship_flags(rels_xml: str) -> set[str]:
+    """관계 XML 문자열에서 macro/ole/hyperlink/external_link flag 를 추출한다 (실행 없음)."""
+    flags: set[str] = set()
+    for m in _REL_TAG_RE.finditer(rels_xml):
+        attrs = {k.lower(): v for k, v in _REL_ATTR_RE.findall(m.group(1))}
+        rel_type = attrs.get("type", "").rstrip("/").rsplit("/", 1)[-1].lower()
+        flag = _REL_TYPE_FLAGS.get(rel_type)
+        if flag:
+            flags.add(flag)
+        if attrs.get("targetmode", "").lower() == "external" and flag != "hyperlink":
+            flags.add("external_link")
+    return flags
 
 
 class Fragment(StrictModel):
@@ -165,7 +190,11 @@ def _cell_text(value: Any) -> str:
     if value is None:
         return ""
     if isinstance(value, datetime):
-        return value.isoformat(timespec="seconds") if (value.hour or value.minute or value.second) else value.date().isoformat()
+        return (
+            value.isoformat(timespec="seconds")
+            if (value.hour or value.minute or value.second)
+            else value.date().isoformat()
+        )
     if isinstance(value, bool):
         return "TRUE" if value else "FALSE"
     if isinstance(value, float) and value.is_integer():
@@ -204,16 +233,9 @@ def scan_package_flags(path: Path, *, max_members: int = 20000) -> list[str]:
             if low.endswith(".rels"):
                 try:
                     rel = zf.read(n).decode("utf-8", errors="replace")
-                except (KeyError, OSError):
+                except (KeyError, OSError, zipfile.BadZipFile):
                     continue
-                if "relationships/oleObject" in rel:
-                    flags.add("ole")
-                if 'TargetMode="External"' in rel:
-                    flags.add("external_link")
-                if "relationships/hyperlink" in rel:
-                    flags.add("hyperlink")
-                if "relationships/vbaProject" in rel:
-                    flags.add("macro")
+                flags |= relationship_flags(rel)
     if path.suffix.lower() in (".pptm", ".xlsm"):
         flags.add("macro")
     return sorted(flags)
@@ -320,7 +342,9 @@ def _chart_fragments(chart: Any, n: int, name: str, hidden: bool) -> list[Fragme
         title = chart.chart_title.text_frame.text.strip()
         if title:
             out.append(
-                _text_fragment(f"slide:{n}/chart:{name}/title", "chart_title", title, hidden, chart_type=chart_type)
+                _text_fragment(
+                    f"slide:{n}/chart:{name}/title", "chart_title", title, hidden, chart_type=chart_type
+                )
             )
     for plot in chart.plots:
         cats = [str(c) for c in plot.categories]
@@ -400,7 +424,13 @@ def extract_xlsx(path: Path) -> tuple[list[Fragment], dict[str, Any]]:
                     or bool(ws.column_dimensions[col_letter].hidden)
                 )
                 frag = _xlsx_cell_fragment(
-                    f"sheet:{ws.title}!{coord}", "cell", cell, ws_v[coord].value, hidden, sheet=ws.title, cell=coord
+                    f"sheet:{ws.title}!{coord}",
+                    "cell",
+                    cell,
+                    ws_v[coord].value,
+                    hidden,
+                    sheet=ws.title,
+                    cell=coord,
                 )
                 frags.append(frag)
                 cell_lookup[(ws.title, coord)] = frag
@@ -484,13 +514,15 @@ def extract_xlsx(path: Path) -> tuple[list[Fragment], dict[str, Any]]:
 
 
 def _xlsx_cell_fragment(
-    locator: str, kind: FragmentKind, cell: Any, cached: Any, hidden: bool, **meta: str
+    locator: str, kind: FragmentKind, xl_cell: Any, cached: Any, hidden: bool, **meta: str
 ) -> Fragment:
-    value = cell.value
-    number_format = str(cell.number_format) if cell.number_format and cell.number_format != "General" else None
+    value = xl_cell.value
+    number_format = (
+        str(xl_cell.number_format) if xl_cell.number_format and xl_cell.number_format != "General" else None
+    )
     formula: str | None = None
     cached_value: str | None = None
-    if cell.data_type == "f" or (isinstance(value, str) and value.startswith("=")):
+    if xl_cell.data_type == "f" or (isinstance(value, str) and value.startswith("=")):
         formula = str(value)
         cached_value = _cell_text(cached) if cached is not None else None
         text = formula if cached_value is None else f"{formula} = {cached_value}"
@@ -584,10 +616,8 @@ CREATE INDEX IF NOT EXISTS ix_fragments_source ON fragments(source_id);
 CREATE INDEX IF NOT EXISTS ix_fragments_hidden ON fragments(hidden);
 """
 
-_DOC_COLUMNS = (
-    "source_id, path, root, kind, status, sha256, size, mtime, revision, title, author, created, modified, "
-    "approval_state, doc_kind, synthetic, flags, n_fragments, hidden_fragments, indexed_at, error"
-)
+_SELECT_DOCS = "SELECT source_id, path, root, kind, status, sha256, size, mtime, revision, title, author, created, modified, approval_state, doc_kind, synthetic, flags, n_fragments, hidden_fragments, indexed_at, error FROM documents"
+_INSERT_DOC = "INSERT INTO documents(source_id, path, root, kind, status, sha256, size, mtime, revision, title, author, created, modified, approval_state, doc_kind, synthetic, flags, n_fragments, hidden_fragments, indexed_at, error) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
 
 def normalize_text(text: str) -> str:
@@ -650,7 +680,8 @@ class DocumentIndex:
         self._conn.execute("PRAGMA busy_timeout=30000")
         self._conn.executescript(_SCHEMA)
         self._conn.execute(
-            "INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', ?)", (str(INDEX_SCHEMA_VERSION),)
+            "INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', ?)",
+            (str(INDEX_SCHEMA_VERSION),),
         )
         self._conn.commit()
 
@@ -666,17 +697,15 @@ class DocumentIndex:
 
     # -- 조회 --------------------------------------------------------------
     def documents(self) -> list[DocumentMeta]:
-        rows = self._conn.execute(f"SELECT {_DOC_COLUMNS} FROM documents ORDER BY path").fetchall()
+        rows = self._conn.execute(_SELECT_DOCS + " ORDER BY path").fetchall()
         return [_row_to_doc(r) for r in rows]
 
     def get_document(self, source_id: str) -> DocumentMeta | None:
-        row = self._conn.execute(f"SELECT {_DOC_COLUMNS} FROM documents WHERE source_id=?", (source_id,)).fetchone()
+        row = self._conn.execute(_SELECT_DOCS + " WHERE source_id=?", (source_id,)).fetchone()
         return _row_to_doc(row) if row else None
 
     def find_by_path(self, path: str | os.PathLike[str]) -> DocumentMeta | None:
-        row = self._conn.execute(
-            f"SELECT {_DOC_COLUMNS} FROM documents WHERE path=?", (str(Path(path).resolve()),)
-        ).fetchone()
+        row = self._conn.execute(_SELECT_DOCS + " WHERE path=?", (str(Path(path).resolve()),)).fetchone()
         return _row_to_doc(row) if row else None
 
     def fragments(self, source_id: str, *, include_hidden: bool = True) -> list[Fragment]:
@@ -692,9 +721,10 @@ class DocumentIndex:
         """text_norm 에 patterns 중 하나라도 포함된 fragment (검색 1차 후보)."""
         if not patterns:
             return []
-        where = " OR ".join("f.text_norm LIKE ? ESCAPE '\\'" for _ in patterns)
+        # 값은 모두 바인딩 파라미터이며 patterns 개수만큼 'LIKE ?' 절을 반복한다 (문자열 삽입 없음)
+        where = " OR ".join(["f.text_norm LIKE ? ESCAPE '\\'"] * len(patterns))
         params: list[Any] = [f"%{_like_escape(p)}%" for p in patterns]
-        sql = f"SELECT f.*, d.source_id AS d_source_id FROM fragments f JOIN documents d ON d.source_id=f.source_id WHERE ({where})"
+        sql = "SELECT f.* FROM fragments f WHERE (" + where + ")"  # noqa: S608 - 바인딩 파라미터만 사용
         if not include_hidden:
             sql += " AND f.hidden=0"
         sql += " ORDER BY f.id LIMIT ?"
@@ -763,7 +793,9 @@ class DocumentIndex:
         root_paths = [Path(r).expanduser().resolve() for r in roots]
         for r in root_paths:
             if not r.is_dir():
-                raise AgentError("E_PATH_OUTSIDE_ROOT", f"색인 root 폴더가 없습니다: {r.name}", details={"root": str(r)})
+                raise AgentError(
+                    "E_PATH_OUTSIDE_ROOT", f"색인 root 폴더가 없습니다: {r.name}", details={"root": str(r)}
+                )
         report = IndexReport(roots=[str(r) for r in root_paths], started_at=started, finished_at=started)
         seen: set[str] = set()
         for root in root_paths:
@@ -899,7 +931,7 @@ class DocumentIndex:
             self._conn.execute("DELETE FROM fragments WHERE source_id=?", (doc.source_id,))
             self._conn.execute("DELETE FROM documents WHERE source_id=?", (doc.source_id,))
             self._conn.execute(
-                f"INSERT INTO documents({_DOC_COLUMNS}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                _INSERT_DOC,
                 (
                     doc.source_id,
                     doc.path,

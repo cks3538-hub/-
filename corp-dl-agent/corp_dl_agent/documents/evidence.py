@@ -12,7 +12,14 @@ from pathlib import Path
 
 from pydantic import Field
 
-from corp_dl_agent.common import StrictModel, atomic_write_json, now_iso, read_json, stable_id, validate_strict
+from corp_dl_agent.common import (
+    StrictModel,
+    atomic_write_json,
+    now_iso,
+    read_json,
+    stable_id,
+    validate_strict,
+)
 from corp_dl_agent.documents.index import DocKind
 from corp_dl_agent.documents.search import Hit
 from corp_dl_agent.version import SCHEMA_VERSION

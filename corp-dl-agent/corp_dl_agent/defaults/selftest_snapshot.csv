@@ -1,0 +1,10 @@
+﻿document_id,revision,configuration_id,occurrence_path,parent_path,reference_id,quantity,is_assembly,geometry_status,material_id,density,density_unit,volume,volume_unit,area,area_unit,surface_thickness,thickness_unit,mass,mass_unit,param:nominal_thickness_mm,extracted_at,extractor_version,synthetic
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A,,ASM_A,1,true,solid,,,,,,,,,,4.675,kg,,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_CUBE.1,ROOT/ASM_A,PART_CUBE,1,false,solid,SYN-PLASTIC-1.0,1.0,g/cm3,1000000,mm3,,,,,1.0,kg,3.0,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_CUBE.2,ROOT/ASM_A,PART_CUBE,1,false,solid,SYN-PLASTIC-1.0,1.0,g/cm3,1000000,mm3,,,,,1.0,kg,3.0,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_CUBE.3,ROOT/ASM_A,PART_CUBE,2,false,solid,SYN-PLASTIC-1.0,1.0,g/cm3,1000000,mm3,,,,,1.0,kg,3.0,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_BRACKET.1,ROOT/ASM_A,PART_BRACKET,1,false,solid,AL-6061,2700,kg/m3,250,cm3,,,,,,,2.5,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_SUPPRESSED.1,ROOT/ASM_A,PART_SUPPRESSED,1,false,suppressed,SYN-PLASTIC-1.0,1.0,g/cm3,500000,mm3,,,,,0.5,kg,,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_UNLOADED.1,ROOT/ASM_A,PART_UNLOADED,1,false,unloaded,,,,,,,,,,,,,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_NODENSITY.1,ROOT/ASM_A,PART_NODENSITY,1,false,solid,PP-GF30,,,100000,mm3,,,,,,,,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true
+DOC-ASM-A,R1,CFG-A,ROOT/ASM_A/PART_SKIN.1,ROOT/ASM_A,PART_SKIN,1,false,surface,PVC-SKIN,1.2,g/cm3,,,200000,mm2,,,,,,2026-09-01T00:00:00+00:00,synthetic_generator/1.0,true

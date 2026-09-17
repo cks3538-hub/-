@@ -1,0 +1,164 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "4.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "generator": {
+      "default": "corp-dl-agent 4.0.0",
+      "title": "Generator",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_type": {
+      "title": "Task Type",
+      "type": "string"
+    },
+    "target": {
+      "title": "Target",
+      "type": "string"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "data_origin": {
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "purpose": {
+      "default": "",
+      "title": "Purpose",
+      "type": "string"
+    },
+    "selected_model": {
+      "title": "Selected Model",
+      "type": "string"
+    },
+    "model_kind": {
+      "title": "Model Kind",
+      "type": "string"
+    },
+    "features": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Features",
+      "type": "object"
+    },
+    "train_ranges": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "type": "object"
+      },
+      "default": {},
+      "title": "Train Ranges",
+      "type": "object"
+    },
+    "split": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Split",
+      "type": "object"
+    },
+    "validation_metrics": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Validation Metrics",
+      "type": "object"
+    },
+    "test_metrics": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Test Metrics",
+      "type": "object"
+    },
+    "acceptance": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Acceptance",
+      "type": "object"
+    },
+    "threshold": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Threshold"
+    },
+    "hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {},
+      "title": "Hashes",
+      "type": "object"
+    },
+    "production_auto_select": {
+      "title": "Production Auto Select",
+      "type": "boolean"
+    },
+    "notices": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Notices",
+      "type": "array"
+    },
+    "limitations": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "created_at",
+    "run_id",
+    "task_id",
+    "task_type",
+    "target",
+    "data_origin",
+    "selected_model",
+    "model_kind",
+    "features",
+    "production_auto_select"
+  ],
+  "title": "ModelCard",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

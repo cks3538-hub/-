@@ -21,8 +21,10 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from corp_dl_agent.common import Status, StrictModel, atomic_write_json, now_iso, sha256_file
+from corp_dl_agent.common import Quantity, Status, StrictModel, atomic_write_json, now_iso, sha256_file
 from corp_dl_agent.documents.payload import (
+    CONFLICT_TEXT,
+    MISSING_TEXT,
     PayloadValidation,
     ReportPayload,
     parse_number,
@@ -34,6 +36,7 @@ from corp_dl_agent.documents.templates import (
     RenderStatus,
     collect_pptx_texts,
     collect_xlsx_texts,
+    defined_name_destinations,
     read_pptx_structure,
     read_xlsx_structure,
 )
@@ -133,7 +136,10 @@ def _hash_checks(path: Path, manifest: DocumentManifest | None, prefix: str) -> 
     if manifest is None:
         out.append(
             ValidationCheck(
-                check_id=f"{prefix}.template_hash", category="hash", status=Status.NOT_RUN, message_ko="manifest 가 없어 템플릿 hash 를 비교하지 못했습니다"
+                check_id=f"{prefix}.template_hash",
+                category="hash",
+                status=Status.NOT_RUN,
+                message_ko="manifest 가 없어 템플릿 hash 를 비교하지 못했습니다",
             )
         )
         return out
@@ -155,7 +161,11 @@ def _hash_checks(path: Path, manifest: DocumentManifest | None, prefix: str) -> 
     else:
         out.append(
             ValidationCheck(
-                check_id=f"{prefix}.template_hash", category="hash", status=Status.NOT_RUN, locator=str(tpl), message_ko="템플릿 파일을 찾을 수 없습니다"
+                check_id=f"{prefix}.template_hash",
+                category="hash",
+                status=Status.NOT_RUN,
+                locator=str(tpl),
+                message_ko="템플릿 파일을 찾을 수 없습니다",
             )
         )
     actual_out = sha256_file(path)
@@ -168,13 +178,17 @@ def _hash_checks(path: Path, manifest: DocumentManifest | None, prefix: str) -> 
             locator=str(path),
             expected=manifest.output_hash,
             actual=actual_out,
-            message_ko="산출물 hash 가 manifest 와 일치" if ok else "산출물이 manifest 기록 이후 변경되었습니다",
+            message_ko="산출물 hash 가 manifest 와 일치"
+            if ok
+            else "산출물이 manifest 기록 이후 변경되었습니다",
         )
     )
     return out
 
 
-def _stale_and_placeholder_checks(texts: dict[str, str], stale_values: list[str], prefix: str) -> list[ValidationCheck]:
+def _stale_and_placeholder_checks(
+    texts: dict[str, str], stale_values: list[str], prefix: str
+) -> list[ValidationCheck]:
     out: list[ValidationCheck] = []
     leftovers = [loc for loc, t in texts.items() if _PLACEHOLDER_LEFT_RE.search(t)]
     out.append(
@@ -183,7 +197,9 @@ def _stale_and_placeholder_checks(texts: dict[str, str], stale_values: list[str]
             category="placeholder",
             status=Status.FAIL if leftovers else Status.PASS,
             locator=", ".join(leftovers[:10]) or None,
-            message_ko=f"치환되지 않은 placeholder {len(leftovers)}곳" if leftovers else "남은 placeholder 없음",
+            message_ko=f"치환되지 않은 placeholder {len(leftovers)}곳"
+            if leftovers
+            else "남은 placeholder 없음",
         )
     )
     if stale_values:
@@ -196,15 +212,80 @@ def _stale_and_placeholder_checks(texts: dict[str, str], stale_values: list[str]
                 locator=", ".join(f"{loc}[{tok}]" for loc, tok in found[:10]) or None,
                 expected="none",
                 actual=", ".join(sorted({tok for _, tok in found})) or "none",
-                message_ko=f"오래된 값 잔존 {len(found)}곳 (과거 차종/날짜/원가)" if found else "오래된 값 잔존 없음",
+                message_ko=f"오래된 값 잔존 {len(found)}곳 (과거 차종/날짜/원가)"
+                if found
+                else "오래된 값 잔존 없음",
             )
         )
     else:
         out.append(
             ValidationCheck(
-                check_id=f"{prefix}.stale_values", category="stale", status=Status.NOT_RUN, message_ko="stale_values 가 지정되지 않아 잔존 검사를 건너뜀"
+                check_id=f"{prefix}.stale_values",
+                category="stale",
+                status=Status.NOT_RUN,
+                message_ko="stale_values 가 지정되지 않아 잔존 검사를 건너뜀",
             )
         )
+    return out
+
+
+def _conflict_after_revalidation(
+    prefix: str, locator: str, key: str, rendered: str, notes: str | None
+) -> ValidationCheck:
+    """문서에는 값이 기록되었으나 payload 재검증(합계/차이) 에서 해당 항목이 CONFLICT 로 바뀐 경우."""
+    return ValidationCheck(
+        check_id=f"{prefix}.conflict[{locator}:{key}]",
+        category="numeric",
+        status=Status.FAIL,
+        locator=locator,
+        expected=CONFLICT_TEXT,
+        actual=rendered,
+        message_ko=f"문서에 기록된 값이 payload 재검증에서 CONFLICT 로 판정됨: {notes or ''}".rstrip(": "),
+    )
+
+
+def _value_without_payload(prefix: str, locator: str, key: str, rendered: str) -> ValidationCheck:
+    """문서에는 값이 있으나 payload 에는 값이 없는(MISSING) 경우 — 근거 없는 숫자."""
+    return ValidationCheck(
+        check_id=f"{prefix}.numeric[{locator}:{key}]",
+        category="numeric",
+        status=Status.FAIL,
+        locator=locator,
+        expected=MISSING_TEXT,
+        actual=rendered,
+        message_ko="payload 에 값이 없는데(MISSING) 문서에는 값이 기록되어 있습니다",
+    )
+
+
+def _engine_status_checks(prefix: str, *, renderer: str, recalc_engine: str | None) -> list[ValidationCheck]:
+    """RECALC/RENDER 상태 항목. 엔진이 설정되어 있어도 이 버전은 실행하지 않는다 (E_NOT_SUPPORTED, 상태는 NOT_RUN)."""
+    out: list[ValidationCheck] = []
+    if recalc_engine is not None:
+        msg = "RECALC_NOT_RUN: openpyxl 은 수식을 계산하지 않으며 저장된 수식 셀에는 cached value 가 없습니다. 수식 결과값은 Excel/승인 엔진 재계산 후 확인하세요"
+        if recalc_engine != "none":
+            msg += f" (documents.recalc_engine='{recalc_engine}' 설정됨 — 이 버전은 재계산 엔진 실행을 지원하지 않습니다: E_NOT_SUPPORTED)"
+        out.append(
+            ValidationCheck(
+                check_id=f"{prefix}.recalc",
+                category="status",
+                status=Status.NOT_RUN,
+                actual=f"recalc_engine={recalc_engine}",
+                message_ko=msg,
+            )
+        )
+    what = "slide 렌더링(잘림/겹침/폰트)" if prefix == "pptx" else "인쇄영역/렌더링"
+    msg = f"RENDER_NOT_RUN: {what} 검사는 승인 렌더러가 없어 수행하지 않음"
+    if renderer != "none":
+        msg = f"RENDER_NOT_RUN: documents.renderer='{renderer}' 설정됨 — 이 버전은 렌더러 실행을 지원하지 않습니다 (E_NOT_SUPPORTED). {what} 검사는 수행하지 않음"
+    out.append(
+        ValidationCheck(
+            check_id=f"{prefix}.render",
+            category="status",
+            status=Status.NOT_RUN,
+            actual=f"renderer={renderer}",
+            message_ko=msg,
+        )
+    )
     return out
 
 
@@ -227,16 +308,25 @@ def validate_pptx(
     *,
     manifest: DocumentManifest | None = None,
     stale_values: list[str] | None = None,
+    renderer: str = "none",
 ) -> DocumentValidation:
     p = Path(path)
     doc = DocumentValidation(
-        document_type="pptx", path=str(p), sha256=sha256_file(p), template_path=manifest.template_path if manifest else None
+        document_type="pptx",
+        path=str(p),
+        sha256=sha256_file(p),
+        template_path=manifest.template_path if manifest else None,
     )
     texts = collect_pptx_texts(p, include_hidden=True)
     checks = doc.checks
     if manifest is None:
         checks.append(
-            ValidationCheck(check_id="pptx.numeric", category="numeric", status=Status.NOT_RUN, message_ko="manifest 가 없어 placeholder 위치별 수치 대조를 건너뜀")
+            ValidationCheck(
+                check_id="pptx.numeric",
+                category="numeric",
+                status=Status.NOT_RUN,
+                message_ko="manifest 가 없어 placeholder 위치별 수치 대조를 건너뜀",
+            )
         )
     else:
         n_ok = 0
@@ -246,7 +336,13 @@ def validate_pptx(
                 continue
             if text is None:
                 checks.append(
-                    ValidationCheck(check_id=f"pptx.numeric[{r.locator}:{r.key}]", category="numeric", status=Status.FAIL, locator=r.locator, message_ko="locator 를 산출물에서 찾을 수 없습니다")
+                    ValidationCheck(
+                        check_id=f"pptx.numeric[{r.locator}:{r.key}]",
+                        category="numeric",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        message_ko="locator 를 산출물에서 찾을 수 없습니다",
+                    )
                 )
                 continue
             if r.status in ("missing", "unknown_key"):
@@ -257,35 +353,77 @@ def validate_pptx(
                         status=Status.PARTIAL if r.rendered in text else Status.FAIL,
                         locator=r.locator,
                         expected=r.rendered,
-                        message_ko="payload 에 값이 없어 MISSING 으로 표시됨" if r.status == "missing" else f"payload 에 없는 key '{r.key}' → MISSING 표시",
+                        message_ko="payload 에 값이 없어 MISSING 으로 표시됨"
+                        if r.status == "missing"
+                        else f"payload 에 없는 key '{r.key}' → MISSING 표시",
                     )
                 )
                 continue
             if r.status == "conflict":
                 checks.append(
-                    ValidationCheck(check_id=f"pptx.conflict[{r.locator}:{r.key}]", category="numeric", status=Status.FAIL, locator=r.locator, expected=r.rendered, message_ko="출처 상충(CONFLICT) 값이 문서에 표시됨")
+                    ValidationCheck(
+                        check_id=f"pptx.conflict[{r.locator}:{r.key}]",
+                        category="numeric",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        expected=r.rendered,
+                        message_ko="출처 상충(CONFLICT) 값이 문서에 표시됨",
+                    )
                 )
                 continue
             if r.rendered not in text:
                 checks.append(
-                    ValidationCheck(check_id=f"pptx.numeric[{r.locator}:{r.key}]", category="numeric" if r.numeric else "text", status=Status.FAIL, locator=r.locator, expected=r.rendered, actual=text[:120], message_ko="문서에서 렌더링된 값을 찾지 못했습니다")
+                    ValidationCheck(
+                        check_id=f"pptx.numeric[{r.locator}:{r.key}]",
+                        category="numeric" if r.numeric else "text",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        expected=r.rendered,
+                        actual=text[:120],
+                        message_ko="문서에서 렌더링된 값을 찾지 못했습니다",
+                    )
                 )
                 continue
             if r.numeric:
                 item = payload.items.get(r.key)
-                pv = item.quantity.value if item else None
+                pq = item.quantity if item else None
+                if pq is not None and pq.value_type == "conflict":
+                    checks.append(_conflict_after_revalidation("pptx", r.locator, r.key, r.rendered, pq.notes))
+                    continue
+                pv = pq.value if pq else None
+                if pv is None:
+                    checks.append(_value_without_payload("pptx", r.locator, r.key, r.rendered))
+                    continue
                 start = text.index(r.rendered)
                 read_back = parse_number(text[start : start + len(r.rendered)])
-                if pv is None or read_back is None or not _numbers_equal(read_back, pv):
+                if read_back is None or not _numbers_equal(read_back, pv):
                     checks.append(
-                        ValidationCheck(check_id=f"pptx.numeric[{r.locator}:{r.key}]", category="numeric", status=Status.FAIL, locator=r.locator, expected=str(pv), actual=str(read_back), message_ko="문서에서 읽은 수치가 payload 와 다릅니다")
+                        ValidationCheck(
+                            check_id=f"pptx.numeric[{r.locator}:{r.key}]",
+                            category="numeric",
+                            status=Status.FAIL,
+                            locator=r.locator,
+                            expected=str(pv),
+                            actual=str(read_back),
+                            message_ko="문서에서 읽은 수치가 payload 와 다릅니다",
+                        )
                     )
                     continue
             n_ok += 1
         checks.append(
-            ValidationCheck(check_id="pptx.numeric", category="numeric", status=Status.PASS, message_ko=f"placeholder {n_ok}곳의 값이 payload 와 일치")
+            ValidationCheck(
+                check_id="pptx.numeric",
+                category="numeric",
+                status=Status.PASS,
+                message_ko=f"placeholder {n_ok}곳의 값이 payload 와 일치",
+            )
             if not any(c.status is Status.FAIL and c.category in ("numeric", "text") for c in checks)
-            else ValidationCheck(check_id="pptx.numeric", category="numeric", status=Status.FAIL, message_ko="일부 placeholder 값이 payload 와 다릅니다")
+            else ValidationCheck(
+                check_id="pptx.numeric",
+                category="numeric",
+                status=Status.FAIL,
+                message_ko="일부 placeholder 값이 payload 와 다릅니다",
+            )
         )
     checks.extend(_stale_and_placeholder_checks(texts, list(stale_values or payload.stale_values), "pptx"))
     # 구조
@@ -305,15 +443,22 @@ def validate_pptx(
                 status=Status.FAIL if diffs else Status.PASS,
                 expected=f"slides={tpl['n_slides']}, charts={tpl['n_charts']}, tables={tpl['n_tables']}",
                 actual=f"slides={cur['n_slides']}, charts={cur['n_charts']}, tables={cur['n_tables']}",
-                message_ko=("구조 차이: " + ", ".join(diffs)) if diffs else "slide 수·순서·layout·shape·차트·표 보존",
+                message_ko=("구조 차이: " + ", ".join(diffs))
+                if diffs
+                else "slide 수·순서·layout·shape·차트·표 보존",
             )
         )
     else:
-        checks.append(ValidationCheck(check_id="pptx.structure", category="structure", status=Status.NOT_RUN, message_ko="템플릿을 찾을 수 없어 구조 비교를 건너뜀"))
+        checks.append(
+            ValidationCheck(
+                check_id="pptx.structure",
+                category="structure",
+                status=Status.NOT_RUN,
+                message_ko="템플릿을 찾을 수 없어 구조 비교를 건너뜀",
+            )
+        )
     checks.extend(_hash_checks(p, manifest, "pptx"))
-    checks.append(
-        ValidationCheck(check_id="pptx.render", category="status", status=Status.NOT_RUN, message_ko="RENDER_NOT_RUN: slide 렌더링(잘림/겹침/폰트) 검사는 승인 렌더러가 없어 수행하지 않음")
-    )
+    checks.extend(_engine_status_checks("pptx", renderer=renderer, recalc_engine=None))
     return _summarize(doc)
 
 
@@ -347,18 +492,16 @@ def read_xlsx_values(path: str | os.PathLike[str]) -> tuple[dict[str, Any], dict
         for ws in wb.worksheets:
             names.extend((str(k), v) for k, v in ws.defined_names.items())
         for name, dn in names:
-            try:
-                dests = [(str(s), str(c)) for s, c in dn.destinations]
-            except Exception:  # noqa: BLE001
-                continue
-            for sheet, coord in dests:
+            for sheet, coord in defined_name_destinations(dn):
                 if sheet not in wb.sheetnames:
                     continue
                 c = coord.replace("$", "")
                 ws = wb[sheet]
                 if ":" not in c:
                     cell = ws[c]
-                    if cell.data_type == "f" or (isinstance(cell.value, str) and str(cell.value).startswith("=")):
+                    if cell.data_type == "f" or (
+                        isinstance(cell.value, str) and str(cell.value).startswith("=")
+                    ):
                         formulas[f"range:{name}"] = str(cell.value)
                     else:
                         values[f"range:{name}"] = cell.value
@@ -384,25 +527,54 @@ def validate_xlsx(
     *,
     manifest: DocumentManifest | None = None,
     stale_values: list[str] | None = None,
+    renderer: str = "none",
+    recalc_engine: str = "none",
 ) -> DocumentValidation:
     p = Path(path)
     doc = DocumentValidation(
-        document_type="xlsx", path=str(p), sha256=sha256_file(p), template_path=manifest.template_path if manifest else None
+        document_type="xlsx",
+        path=str(p),
+        sha256=sha256_file(p),
+        template_path=manifest.template_path if manifest else None,
     )
     checks = doc.checks
     values, formulas = read_xlsx_values(p)
     if manifest is None:
-        checks.append(ValidationCheck(check_id="xlsx.numeric", category="numeric", status=Status.NOT_RUN, message_ko="manifest 가 없어 named range 별 수치 대조를 건너뜀"))
+        checks.append(
+            ValidationCheck(
+                check_id="xlsx.numeric",
+                category="numeric",
+                status=Status.NOT_RUN,
+                message_ko="manifest 가 없어 named range 별 수치 대조를 건너뜀",
+            )
+        )
     else:
         n_ok = 0
         for r in manifest.replacements:
             if r.status == "unapproved":
                 continue
             if r.locator in formulas:
-                checks.append(ValidationCheck(check_id=f"xlsx.numeric[{r.locator}]", category="numeric", status=Status.FAIL, locator=r.locator, message_ko="값을 기록한 셀이 수식 셀로 바뀌었습니다"))
+                checks.append(
+                    ValidationCheck(
+                        check_id=f"xlsx.numeric[{r.locator}]",
+                        category="numeric",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        message_ko="값을 기록한 셀이 수식 셀로 바뀌었습니다",
+                    )
+                )
                 continue
             if r.locator not in values:
-                checks.append(ValidationCheck(check_id=f"xlsx.numeric[{r.locator}]", category="numeric", status=Status.FAIL, locator=r.locator, expected=r.rendered, message_ko="산출물에서 named range/셀을 찾지 못했습니다"))
+                checks.append(
+                    ValidationCheck(
+                        check_id=f"xlsx.numeric[{r.locator}]",
+                        category="numeric",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        expected=r.rendered,
+                        message_ko="산출물에서 named range/셀을 찾지 못했습니다",
+                    )
+                )
                 continue
             actual = values[r.locator]
             if r.status in ("missing", "unknown_key"):
@@ -419,25 +591,74 @@ def validate_xlsx(
                 )
                 continue
             if r.status == "conflict":
-                checks.append(ValidationCheck(check_id=f"xlsx.conflict[{r.locator}]", category="numeric", status=Status.FAIL, locator=r.locator, expected=r.rendered, actual=str(actual), message_ko="출처 상충(CONFLICT) 값이 문서에 표시됨"))
+                checks.append(
+                    ValidationCheck(
+                        check_id=f"xlsx.conflict[{r.locator}]",
+                        category="numeric",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        expected=r.rendered,
+                        actual=str(actual),
+                        message_ko="출처 상충(CONFLICT) 값이 문서에 표시됨",
+                    )
+                )
                 continue
             if r.numeric and r.value is not None:
-                ok = isinstance(actual, (int, float)) and not isinstance(actual, bool) and _numbers_equal(float(actual), float(r.value))
-                if ok and r.key in payload.items and r.attr in (None, "value"):
-                    pv = payload.items[r.key].quantity.value
-                    ok = pv is not None and _numbers_equal(float(actual), float(pv))
-                elif ok and r.key in payload.tables and r.attr is not None:
-                    ok = _table_cell_matches(payload, r.key, r.attr, r.locator, float(actual))
+                # payload 재검증 이후의 값과 대조한다 (항목 또는 표 셀)
+                pq: Quantity | None = None
+                if r.key in payload.items and r.attr in (None, "value"):
+                    pq = payload.items[r.key].quantity
+                elif r.key in payload.tables and r.attr is not None:
+                    pq = _table_cell_quantity(payload, r.key, r.attr, r.locator)
+                if pq is not None and pq.value_type == "conflict":
+                    checks.append(_conflict_after_revalidation("xlsx", r.locator, r.key, r.rendered, pq.notes))
+                    continue
+                if pq is None or pq.value is None:
+                    checks.append(_value_without_payload("xlsx", r.locator, r.key, r.rendered))
+                    continue
+                ok = (
+                    isinstance(actual, (int, float))
+                    and not isinstance(actual, bool)
+                    and _numbers_equal(float(actual), float(r.value))
+                    and _numbers_equal(float(actual), float(pq.value))
+                )
                 if not ok:
-                    checks.append(ValidationCheck(check_id=f"xlsx.numeric[{r.locator}]", category="numeric", status=Status.FAIL, locator=r.locator, expected=str(r.value), actual=str(actual), message_ko="셀에서 읽은 수치가 payload 와 다릅니다"))
+                    checks.append(
+                        ValidationCheck(
+                            check_id=f"xlsx.numeric[{r.locator}]",
+                            category="numeric",
+                            status=Status.FAIL,
+                            locator=r.locator,
+                            expected=str(r.value),
+                            actual=str(actual),
+                            message_ko="셀에서 읽은 수치가 payload 와 다릅니다",
+                        )
+                    )
                     continue
             elif str(actual) != r.rendered:
-                checks.append(ValidationCheck(check_id=f"xlsx.text[{r.locator}]", category="text", status=Status.FAIL, locator=r.locator, expected=r.rendered, actual=str(actual), message_ko="셀 텍스트가 payload 와 다릅니다"))
+                checks.append(
+                    ValidationCheck(
+                        check_id=f"xlsx.text[{r.locator}]",
+                        category="text",
+                        status=Status.FAIL,
+                        locator=r.locator,
+                        expected=r.rendered,
+                        actual=str(actual),
+                        message_ko="셀 텍스트가 payload 와 다릅니다",
+                    )
+                )
                 continue
             n_ok += 1
         failed = any(c.status is Status.FAIL and c.category in ("numeric", "text") for c in checks)
         checks.append(
-            ValidationCheck(check_id="xlsx.numeric", category="numeric", status=Status.FAIL if failed else Status.PASS, message_ko="일부 named range 값이 payload 와 다릅니다" if failed else f"named range {n_ok}곳의 값이 payload 와 일치")
+            ValidationCheck(
+                check_id="xlsx.numeric",
+                category="numeric",
+                status=Status.FAIL if failed else Status.PASS,
+                message_ko="일부 named range 값이 payload 와 다릅니다"
+                if failed
+                else f"named range {n_ok}곳의 값이 payload 와 일치",
+            )
         )
     texts = collect_xlsx_texts(p, include_hidden=True)
     checks.extend(_stale_and_placeholder_checks(texts, list(stale_values or payload.stale_values), "xlsx"))
@@ -445,7 +666,11 @@ def validate_xlsx(
         tpl = read_xlsx_structure(manifest.template_path)
         cur = read_xlsx_structure(p)
         diffs = _structure_diff(tpl, cur, ["sheets", "sheet_states", "defined_names", "tables", "merged"])
-        changed_formulas = sorted(k for k in set(tpl["formulas"]) | set(cur["formulas"]) if tpl["formulas"].get(k) != cur["formulas"].get(k))
+        changed_formulas = sorted(
+            k
+            for k in set(tpl["formulas"]) | set(cur["formulas"])
+            if tpl["formulas"].get(k) != cur["formulas"].get(k)
+        )
         if changed_formulas:
             diffs.append(f"formulas({', '.join(changed_formulas[:10])})")
         checks.append(
@@ -459,31 +684,31 @@ def validate_xlsx(
             )
         )
     else:
-        checks.append(ValidationCheck(check_id="xlsx.structure", category="structure", status=Status.NOT_RUN, message_ko="템플릿을 찾을 수 없어 구조 비교를 건너뜀"))
-    checks.extend(_hash_checks(p, manifest, "xlsx"))
-    checks.append(
-        ValidationCheck(
-            check_id="xlsx.recalc",
-            category="status",
-            status=Status.NOT_RUN,
-            actual=f"formula_cells={len(formulas)}",
-            message_ko="RECALC_NOT_RUN: openpyxl 은 수식을 계산하지 않으며 저장된 수식 셀에는 cached value 가 없습니다. 수식 결과값은 Excel/승인 엔진 재계산 후 확인하세요",
+        checks.append(
+            ValidationCheck(
+                check_id="xlsx.structure",
+                category="structure",
+                status=Status.NOT_RUN,
+                message_ko="템플릿을 찾을 수 없어 구조 비교를 건너뜀",
+            )
         )
-    )
-    checks.append(ValidationCheck(check_id="xlsx.render", category="status", status=Status.NOT_RUN, message_ko="RENDER_NOT_RUN: 인쇄영역/렌더링 검사는 수행하지 않음"))
+    checks.extend(_hash_checks(p, manifest, "xlsx"))
+    engine_checks = _engine_status_checks("xlsx", renderer=renderer, recalc_engine=recalc_engine)
+    engine_checks[0].actual = f"formula_cells={len(formulas)}, recalc_engine={recalc_engine}"
+    checks.extend(engine_checks)
     return _summarize(doc)
 
 
-def _table_cell_matches(payload: ReportPayload, table: str, column: str, locator: str, actual: float) -> bool:
+def _table_cell_quantity(payload: ReportPayload, table: str, column: str, locator: str) -> Quantity | None:
+    """locator 'range:tbl_x/r{i}c{j}' 가 가리키는 payload 표 셀의 Quantity (없으면 None)."""
     m = re.search(r"/r(\d+)c(\d+)$", locator)
     if not m:
-        return False
+        return None
     row_idx = int(m.group(1)) - 1
     tb = payload.tables.get(table)
     if tb is None or row_idx >= len(tb.rows):
-        return False
-    q = tb.rows[row_idx].cells.get(column)
-    return q is not None and q.value is not None and _numbers_equal(actual, float(q.value))
+        return None
+    return tb.rows[row_idx].cells.get(column)
 
 
 # ---------------------------------------------------------------------------
@@ -507,12 +732,31 @@ def validate_documents(
     by_type: dict[str, DocumentManifest] = {m.document_type: m for m in (manifests or [])}
     docs: list[DocumentValidation] = []
     if pptx is not None:
-        docs.append(validate_pptx(pptx, pv.payload, manifest=by_type.get("pptx"), stale_values=stale))
+        docs.append(
+            validate_pptx(pptx, pv.payload, manifest=by_type.get("pptx"), stale_values=stale, renderer=renderer)
+        )
     if xlsx is not None:
-        docs.append(validate_xlsx(xlsx, pv.payload, manifest=by_type.get("xlsx"), stale_values=stale))
+        docs.append(
+            validate_xlsx(
+                xlsx,
+                pv.payload,
+                manifest=by_type.get("xlsx"),
+                stale_values=stale,
+                renderer=renderer,
+                recalc_engine=recalc_engine,
+            )
+        )
     notes = [
         "수식 재계산(RECALC) 과 렌더링(RENDER) 은 수행하지 않았습니다. 상태는 각 문서의 status 항목에 있습니다.",
     ]
+    if renderer != "none":
+        notes.append(
+            f"documents.renderer='{renderer}' 가 설정되어 있으나 이 버전은 렌더러 실행을 지원하지 않습니다 (E_NOT_SUPPORTED): RENDER_NOT_RUN."
+        )
+    if recalc_engine != "none":
+        notes.append(
+            f"documents.recalc_engine='{recalc_engine}' 가 설정되어 있으나 이 버전은 재계산 엔진 실행을 지원하지 않습니다 (E_NOT_SUPPORTED): RECALC_NOT_RUN."
+        )
     if not pv.passed:
         notes.append("report_payload 재검증 실패: 합계/차이 불일치 또는 출처 누락 항목이 있습니다.")
     passed = pv.passed and all(d.passed for d in docs)

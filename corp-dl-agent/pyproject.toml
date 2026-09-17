@@ -63,7 +63,7 @@ corp-dl-agent = "corp_dl_agent.cli:main"
 include = ["corp_dl_agent*"]
 
 [tool.setuptools.package-data]
-corp_dl_agent = ["py.typed", "defaults/*.yaml", "defaults/*.json"]
+corp_dl_agent = ["py.typed", "defaults/*.yaml", "defaults/*.json", "defaults/*.csv"]
 
 [tool.ruff]
 line-length = 110

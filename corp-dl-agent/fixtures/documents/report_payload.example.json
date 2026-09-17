@@ -1,0 +1,387 @@
+{
+  "schema_version": "4.0",
+  "report_id": "RPT-SYNTHETIC-0001",
+  "created_at": "2026-09-17T00:00:00+00:00",
+  "subject": "X-NEW 설계안 A/B 비교 검토 (synthetic)",
+  "items": {
+    "mass_a": {
+      "key": "mass_a",
+      "label_ko": "중량 A",
+      "quantity": {
+        "value": 11.2,
+        "unit": "kg",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "mass:asm_a:total",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "mass_b": {
+      "key": "mass_b",
+      "label_ko": "중량 B",
+      "quantity": {
+        "value": 10.4,
+        "unit": "kg",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "mass:asm_b:total",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "mass_delta": {
+      "key": "mass_delta",
+      "label_ko": "중량 차이(B-A)",
+      "quantity": {
+        "value": -0.8,
+        "unit": "kg",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "compare:mass_delta",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_a": {
+      "key": "cost_a",
+      "label_ko": "원가 A",
+      "quantity": {
+        "value": 2050.0,
+        "unit": "원",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "cost:asm_a:unit_cost",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_b": {
+      "key": "cost_b",
+      "label_ko": "원가 B",
+      "quantity": {
+        "value": 1980.0,
+        "unit": "원",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "cost:asm_b:unit_cost",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_delta": {
+      "key": "cost_delta",
+      "label_ko": "원가 차이(B-A)",
+      "quantity": {
+        "value": -70.0,
+        "unit": "원",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "compare:cost_delta",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_line_material": {
+      "key": "cost_line_material",
+      "label_ko": "재료비(B)",
+      "quantity": {
+        "value": 900.0,
+        "unit": "원",
+        "value_type": "source",
+        "source_locator": "cost_recipes.json#asm_b.material",
+        "calculation_id": null,
+        "model_run_id": null,
+        "calculation_version": null,
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_line_process": {
+      "key": "cost_line_process",
+      "label_ko": "가공비(B)",
+      "quantity": {
+        "value": 780.0,
+        "unit": "원",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "cost:asm_b:process",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_line_tooling": {
+      "key": "cost_line_tooling",
+      "label_ko": "금형비(B)",
+      "quantity": {
+        "value": 300.0,
+        "unit": "원",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "cost:asm_b:tooling",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "cost_total": {
+      "key": "cost_total",
+      "label_ko": "원가 합계(B)",
+      "quantity": {
+        "value": 1980.0,
+        "unit": "원",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "cost:asm_b:total",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "insertion_force_a": {
+      "key": "insertion_force_a",
+      "label_ko": "예측 삽입력 A",
+      "quantity": {
+        "value": 42.5,
+        "unit": "N",
+        "value_type": "predicted",
+        "source_locator": null,
+        "calculation_id": null,
+        "model_run_id": "run-synthetic-reg-0001",
+        "calculation_version": null,
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "insertion_force_b": {
+      "key": "insertion_force_b",
+      "label_ko": "예측 삽입력 B",
+      "quantity": {
+        "value": 39.8,
+        "unit": "N",
+        "value_type": "predicted",
+        "source_locator": null,
+        "calculation_id": null,
+        "model_run_id": "run-synthetic-reg-0001",
+        "calculation_version": null,
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "insertion_force_delta": {
+      "key": "insertion_force_delta",
+      "label_ko": "삽입력 차이(B-A)",
+      "quantity": {
+        "value": -2.7,
+        "unit": "N",
+        "value_type": "calculated",
+        "source_locator": null,
+        "calculation_id": "compare:insertion_force_delta",
+        "model_run_id": null,
+        "calculation_version": "mass-cost-4.0",
+        "assumption": false,
+        "notes": null
+      }
+    },
+    "retention_pass_rate": {
+      "key": "retention_pass_rate",
+      "label_ko": "유지력 합격률",
+      "quantity": {
+        "value": null,
+        "unit": "%",
+        "value_type": "missing",
+        "source_locator": null,
+        "calculation_id": null,
+        "model_run_id": null,
+        "calculation_version": null,
+        "assumption": false,
+        "notes": "새 자료에 없음"
+      }
+    }
+  },
+  "tables": {
+    "cost_lines": {
+      "name": "cost_lines",
+      "label_ko": "원가 항목(B안)",
+      "columns": [
+        {
+          "key": "amount",
+          "label_ko": "금액",
+          "unit": "원"
+        }
+      ],
+      "rows": [
+        {
+          "label_ko": "재료비",
+          "cells": {
+            "amount": {
+              "value": 900.0,
+              "unit": "원",
+              "value_type": "source",
+              "source_locator": "cost_recipes.json#asm_b.material",
+              "calculation_id": null,
+              "model_run_id": null,
+              "calculation_version": null,
+              "assumption": false,
+              "notes": null
+            }
+          }
+        },
+        {
+          "label_ko": "가공비",
+          "cells": {
+            "amount": {
+              "value": 780.0,
+              "unit": "원",
+              "value_type": "calculated",
+              "source_locator": null,
+              "calculation_id": "cost:asm_b:process",
+              "model_run_id": null,
+              "calculation_version": "mass-cost-4.0",
+              "assumption": false,
+              "notes": null
+            }
+          }
+        },
+        {
+          "label_ko": "금형비",
+          "cells": {
+            "amount": {
+              "value": 300.0,
+              "unit": "원",
+              "value_type": "calculated",
+              "source_locator": null,
+              "calculation_id": "cost:asm_b:tooling",
+              "model_run_id": null,
+              "calculation_version": "mass-cost-4.0",
+              "assumption": false,
+              "notes": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "texts": {
+    "vehicle": {
+      "key": "vehicle",
+      "label_ko": "차종",
+      "text": "X-NEW (synthetic)",
+      "origin": "user",
+      "source_locator": null
+    },
+    "base_date": {
+      "key": "base_date",
+      "label_ko": "기준일",
+      "text": "2026-09-01",
+      "origin": "user",
+      "source_locator": null
+    },
+    "conclusion": {
+      "key": "conclusion",
+      "label_ko": "결론",
+      "text": "B안이 중량·원가 모두 유리 (합성 자료 기준, 운영 판단 아님)",
+      "origin": "user",
+      "source_locator": null
+    },
+    "evidence_note": {
+      "key": "evidence_note",
+      "label_ko": "근거 메모",
+      "text": "evidence.json 참조",
+      "origin": "user",
+      "source_locator": null
+    }
+  },
+  "checks": [
+    {
+      "check_id": "cost_total_sum",
+      "kind": "sum",
+      "target": "cost_total",
+      "terms": [
+        "cost_line_material",
+        "cost_line_process",
+        "cost_line_tooling"
+      ],
+      "table": null,
+      "column": null,
+      "tolerance_abs": 1e-06,
+      "description_ko": "원가 합계 = 항목 합"
+    },
+    {
+      "check_id": "cost_total_table_sum",
+      "kind": "sum",
+      "target": "cost_total",
+      "terms": [],
+      "table": "cost_lines",
+      "column": "amount",
+      "tolerance_abs": 1e-06,
+      "description_ko": "원가 합계 = 표 합"
+    },
+    {
+      "check_id": "mass_delta_diff",
+      "kind": "difference",
+      "target": "mass_delta",
+      "terms": [
+        "mass_b",
+        "mass_a"
+      ],
+      "table": null,
+      "column": null,
+      "tolerance_abs": 1e-06,
+      "description_ko": ""
+    },
+    {
+      "check_id": "cost_delta_diff",
+      "kind": "difference",
+      "target": "cost_delta",
+      "terms": [
+        "cost_b",
+        "cost_a"
+      ],
+      "table": null,
+      "column": null,
+      "tolerance_abs": 1e-06,
+      "description_ko": ""
+    },
+    {
+      "check_id": "insertion_force_delta_diff",
+      "kind": "difference",
+      "target": "insertion_force_delta",
+      "terms": [
+        "insertion_force_b",
+        "insertion_force_a"
+      ],
+      "table": null,
+      "column": null,
+      "tolerance_abs": 1e-06,
+      "description_ko": ""
+    }
+  ],
+  "stale_values": [
+    "X-OLD",
+    "2023-05-01",
+    "1,234"
+  ],
+  "synthetic": true,
+  "data_origin": "synthetic",
+  "calculation_version": "mass-cost-4.0",
+  "notes": [
+    "모든 수치는 합성 fixture 에서 계산/예측한 값이며 실제 차량·원가를 대표하지 않습니다."
+  ]
+}

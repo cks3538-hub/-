@@ -56,7 +56,9 @@ def _variants(tok: str) -> list[str]:
     return out
 
 
-def score_fragment(tokens: list[str], doc: DocumentMeta, frag: Fragment, query: str) -> tuple[float, list[str]]:
+def score_fragment(
+    tokens: list[str], doc: DocumentMeta, frag: Fragment, query: str
+) -> tuple[float, list[str]]:
     text_low = frag.text.lower()
     text_nc = re.sub(r"(?<=\d),(?=\d{3})", "", text_low)
     meta_low = " ".join([doc.path.lower(), doc.title.lower(), doc.revision.lower()])

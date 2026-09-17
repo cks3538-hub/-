@@ -220,6 +220,11 @@ ERROR_CATALOG: dict[str, tuple[str, str, int]] = {
         "preview/export 만 가능합니다. 쓰기는 명시적 설정과 승인이 필요합니다.",
         EXIT_BLOCKED_CONFIG,
     ),
+    "E_INTEGRATION_CONFLICT": (
+        "원격 리소스 충돌(409)이 보고되었습니다.",
+        "대상이 이미 존재하거나 버전이 바뀌었습니다. 원격 상태를 확인한 뒤 payload 를 갱신하세요. 자동 덮어쓰기하지 않습니다.",
+        EXIT_RUNTIME,
+    ),
     "E_INTERNAL": (
         "내부 오류가 발생했습니다.",
         "로그를 확인하고 재현 가능한 합성 입력으로 보고하세요.",

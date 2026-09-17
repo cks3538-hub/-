@@ -45,7 +45,14 @@ from corp_dl_agent.version import SCHEMA_VERSION
 PLACEHOLDER_RE = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)(?:\.(value|unit|label|source|type))?\s*\}\}")
 XLSX_NAME_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*?)(?:__(value|unit|label|source|type))?$")
 TABLE_RANGE_PREFIX = "tbl_"
-PAYLOAD_FIELDS = ("subject", "report_id", "created_at", "data_origin", "calculation_version", "schema_version")
+PAYLOAD_FIELDS = (
+    "subject",
+    "report_id",
+    "created_at",
+    "data_origin",
+    "calculation_version",
+    "schema_version",
+)
 LOSSY_XLSX_FLAGS = ("chart", "drawing", "image", "pivot", "ole")
 
 RecalcStatus = Literal["RECALC_NOT_RUN", "RECALC_DONE"]
@@ -125,7 +132,9 @@ class Resolved(StrictModel):
 # ---------------------------------------------------------------------------
 
 
-def make_resolver(payload: ReportPayload, approved_keys: set[str] | None = None) -> Callable[[str, str | None], Resolved]:
+def make_resolver(
+    payload: ReportPayload, approved_keys: set[str] | None = None
+) -> Callable[[str, str | None], Resolved]:
     """(key, attr) -> Resolved. approved_keys 가 주어지면 그 밖의 key 는 'unapproved' 로 손대지 않는다."""
 
     def resolve(key: str, attr: str | None) -> Resolved:
@@ -149,7 +158,12 @@ def make_resolver(payload: ReportPayload, approved_keys: set[str] | None = None)
                 return Resolved(key=key, attr=attr, status="missing", rendered=MISSING_TEXT)
             if attr == "value":
                 return Resolved(
-                    key=key, attr=attr, status="filled", rendered=format_number(q.value), numeric=True, value=q.value
+                    key=key,
+                    attr=attr,
+                    status="filled",
+                    rendered=format_number(q.value),
+                    numeric=True,
+                    value=q.value,
                 )
             return Resolved(
                 key=key,
@@ -191,7 +205,12 @@ def _replace_text(
         if r.status == "unapproved":
             out.append(
                 Replacement(
-                    locator=locator, placeholder=m.group(0), key=key, attr=attr, rendered="", status="unapproved"
+                    locator=locator,
+                    placeholder=m.group(0),
+                    key=key,
+                    attr=attr,
+                    rendered="",
+                    status="unapproved",
                 )
             )
             return m.group(0)
@@ -426,7 +445,17 @@ def fill_pptx(
         "렌더링(잘림/겹침/폰트) 검사는 수행하지 않았습니다: RENDER_NOT_RUN.",
     ]
     return _manifest(
-        "pptx", template_path, input_hash, out_path, payload, changed, replacements, unsupported, structure, flags, notes
+        "pptx",
+        template_path,
+        input_hash,
+        out_path,
+        payload,
+        changed,
+        replacements,
+        unsupported,
+        structure,
+        flags,
+        notes,
     )
 
 
@@ -529,7 +558,7 @@ def collect_xlsx_texts(path: str | os.PathLike[str], *, include_hidden: bool = T
                         continue
                     out[f"sheet:{ws.title}!{cell.coordinate}"] = _xl_text(cell.value)
         for name, dn in _all_defined_names(wb):
-            for sheet, coord in _destinations(dn):
+            for sheet, coord in defined_name_destinations(dn):
                 c = coord.replace("$", "")
                 if ":" in c or sheet not in wb.sheetnames:
                     continue
@@ -555,7 +584,8 @@ def _all_defined_names(wb: Any) -> list[tuple[str, Any]]:
     return names
 
 
-def _destinations(dn: Any) -> list[tuple[str, str]]:
+def defined_name_destinations(dn: Any) -> list[tuple[str, str]]:
+    """DefinedName 의 (sheet, 좌표) 목록. 상수/외부 참조 이름은 빈 목록."""
     try:
         return [(str(s), str(c)) for s, c in dn.destinations]
     except Exception:  # noqa: BLE001 - 상수/외부 이름
@@ -621,7 +651,7 @@ def fill_xlsx(
         changed: list[str] = []
         notes: list[str] = []
         for name, dn in _all_defined_names(wb):
-            dests = _destinations(dn)
+            dests = defined_name_destinations(dn)
             if not dests:
                 continue
             for sheet, coord in dests:
@@ -632,19 +662,33 @@ def fill_xlsx(
                 loc = f"range:{name}"
                 if ":" in c:
                     if name.startswith(TABLE_RANGE_PREFIX):
-                        _fill_table_range(ws, c, name[len(TABLE_RANGE_PREFIX) :], payload, loc, replacements, changed, unsupported)
+                        _fill_table_range(
+                            ws,
+                            c,
+                            name[len(TABLE_RANGE_PREFIX) :],
+                            payload,
+                            loc,
+                            replacements,
+                            changed,
+                            unsupported,
+                        )
                     continue
                 cell = ws[c]
                 if _is_formula_cell(cell):
+                    # 수식 셀은 어떤 경우에도 쓰지 않는다. 호환성 보고에 남겨 사용자가 named range 를 확인하게 한다.
                     m = XLSX_NAME_RE.match(name)
-                    if m and (m.group(1) in payload.items or m.group(1) in payload.texts):
-                        unsupported.append(
-                            UnsupportedElement(
-                                locator=loc,
-                                element_type="formula_cell",
-                                reason_ko="named range 가 수식 셀을 가리켜 값을 쓰지 않았습니다 (수식 보존)",
-                            )
+                    has_value = bool(m) and (m.group(1) in payload.items or m.group(1) in payload.texts)
+                    unsupported.append(
+                        UnsupportedElement(
+                            locator=loc,
+                            element_type="formula_cell",
+                            reason_ko=(
+                                "named range 가 수식 셀을 가리켜 payload 값을 쓰지 않았습니다 (수식 보존)"
+                                if has_value
+                                else "named range 가 수식 셀을 가리킵니다. 값 입력 대상이 아니며 수식을 보존했습니다"
+                            ),
                         )
+                    )
                     continue
                 m = XLSX_NAME_RE.match(name)
                 if not m:
@@ -653,7 +697,14 @@ def fill_xlsx(
                 r = resolve(key, attr)
                 if r.status == "unapproved":
                     replacements.append(
-                        Replacement(locator=loc, placeholder=name, key=key, attr=attr, rendered="", status="unapproved")
+                        Replacement(
+                            locator=loc,
+                            placeholder=name,
+                            key=key,
+                            attr=attr,
+                            rendered="",
+                            status="unapproved",
+                        )
                     )
                     continue
                 if r.status == "unknown_key":
@@ -662,7 +713,12 @@ def fill_xlsx(
                         changed.append(loc)
                         replacements.append(
                             Replacement(
-                                locator=loc, placeholder=name, key=key, attr=attr, rendered=MISSING_TEXT, status="unknown_key"
+                                locator=loc,
+                                placeholder=name,
+                                key=key,
+                                attr=attr,
+                                rendered=MISSING_TEXT,
+                                status="unknown_key",
                             )
                         )
                     continue
@@ -696,8 +752,8 @@ def fill_xlsx(
         tmp = out_path.with_name(f".{out_path.name}.tmp")
         try:
             wb.save(str(tmp))
-            with open(tmp, "rb") as f:
-                os.fsync(f.fileno())
+            with open(tmp, "rb") as fh:
+                os.fsync(fh.fileno())
             os.replace(tmp, out_path)
         except BaseException:
             try:
@@ -716,7 +772,17 @@ def fill_xlsx(
         ]
     )
     return _manifest(
-        "xlsx", template_path, input_hash, out_path, payload, changed, replacements, unsupported, after, flags, notes
+        "xlsx",
+        template_path,
+        input_hash,
+        out_path,
+        payload,
+        changed,
+        replacements,
+        unsupported,
+        after,
+        flags,
+        notes,
     )
 
 
@@ -758,7 +824,9 @@ def _fill_table_range(
             if _is_formula_cell(cell):
                 unsupported.append(
                     UnsupportedElement(
-                        locator=cell_loc, element_type="formula_cell", reason_ko="표 범위 안의 수식 셀은 쓰지 않습니다"
+                        locator=cell_loc,
+                        element_type="formula_cell",
+                        reason_ko="표 범위 안의 수식 셀은 쓰지 않습니다",
                     )
                 )
                 continue
@@ -768,14 +836,24 @@ def _fill_table_range(
                 status: ReplacementStatus = "conflict" if q is not None else "missing"
                 replacements.append(
                     Replacement(
-                        locator=cell_loc, placeholder=f"{table_name}.{col.key}", key=table_name, attr=col.key, rendered=str(cell.value), status=status
+                        locator=cell_loc,
+                        placeholder=f"{table_name}.{col.key}",
+                        key=table_name,
+                        attr=col.key,
+                        rendered=str(cell.value),
+                        status=status,
                     )
                 )
             elif q.value is None or q.value_type == "missing":
                 cell.value = MISSING_TEXT
                 replacements.append(
                     Replacement(
-                        locator=cell_loc, placeholder=f"{table_name}.{col.key}", key=table_name, attr=col.key, rendered=MISSING_TEXT, status="missing"
+                        locator=cell_loc,
+                        placeholder=f"{table_name}.{col.key}",
+                        key=table_name,
+                        attr=col.key,
+                        rendered=MISSING_TEXT,
+                        status="missing",
                     )
                 )
             else:

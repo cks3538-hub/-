@@ -1,0 +1,417 @@
+{
+  "$defs": {
+    "PayloadCheck": {
+      "additionalProperties": false,
+      "description": "계산 엔진 재검증 규칙.\n\n- kind=\"sum\":        target == sum(terms)  또는 target == sum(tables[table].rows[*].cells[column])\n- kind=\"difference\": target == terms[0] - terms[1]",
+      "properties": {
+        "check_id": {
+          "title": "Check Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "sum",
+            "difference"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "terms": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Terms",
+          "type": "array"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Table"
+        },
+        "column": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Column"
+        },
+        "tolerance_abs": {
+          "default": 1e-06,
+          "title": "Tolerance Abs",
+          "type": "number"
+        },
+        "description_ko": {
+          "default": "",
+          "title": "Description Ko",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "kind",
+        "target"
+      ],
+      "title": "PayloadCheck",
+      "type": "object"
+    },
+    "PayloadColumn": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label_ko": {
+          "title": "Label Ko",
+          "type": "string"
+        },
+        "unit": {
+          "default": "",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "label_ko"
+      ],
+      "title": "PayloadColumn",
+      "type": "object"
+    },
+    "PayloadItem": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label_ko": {
+          "title": "Label Ko",
+          "type": "string"
+        },
+        "quantity": {
+          "$ref": "#/$defs/Quantity"
+        }
+      },
+      "required": [
+        "key",
+        "label_ko",
+        "quantity"
+      ],
+      "title": "PayloadItem",
+      "type": "object"
+    },
+    "PayloadRow": {
+      "additionalProperties": false,
+      "properties": {
+        "label_ko": {
+          "title": "Label Ko",
+          "type": "string"
+        },
+        "cells": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Quantity"
+          },
+          "title": "Cells",
+          "type": "object"
+        }
+      },
+      "required": [
+        "label_ko"
+      ],
+      "title": "PayloadRow",
+      "type": "object"
+    },
+    "PayloadTable": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "label_ko": {
+          "title": "Label Ko",
+          "type": "string"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/PayloadColumn"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/PayloadRow"
+          },
+          "title": "Rows",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "label_ko",
+        "columns"
+      ],
+      "title": "PayloadTable",
+      "type": "object"
+    },
+    "PayloadText": {
+      "additionalProperties": false,
+      "description": "수치가 아닌 문자열 항목(차종명·결론 등). origin 으로 출처를 구분한다.",
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label_ko": {
+          "title": "Label Ko",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "origin": {
+          "default": "user",
+          "enum": [
+            "user",
+            "source",
+            "calculated",
+            "template"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "source_locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Locator"
+        }
+      },
+      "required": [
+        "key",
+        "label_ko",
+        "text"
+      ],
+      "title": "PayloadText",
+      "type": "object"
+    },
+    "Quantity": {
+      "additionalProperties": false,
+      "description": "값/단위/출처/계산버전/가정 여부를 함께 보존하는 수치.\n\nvalue_type:\n  source     - 입력 자료에서 그대로 가져온 값 (source_locator 필요)\n  calculated - 계산 엔진 결과 (calculation_id 필요)\n  predicted  - 학습 모델 예측 (model_run_id 필요)\n  missing    - 값 없음 (value=None)\n  assumed    - 명시적 scenario 가정값 (assumption=True)\n  conflict   - 출처 간 상충 (value=None, notes 에 상충 값 기록)",
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "unit": {
+          "default": "",
+          "title": "Unit",
+          "type": "string"
+        },
+        "value_type": {
+          "default": "missing",
+          "enum": [
+            "source",
+            "calculated",
+            "predicted",
+            "missing",
+            "assumed",
+            "conflict"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        },
+        "source_locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Locator"
+        },
+        "calculation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calculation Id"
+        },
+        "model_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Run Id"
+        },
+        "calculation_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calculation Version"
+        },
+        "assumption": {
+          "default": false,
+          "title": "Assumption",
+          "type": "boolean"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        }
+      },
+      "title": "Quantity",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "4.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "subject": {
+      "title": "Subject",
+      "type": "string"
+    },
+    "items": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PayloadItem"
+      },
+      "title": "Items",
+      "type": "object"
+    },
+    "tables": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PayloadTable"
+      },
+      "title": "Tables",
+      "type": "object"
+    },
+    "texts": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PayloadText"
+      },
+      "title": "Texts",
+      "type": "object"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/PayloadCheck"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "stale_values": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Stale Values",
+      "type": "array"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "data_origin": {
+      "default": "synthetic",
+      "enum": [
+        "synthetic",
+        "corporate"
+      ],
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "calculation_version": {
+      "default": "mass-cost-4.0",
+      "title": "Calculation Version",
+      "type": "string"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "report_id",
+    "created_at",
+    "subject",
+    "items",
+    "synthetic"
+  ],
+  "title": "ReportPayload",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

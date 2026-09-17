@@ -143,9 +143,9 @@ class ReportPayload(StrictModel):
             seen.add(c.check_id)
             if c.target not in self.items:
                 raise ValueError(f"check '{c.check_id}' 의 target '{c.target}' 가 items 에 없습니다")
-            for t in c.terms:
-                if t not in self.items:
-                    raise ValueError(f"check '{c.check_id}' 의 term '{t}' 가 items 에 없습니다")
+            for term in c.terms:
+                if term not in self.items:
+                    raise ValueError(f"check '{c.check_id}' 의 term '{term}' 가 items 에 없습니다")
             if c.table is not None:
                 if c.table not in self.tables:
                     raise ValueError(f"check '{c.check_id}' 의 table '{c.table}' 가 tables 에 없습니다")
@@ -419,11 +419,15 @@ def validate_payload(payload: ReportPayload, *, mark_conflicts: bool = True) -> 
 def load_payload(path: str | os.PathLike[str]) -> ReportPayload:
     p = Path(path)
     if not p.is_file():
-        raise AgentError("E_INPUT_INVALID", f"report_payload 파일이 없습니다: {p.name}", details={"path": str(p)})
+        raise AgentError(
+            "E_INPUT_INVALID", f"report_payload 파일이 없습니다: {p.name}", details={"path": str(p)}
+        )
     try:
         data = read_json(p)
     except ValueError as exc:
-        raise AgentError("E_INPUT_INVALID", f"report_payload JSON 파싱 실패: {p.name}", details={"error": str(exc)[:300]}) from exc
+        raise AgentError(
+            "E_INPUT_INVALID", f"report_payload JSON 파싱 실패: {p.name}", details={"error": str(exc)[:300]}
+        ) from exc
     return payload_from_dict(data)
 
 
@@ -434,7 +438,9 @@ def payload_from_dict(data: Any) -> ReportPayload:
         payload: ReportPayload = validate_strict(ReportPayload, data)
     except ValidationError as exc:
         errs = [f"{'.'.join(str(x) for x in e.get('loc', ()))}: {e.get('msg', '')}" for e in exc.errors()]
-        raise AgentError("E_SCHEMA_INVALID", "report_payload schema 검증 실패", details={"errors": errs[:20]}) from exc
+        raise AgentError(
+            "E_SCHEMA_INVALID", "report_payload schema 검증 실패", details={"errors": errs[:20]}
+        ) from exc
     return payload
 
 

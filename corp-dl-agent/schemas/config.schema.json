@@ -1,0 +1,668 @@
+{
+  "$defs": {
+    "AtlassianProductConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "base_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Base Url"
+        },
+        "deployment": {
+          "default": "datacenter",
+          "enum": [
+            "cloud",
+            "datacenter"
+          ],
+          "title": "Deployment",
+          "type": "string"
+        },
+        "api_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Api Version"
+        },
+        "secret_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secret Ref"
+        },
+        "ca_bundle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ca Bundle"
+        },
+        "project_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Project Key"
+        },
+        "space_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Space Key"
+        },
+        "repo_slug": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repo Slug"
+        },
+        "timeout_seconds": {
+          "default": 30.0,
+          "exclusiveMinimum": 0,
+          "maximum": 600,
+          "title": "Timeout Seconds",
+          "type": "number"
+        }
+      },
+      "title": "AtlassianProductConfig",
+      "type": "object"
+    },
+    "BudgetConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "max_candidates": {
+          "default": 2,
+          "maximum": 64,
+          "minimum": 1,
+          "title": "Max Candidates",
+          "type": "integer"
+        },
+        "max_epochs": {
+          "default": 10,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Max Epochs",
+          "type": "integer"
+        },
+        "patience": {
+          "default": 3,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Patience",
+          "type": "integer"
+        },
+        "wall_time_seconds": {
+          "default": 300,
+          "maximum": 604800,
+          "minimum": 10,
+          "title": "Wall Time Seconds",
+          "type": "integer"
+        }
+      },
+      "title": "BudgetConfig",
+      "type": "object"
+    },
+    "CadConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "default": "csv_json",
+          "enum": [
+            "csv_json",
+            "catia_v5_com",
+            "3dexperience"
+          ],
+          "title": "Adapter",
+          "type": "string"
+        },
+        "field_mapping": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "snapshot 필드 <- 회사 export 열 이름",
+          "title": "Field Mapping",
+          "type": "object"
+        },
+        "default_density_policy": {
+          "default": "reject",
+          "enum": [
+            "reject",
+            "use_material_table"
+          ],
+          "title": "Default Density Policy",
+          "type": "string"
+        },
+        "material_table": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Material Table"
+        }
+      },
+      "title": "CadConfig",
+      "type": "object"
+    },
+    "DocumentsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "approved_fonts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Approved Fonts",
+          "type": "array"
+        },
+        "renderer": {
+          "default": "none",
+          "enum": [
+            "none",
+            "libreoffice"
+          ],
+          "title": "Renderer",
+          "type": "string"
+        },
+        "renderer_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Renderer Path"
+        },
+        "recalc_engine": {
+          "default": "none",
+          "enum": [
+            "none",
+            "excel_com"
+          ],
+          "title": "Recalc Engine",
+          "type": "string"
+        },
+        "allow_hidden_content_to_llm": {
+          "default": false,
+          "title": "Allow Hidden Content To Llm",
+          "type": "boolean"
+        },
+        "include_notes": {
+          "default": true,
+          "title": "Include Notes",
+          "type": "boolean"
+        },
+        "max_index_file_mb": {
+          "default": 200,
+          "maximum": 4096,
+          "minimum": 1,
+          "title": "Max Index File Mb",
+          "type": "integer"
+        }
+      },
+      "title": "DocumentsConfig",
+      "type": "object"
+    },
+    "ExtensionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "compatible_schema": {
+          "title": "Compatible Schema",
+          "type": "string"
+        },
+        "entry": {
+          "default": "register",
+          "title": "Entry",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "version",
+        "compatible_schema"
+      ],
+      "title": "ExtensionConfig",
+      "type": "object"
+    },
+    "GatewayConfig": {
+      "additionalProperties": false,
+      "description": "사내 LLM gateway. 값이 없으면 호출하지 않는다 (public provider fallback 없음).",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "base_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Base Url"
+        },
+        "api_format": {
+          "default": "openai_chat",
+          "enum": [
+            "openai_chat",
+            "anthropic_messages",
+            "gemini_custom"
+          ],
+          "title": "Api Format",
+          "type": "string"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "secret_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secret Ref"
+        },
+        "ca_bundle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ca Bundle"
+        },
+        "approved_origins": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Approved Origins",
+          "type": "array"
+        },
+        "timeout_seconds": {
+          "default": 60.0,
+          "exclusiveMinimum": 0,
+          "maximum": 600,
+          "title": "Timeout Seconds",
+          "type": "number"
+        },
+        "max_calls": {
+          "default": 12,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Max Calls",
+          "type": "integer"
+        },
+        "max_total_tokens": {
+          "default": 30000,
+          "minimum": 1,
+          "title": "Max Total Tokens",
+          "type": "integer"
+        },
+        "max_response_tokens": {
+          "default": 2000,
+          "minimum": 1,
+          "title": "Max Response Tokens",
+          "type": "integer"
+        },
+        "retry_transient": {
+          "default": 2,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Retry Transient",
+          "type": "integer"
+        },
+        "json_repair_attempts": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Json Repair Attempts",
+          "type": "integer"
+        },
+        "reserve_tokens_per_call": {
+          "default": 2000,
+          "description": "usage 미제공 시 보수적 예약",
+          "minimum": 0,
+          "title": "Reserve Tokens Per Call",
+          "type": "integer"
+        },
+        "extra_headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Extra Headers",
+          "type": "object"
+        }
+      },
+      "title": "GatewayConfig",
+      "type": "object"
+    },
+    "IntegrationsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "write": {
+          "default": false,
+          "title": "Write",
+          "type": "boolean"
+        },
+        "approved_origins": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Approved Origins",
+          "type": "array"
+        },
+        "bitbucket": {
+          "$ref": "#/$defs/AtlassianProductConfig"
+        },
+        "jira": {
+          "$ref": "#/$defs/AtlassianProductConfig"
+        },
+        "confluence": {
+          "$ref": "#/$defs/AtlassianProductConfig"
+        },
+        "bamboo": {
+          "$ref": "#/$defs/AtlassianProductConfig"
+        }
+      },
+      "title": "IntegrationsConfig",
+      "type": "object"
+    },
+    "LoggingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "default": "INFO",
+          "enum": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "json_events": {
+          "default": true,
+          "title": "Json Events",
+          "type": "boolean"
+        }
+      },
+      "title": "LoggingConfig",
+      "type": "object"
+    },
+    "MlConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "default": "cpu",
+          "enum": [
+            "cpu",
+            "cuda"
+          ],
+          "title": "Device",
+          "type": "string"
+        },
+        "num_workers": {
+          "default": 0,
+          "maximum": 32,
+          "minimum": 0,
+          "title": "Num Workers",
+          "type": "integer"
+        },
+        "amp": {
+          "default": false,
+          "title": "Amp",
+          "type": "boolean"
+        },
+        "demo": {
+          "$ref": "#/$defs/BudgetConfig"
+        },
+        "pilot": {
+          "$ref": "#/$defs/BudgetConfig"
+        },
+        "oom_retries": {
+          "default": 2,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Oom Retries",
+          "type": "integer"
+        },
+        "nan_retries": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Nan Retries",
+          "type": "integer"
+        },
+        "allow_synthetic_models_in_production": {
+          "default": false,
+          "title": "Allow Synthetic Models In Production",
+          "type": "boolean"
+        }
+      },
+      "title": "MlConfig",
+      "type": "object"
+    },
+    "PathsConfig": {
+      "additionalProperties": false,
+      "description": "모든 경로는 절대 경로 또는 config 파일 기준 상대 경로. 한글/공백 허용.",
+      "properties": {
+        "install_root": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Install Root"
+        },
+        "data_root": {
+          "default": "workspace",
+          "title": "Data Root",
+          "type": "string"
+        },
+        "company_root": {
+          "default": "company",
+          "title": "Company Root",
+          "type": "string"
+        },
+        "input_roots": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Input Roots",
+          "type": "array"
+        },
+        "sources_roots": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sources Roots",
+          "type": "array"
+        },
+        "output_root": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Root"
+        }
+      },
+      "title": "PathsConfig",
+      "type": "object"
+    },
+    "Profile": {
+      "enum": [
+        "personal-dev",
+        "transfer-test",
+        "corp-offline",
+        "corp-gateway"
+      ],
+      "title": "Profile",
+      "type": "string"
+    },
+    "SecurityConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "forbid_symlinks": {
+          "default": true,
+          "title": "Forbid Symlinks",
+          "type": "boolean"
+        },
+        "max_archive_members": {
+          "default": 20000,
+          "minimum": 1,
+          "title": "Max Archive Members",
+          "type": "integer"
+        },
+        "max_archive_ratio": {
+          "default": 200,
+          "description": "압축 해제 확대 비율 상한",
+          "minimum": 1,
+          "title": "Max Archive Ratio",
+          "type": "integer"
+        }
+      },
+      "title": "SecurityConfig",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "4.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "profile": {
+      "$ref": "#/$defs/Profile",
+      "default": "corp-offline"
+    },
+    "paths": {
+      "$ref": "#/$defs/PathsConfig"
+    },
+    "ml": {
+      "$ref": "#/$defs/MlConfig"
+    },
+    "gateway": {
+      "$ref": "#/$defs/GatewayConfig"
+    },
+    "integrations": {
+      "$ref": "#/$defs/IntegrationsConfig"
+    },
+    "cad": {
+      "$ref": "#/$defs/CadConfig"
+    },
+    "documents": {
+      "$ref": "#/$defs/DocumentsConfig"
+    },
+    "extensions": {
+      "items": {
+        "$ref": "#/$defs/ExtensionConfig"
+      },
+      "title": "Extensions",
+      "type": "array"
+    },
+    "security": {
+      "$ref": "#/$defs/SecurityConfig"
+    },
+    "logging": {
+      "$ref": "#/$defs/LoggingConfig"
+    }
+  },
+  "title": "AppConfig",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
