@@ -88,7 +88,9 @@ def test_xlsx_fragments_formula_vs_cached_named_range_table_hidden(docs_dir: Pat
     stale = by_loc["sheet:Cost!B9"]
     assert stale.formula == "=B7*0.1" and stale.cached_value == "120" and stale.hidden is True
     assert by_loc["sheet:Cost!B2"].formula is None and by_loc["sheet:Cost!B2"].text == "500"
-    assert by_loc["range:UnitCost"].formula == "=SUM(B2:B6)" and by_loc["range:UnitCost"].cached_value == "1234"
+    assert (
+        by_loc["range:UnitCost"].formula == "=SUM(B2:B6)" and by_loc["range:UnitCost"].cached_value == "1234"
+    )
     assert by_loc["range:BaseDate"].base_date == "2023-05-01"
     assert by_loc["range:Vehicle"].text == "X-OLD"
     assert by_loc["table:T1!r1c2"].text == "금액(원)" and by_loc["table:T1!r2c2"].text == "500"
@@ -198,7 +200,9 @@ def test_helpers() -> None:
     assert revision_from_filename("past_review_2023.pptx") is None
     assert detect_unit("단가 1,234 원 기준") == "원" and detect_unit("중량 12.5 kg") == "kg"
     assert detect_unit("항목") is None
-    assert detect_date("검토일 2023-05-01") == "2023-05-01" and detect_date("2023년 5월 1일") == "2023년 5월 1일"
+    assert (
+        detect_date("검토일 2023-05-01") == "2023-05-01" and detect_date("2023년 5월 1일") == "2023년 5월 1일"
+    )
     assert normalize_approval("Approved") == "approved" and normalize_approval("초안") == "draft"
     assert normalize_approval("") == "unknown"
 
@@ -217,8 +221,15 @@ def test_relationship_flags_parse_full_uri_and_package_is_not_ole() -> None:
     )
     assert relationship_flags(rels) == {"hyperlink", "ole", "external_link"}
     # 차트 내장 데이터(package) 만 있는 관계는 flag 없음, 매크로 관계는 macro
-    assert relationship_flags(f'<Relationships><Relationship Type="{ns}/package" Target="x.xlsx"/></Relationships>') == set()
-    assert relationship_flags(f'<Relationships><Relationship Type="{ns}/vbaProject" Target="vbaProject.bin"/></Relationships>') == {"macro"}
+    assert (
+        relationship_flags(
+            f'<Relationships><Relationship Type="{ns}/package" Target="x.xlsx"/></Relationships>'
+        )
+        == set()
+    )
+    assert relationship_flags(
+        f'<Relationships><Relationship Type="{ns}/vbaProject" Target="vbaProject.bin"/></Relationships>'
+    ) == {"macro"}
 
 
 def test_legacy_xls_and_macro_extensions(docs_dir: Path, tmp_path: Path) -> None:

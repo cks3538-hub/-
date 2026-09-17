@@ -10,7 +10,13 @@ import pytest
 from corp_dl_agent.common import Quantity, Status
 from corp_dl_agent.documents.payload import validate_payload
 from corp_dl_agent.documents.synthetic import example_payload
-from corp_dl_agent.documents.templates import DocumentManifest, collect_pptx_texts, collect_xlsx_texts, fill_pptx, fill_xlsx
+from corp_dl_agent.documents.templates import (
+    DocumentManifest,
+    collect_pptx_texts,
+    collect_xlsx_texts,
+    fill_pptx,
+    fill_xlsx,
+)
 from corp_dl_agent.documents.validation import (
     ValidationReport,
     find_stale,
@@ -83,13 +89,22 @@ def test_stale_value_injected_into_payload_fails_validation(tmp_path: Path) -> N
     report = validate_documents(out / "review.pptx", out / "comparison.xlsx", payload, manifests=[m1, m2])
     assert not report.passed
     c = _check(report, "pptx", "pptx.stale_values")
-    assert c.status is Status.FAIL and "slide:2/shape:Body 1" in (c.locator or "") and "X-OLD" in (c.actual or "")
+    assert (
+        c.status is Status.FAIL
+        and "slide:2/shape:Body 1" in (c.locator or "")
+        and "X-OLD" in (c.actual or "")
+    )
     assert _check(report, "xlsx", "xlsx.stale_values").status is Status.FAIL
 
 
 def test_stale_pattern_numeric_boundaries() -> None:
     pat = stale_pattern("1,234")
-    assert pat.search("단가 1,234 원") and pat.search("단가 1234원") and not pat.search("11234") and not pat.search("1,2345")
+    assert (
+        pat.search("단가 1,234 원")
+        and pat.search("단가 1234원")
+        and not pat.search("11234")
+        and not pat.search("1,2345")
+    )
     assert stale_pattern("X-OLD").search("차종 x-old-b")
     assert find_stale({"a": "값 12.5"}, ["12.5"]) == [("a", "12.5")]
     assert find_stale({"a": "값 112.5"}, ["12.5"]) == []
@@ -145,7 +160,9 @@ def test_missing_values_are_partial_not_fail_and_conflict_fails(tmp_path: Path) 
     m2 = fill_xlsx(FIXTURES / "template_comparison.xlsx", payload, out / "comparison.xlsx")
     report = validate_documents(out / "review.pptx", out / "comparison.xlsx", payload, manifests=[m1, m2])
     # mass_delta 는 mass_b 가 없어 재계산 불가 → payload 검증 실패(CONFLICT) 가 보고에 남는다
-    assert report.n_missing >= 1 and report.n_conflict == 1 and not report.payload_passed and not report.passed
+    assert (
+        report.n_missing >= 1 and report.n_conflict == 1 and not report.payload_passed and not report.passed
+    )
     pptx_doc = next(d for d in report.documents if d.document_type == "pptx")
     assert any(c.status is Status.PARTIAL and c.check_id.startswith("pptx.missing") for c in pptx_doc.checks)
     assert any(c.status is Status.FAIL and c.check_id.startswith("pptx.conflict") for c in pptx_doc.checks)
@@ -162,31 +179,40 @@ def test_validation_without_manifests_marks_not_run(generated) -> None:  # type:
 
 
 def test_xlsx_conflict_after_revalidation_and_unbacked_value(tmp_path: Path) -> None:
-    """manifest 는 값이 채워진 payload 로 만들고, 검증은 mass_a 가 사라진 payload 로 한다.
+    """manifest 는 값이 채워진 payload 로 만들고, 검증은 cost_line_material 이 사라진 payload 로 한다.
 
-    - mass_a: 문서에는 11.2 가 있으나 payload 에 값이 없음 → FAIL (근거 없는 숫자)
-    - mass_delta: mass_a 누락으로 재계산 불가 → CONFLICT → xlsx.conflict FAIL
+    - cost_line_material: 문서(B13)에는 900 이 있으나 payload 에 값이 없음 → FAIL (근거 없는 숫자)
+    - cost_total: 항목 합 재계산 불가 → CONFLICT → xlsx.conflict / pptx.conflict FAIL
+    - 표 범위(tbl_cost_lines) 셀은 payload 표 값과 계속 일치 → 추가 FAIL 없음
     """
     filled = example_payload()
     out = tmp_path / "out"
     m1 = fill_pptx(FIXTURES / "template_review.pptx", filled, out / "review.pptx")
     m2 = fill_xlsx(FIXTURES / "template_comparison.xlsx", filled, out / "comparison.xlsx")
     later = example_payload()
-    later.items["mass_a"].quantity = Quantity.missing("kg", "재검토에서 제외됨")
+    later.items["cost_line_material"].quantity = Quantity.missing("원", "재검토에서 제외됨")
     report = validate_documents(out / "review.pptx", out / "comparison.xlsx", later, manifests=[m1, m2])
     assert not report.passed and report.n_conflict == 1 and report.n_missing == 2
     xlsx_doc = next(d for d in report.documents if d.document_type == "xlsx")
     ids = {c.check_id: c for c in xlsx_doc.checks}
-    assert ids["xlsx.numeric[range:mass_a]"].status is Status.FAIL and ids["xlsx.numeric[range:mass_a]"].expected == "MISSING"
-    assert ids["xlsx.numeric[range:mass_a]"].actual == "11.2"
-    conflict = next(c for k, c in ids.items() if k.startswith("xlsx.conflict[") and "mass_delta" in k)
-    assert conflict.status is Status.FAIL and conflict.expected == "CONFLICT" and "mass_delta_diff" in conflict.message_ko
+    unbacked = ids["xlsx.numeric[range:cost_line_material]"]
+    assert unbacked.status is Status.FAIL and unbacked.expected == "MISSING" and unbacked.actual == "900"
+    conflict = ids["xlsx.conflict[range:cost_total]"]
+    assert conflict.status is Status.FAIL and conflict.expected == "CONFLICT" and conflict.actual == "1,980"
+    assert "cost_total_sum" in conflict.message_ko
     assert ids["xlsx.numeric"].status is Status.FAIL
-    # 표 셀(tbl_cost_lines) 값은 그대로 일치한다
-    assert not any(k.startswith("xlsx.numeric[range:tbl_cost_lines") for k in ids)
+    assert not any(
+        k.startswith("xlsx.numeric[range:tbl_cost_lines") or k.startswith("xlsx.conflict[range:tbl_")
+        for k in ids
+    )
     pptx_doc = next(d for d in report.documents if d.document_type == "pptx")
-    assert any(c.check_id.startswith("pptx.conflict[") and c.status is Status.FAIL for c in pptx_doc.checks)
-    assert any(c.check_id == "pptx.numeric[slide:2/shape:Body 1:mass_a]" and c.expected == "MISSING" for c in pptx_doc.checks)
+    p_conflict = next(
+        c for c in pptx_doc.checks if c.check_id == "pptx.conflict[slide:2/shape:Body 1:cost_total]"
+    )
+    assert p_conflict.status is Status.FAIL and p_conflict.actual == "1,980 원"
+    # payload 재검증 결과: 표 합(cost_total_table_sum) 은 계산 가능하지만 CONFLICT 를 덮어쓰지 않는다
+    table_sum = next(c for c in report.payload_checks if c["check_id"] == "cost_total_table_sum")
+    assert table_sum["status"] == "NOT_RUN" and table_sum["expected"] == 1980
 
 
 def test_engine_configured_but_unsupported_stays_not_run(generated) -> None:  # type: ignore[no-untyped-def]

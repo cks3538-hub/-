@@ -112,7 +112,12 @@ def test_missing_total_filled_by_engine_with_calculation_id() -> None:
     )
     pv = validate_payload(p)
     q = pv.payload.items["total"].quantity
-    assert pv.passed and q.value == 300 and q.value_type == "calculated" and q.calculation_id == "payload-check:sum1"
+    assert (
+        pv.passed
+        and q.value == 300
+        and q.value_type == "calculated"
+        and q.calculation_id == "payload-check:sum1"
+    )
     assert q.unit == "원"
 
 
@@ -171,3 +176,44 @@ def test_format_and_parse() -> None:
     assert format_quantity(Quantity.conflict("kg", "x")) == "CONFLICT"
     assert parse_number("원가 1,980 원") == 1980.0 and parse_number("-0.8 kg") == -0.8
     assert parse_number("숫자 없음") is None
+
+
+def test_conflict_is_never_overwritten_by_a_later_computable_check() -> None:
+    """같은 대상에 두 검사가 있을 때: 첫 검사가 CONFLICT 로 판정하면 두 번째 검사가 계산값으로 덮어쓰지 않는다."""
+    p = _payload(
+        {"a": _q(100), "b": _q(200), "total": _q(999)},
+        [
+            PayloadCheck(check_id="sum_terms", kind="sum", target="total", terms=["a", "b"]),
+            PayloadCheck(check_id="sum_again", kind="sum", target="total", terms=["a", "b"]),
+        ],
+    )
+    pv = validate_payload(p)
+    assert (
+        not pv.passed and pv.n_conflict == 1 and pv.payload.items["total"].quantity.value_type == "conflict"
+    )
+    by_id = {c.check_id: c for c in pv.checks}
+    assert by_id["sum_terms"].status.value == "FAIL"
+    assert by_id["sum_again"].status.value == "NOT_RUN" and by_id["sum_again"].expected == 300
+    assert "300" in by_id["sum_again"].message_ko
+    # 입력에서 선언된 CONFLICT 도 계산값으로 대체하지 않는다
+    p2 = _payload(
+        {"a": _q(100), "b": _q(200), "total": Quantity.conflict("원", "견적 vs 계산 상충")},
+        [PayloadCheck(check_id="s", kind="sum", target="total", terms=["a", "b"])],
+    )
+    pv2 = validate_payload(p2)
+    assert not pv2.passed and pv2.payload.items["total"].quantity.value is None
+    assert (
+        pv2.payload.items["total"].quantity.notes == "견적 vs 계산 상충"
+        and pv2.checks[0].status.value == "NOT_RUN"
+    )
+    # 피연산자 누락 + 대상 CONFLICT → 값을 만들지 않고 NOT_RUN
+    p3 = _payload(
+        {"a": _q(100), "b": _q(None), "total": Quantity.conflict("원", "x")},
+        [PayloadCheck(check_id="s", kind="sum", target="total", terms=["a", "b"])],
+    )
+    pv3 = validate_payload(p3)
+    assert (
+        pv3.checks[0].status.value == "NOT_RUN"
+        and "CONFLICT" in pv3.checks[0].message_ko
+        and pv3.n_conflict == 1
+    )

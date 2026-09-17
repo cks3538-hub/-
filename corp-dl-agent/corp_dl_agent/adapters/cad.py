@@ -116,7 +116,9 @@ class _InactiveLiveAdapter:
     def inactive_reasons(self) -> list[str]:
         reasons: list[str] = []
         if platform.system() != "Windows":
-            reasons.append(f"{platform.system()} 에서는 {self.label_ko} 연결을 지원하지 않습니다 (Windows 전용)")
+            reasons.append(
+                f"{platform.system()} 에서는 {self.label_ko} 연결을 지원하지 않습니다 (Windows 전용)"
+            )
         reasons.append(f"{self.label_ko} 설치/자동화 API/라이선스가 이 환경에서 확인되지 않았습니다")
         reasons.append("이 릴리스에는 검증된 live 추출 구현이 포함되어 있지 않습니다 (계약만 제공)")
         return reasons

@@ -229,7 +229,9 @@ def _stale_and_placeholder_checks(
     return out
 
 
-def _conflict_after_revalidation(check_id: str, locator: str, rendered: str, notes: str | None) -> ValidationCheck:
+def _conflict_after_revalidation(
+    check_id: str, locator: str, rendered: str, notes: str | None
+) -> ValidationCheck:
     """문서에는 값이 기록되었으나 payload 재검증(합계/차이) 에서 해당 항목이 CONFLICT 로 바뀐 경우."""
     return ValidationCheck(
         check_id=check_id,
@@ -616,7 +618,9 @@ def validate_xlsx(
                     pq = _table_cell_quantity(payload, r.key, r.attr, r.locator)
                 if pq is not None and pq.value_type == "conflict":
                     checks.append(
-                        _conflict_after_revalidation(f"xlsx.conflict[{r.locator}]", r.locator, r.rendered, pq.notes)
+                        _conflict_after_revalidation(
+                            f"xlsx.conflict[{r.locator}]", r.locator, r.rendered, pq.notes
+                        )
                     )
                     continue
                 if pq is None or pq.value is None:
@@ -740,7 +744,9 @@ def validate_documents(
     docs: list[DocumentValidation] = []
     if pptx is not None:
         docs.append(
-            validate_pptx(pptx, pv.payload, manifest=by_type.get("pptx"), stale_values=stale, renderer=renderer)
+            validate_pptx(
+                pptx, pv.payload, manifest=by_type.get("pptx"), stale_values=stale, renderer=renderer
+            )
         )
     if xlsx is not None:
         docs.append(

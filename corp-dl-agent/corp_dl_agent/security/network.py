@@ -291,9 +291,8 @@ class OutboundGuard:
                 }
                 socket.create_connection = self._wrap_create_connection(self._originals["create_connection"])
                 socket.socket.connect = self._wrap_connect(self._originals["connect"], "socket.connect")  # type: ignore[method-assign]
-                socket.socket.connect_ex = self._wrap_connect(
-                    self._originals["connect_ex"], "socket.connect_ex"
-                )  # type: ignore[method-assign]
+                connect_ex = self._wrap_connect(self._originals["connect_ex"], "socket.connect_ex")
+                socket.socket.connect_ex = connect_ex  # type: ignore[method-assign]
                 if self.block_dns:
                     socket.getaddrinfo = self._wrap_getaddrinfo(self._originals["getaddrinfo"])
             self._depth += 1

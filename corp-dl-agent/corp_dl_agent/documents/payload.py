@@ -288,7 +288,7 @@ def validate_payload(payload: ReportPayload, *, mark_conflicts: bool = True) -> 
                         target=check.target,
                         status=Status.NOT_RUN,
                         unit=unit,
-                        message_ko=f"피연산자 누락({', '.join(missing_ops)}) — 대상도 MISSING 이므로 일관됩니다",
+                        message_ko=f"피연산자 누락({', '.join(missing_ops)}) — 대상도 {tq.value_type.upper()} 이므로 값을 만들지 않습니다",
                     )
                 )
             else:
@@ -324,6 +324,20 @@ def validate_payload(payload: ReportPayload, *, mark_conflicts: bool = True) -> 
             continue
         values = [float(q.value) for _, q in ops if q.value is not None]
         expected = sum(values) if check.kind == "sum" else values[0] - values[1]
+        if tq.value_type == "conflict":
+            # 입력에서 CONFLICT 로 선언되었거나 앞선 검사에서 CONFLICT 로 판정된 대상은 계산값으로 덮어쓰지 않는다.
+            results.append(
+                CheckResult(
+                    check_id=check.check_id,
+                    kind=check.kind,
+                    target=check.target,
+                    status=Status.NOT_RUN,
+                    expected=expected,
+                    unit=unit,
+                    message_ko=f"대상이 CONFLICT 로 표시되어 있어 계산값 {format_number(expected)} 로 대체하지 않습니다 (사람이 상충을 해소해야 합니다)",
+                )
+            )
+            continue
         if tq.is_missing():
             # 계산 엔진이 채울 수 있는 값: 피연산자가 모두 있으므로 calculated 로 기록
             target_item.quantity = Quantity(

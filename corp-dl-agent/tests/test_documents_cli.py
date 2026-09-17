@@ -55,9 +55,7 @@ def test_docs_index_and_search_json(env: dict[str, Path], capsys: pytest.Capture
     assert rc == 0 and _json_out(capsys)["n_hits"] == 2
 
     ev_path = env["ws"] / "outputs" / "evidence.json"
-    rc = main(
-        ["docs", "search", "--query", "X-OLD 단가", "--evidence-output", str(ev_path), *_common(env)]
-    )
+    rc = main(["docs", "search", "--query", "X-OLD 단가", "--evidence-output", str(ev_path), *_common(env)])
     assert rc == 0 and ev_path.is_file()
     text = capsys.readouterr().out
     assert "검색어" in text and "evidence 저장" in text
@@ -65,7 +63,9 @@ def test_docs_index_and_search_json(env: dict[str, Path], capsys: pytest.Capture
     assert ev["n_items"] > 0 and ev["items"][0]["sha256"] and ev["items"][0]["kind"] == "fact"
 
 
-def test_docs_index_rejects_root_outside_sources(env: dict[str, Path], capsys: pytest.CaptureFixture[str]) -> None:
+def test_docs_index_rejects_root_outside_sources(
+    env: dict[str, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
     outside = env["tmp"] / "밖"
     outside.mkdir()
     rc = main(["docs", "index", "--roots", str(outside), *_common(env)])
@@ -131,7 +131,9 @@ def test_docs_generate_creates_all_outputs(env: dict[str, Path], capsys: pytest.
     assert payload_out["items"]["cost_total"]["quantity"]["value"] == 1980
 
 
-def test_docs_generate_text_output_and_evidence_file(env: dict[str, Path], capsys: pytest.CaptureFixture[str]) -> None:
+def test_docs_generate_text_output_and_evidence_file(
+    env: dict[str, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
     out_dir = env["ws"] / "outputs" / "gen2"
     ev_in = env["ws"] / "outputs" / "prev_evidence.json"
     ev_in.parent.mkdir(parents=True)
@@ -159,7 +161,9 @@ def test_docs_generate_text_output_and_evidence_file(env: dict[str, Path], capsy
     assert read_json(out_dir / "evidence.json")["purpose"] == "이전 검색"
 
 
-def test_docs_generate_fails_validation_exit_code(env: dict[str, Path], capsys: pytest.CaptureFixture[str]) -> None:
+def test_docs_generate_fails_validation_exit_code(
+    env: dict[str, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
     out_dir = env["ws"] / "outputs" / "gen3"
     rc = main(
         [
@@ -180,10 +184,15 @@ def test_docs_generate_fails_validation_exit_code(env: dict[str, Path], capsys: 
     assert rc == EXIT_VALIDATION
     data = _json_out(capsys)
     assert data["ok"] is False and (out_dir / "validation_report.json").is_file()
-    assert any(c["check_id"] == "xlsx.stale_values" and c["status"] == "FAIL" for c in data["validation"]["documents"][0]["checks"])
+    assert any(
+        c["check_id"] == "xlsx.stale_values" and c["status"] == "FAIL"
+        for c in data["validation"]["documents"][0]["checks"]
+    )
 
 
-def test_docs_generate_usage_and_unsupported(env: dict[str, Path], capsys: pytest.CaptureFixture[str]) -> None:
+def test_docs_generate_usage_and_unsupported(
+    env: dict[str, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
     rc = main(
         [
             "docs",
@@ -223,7 +232,11 @@ def test_docs_make_synthetic(env: dict[str, Path], capsys: pytest.CaptureFixture
     rc = main(["docs", "make-synthetic", "--output-dir", str(out), "--json", *_common(env)])
     assert rc == 0
     data = _json_out(capsys)
-    assert data["synthetic"] is True and (out / "README.md").is_file() and (out / "past_review_2023.pptx").is_file()
+    assert (
+        data["synthetic"] is True
+        and (out / "README.md").is_file()
+        and (out / "past_review_2023.pptx").is_file()
+    )
     assert "synthetic" in (out / "README.md").read_text(encoding="utf-8")
 
 
@@ -235,7 +248,9 @@ def test_docs_help_lists_subcommands(capsys: pytest.CaptureFixture[str]) -> None
     assert "index" in out and "search" in out and "generate" in out and "색인" in out
 
 
-def test_docs_generate_wrong_sum_becomes_conflict_not_fabricated(env: dict[str, Path], capsys: pytest.CaptureFixture[str]) -> None:
+def test_docs_generate_wrong_sum_becomes_conflict_not_fabricated(
+    env: dict[str, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
     """payload 의 합계가 항목 합과 다르면 계산 엔진 재검증이 CONFLICT 로 바꾸고 문서에는 CONFLICT 가 기록된다."""
     import openpyxl
 
@@ -264,11 +279,22 @@ def test_docs_generate_wrong_sum_becomes_conflict_not_fabricated(env: dict[str, 
     data_out = _json_out(capsys)
     assert data_out["ok"] is False and data_out["payload_validation"]["passed"] is False
     assert data_out["payload_validation"]["n_conflict"] == 1
-    failed = {c["check_id"]: c for c in data_out["payload_validation"]["checks"] if c["status"] == "FAIL"}
-    assert set(failed) == {"cost_total_sum", "cost_total_table_sum"} and failed["cost_total_sum"]["expected"] == 1980
+    by_id = {c["check_id"]: c for c in data_out["payload_validation"]["checks"]}
+    assert by_id["cost_total_sum"]["status"] == "FAIL" and by_id["cost_total_sum"]["expected"] == 1980
+    assert by_id["cost_total_sum"]["actual"] == 9999
+    # 같은 대상의 두 번째 검사(표 합)는 CONFLICT 를 계산값으로 덮어쓰지 않고 NOT_RUN 으로 남는다
+    assert (
+        by_id["cost_total_table_sum"]["status"] == "NOT_RUN"
+        and by_id["cost_total_table_sum"]["expected"] == 1980
+    )
     written = read_json(out_dir / "report_payload.json")
     q = written["items"]["cost_total"]["quantity"]
-    assert q["value_type"] == "conflict" and q["value"] is None and "9,999" in q["notes"] and "1,980" in q["notes"]
+    assert (
+        q["value_type"] == "conflict"
+        and q["value"] is None
+        and "9,999" in q["notes"]
+        and "1,980" in q["notes"]
+    )
     ws = openpyxl.load_workbook(out_dir / "comparison.xlsx")["Comparison"]
     assert ws["B17"].value == "CONFLICT" and ws["B16"].value == "=SUM(B13:B15)"
     from corp_dl_agent.documents.templates import collect_pptx_texts
@@ -278,12 +304,17 @@ def test_docs_generate_wrong_sum_becomes_conflict_not_fabricated(env: dict[str, 
     report = read_json(out_dir / "validation_report.json")
     assert report["passed"] is False and report["n_conflict"] == 1
     xlsx_doc = next(d for d in report["documents"] if d["document_type"] == "xlsx")
-    assert any(c["check_id"] == "xlsx.conflict[range:cost_total]" and c["status"] == "FAIL" for c in xlsx_doc["checks"])
+    assert any(
+        c["check_id"] == "xlsx.conflict[range:cost_total]" and c["status"] == "FAIL"
+        for c in xlsx_doc["checks"]
+    )
     manifest = read_json(out_dir / "document_manifest.json")
     assert all("cost_total" in d["missing_keys"] for d in manifest["documents"])
 
 
-def test_docs_generate_reports_unsupported_engines_as_not_run(env: dict[str, Path], capsys: pytest.CaptureFixture[str]) -> None:
+def test_docs_generate_reports_unsupported_engines_as_not_run(
+    env: dict[str, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
     out_dir = env["ws"] / "outputs" / "엔진 설정"
     rc = main(
         [
@@ -311,7 +342,13 @@ def test_docs_generate_reports_unsupported_engines_as_not_run(env: dict[str, Pat
     assert report["recalc_status"] == "RECALC_NOT_RUN" and report["render_status"] == "RENDER_NOT_RUN"
     assert sum("E_NOT_SUPPORTED" in n for n in report["notes"]) == 2
     statuses = {c["check_id"]: c for c in report["documents"][0]["checks"]}
-    assert statuses["xlsx.recalc"]["status"] == "NOT_RUN" and "excel_com" in statuses["xlsx.recalc"]["message_ko"]
-    assert statuses["xlsx.render"]["status"] == "NOT_RUN" and "libreoffice" in statuses["xlsx.render"]["message_ko"]
+    assert (
+        statuses["xlsx.recalc"]["status"] == "NOT_RUN"
+        and "excel_com" in statuses["xlsx.recalc"]["message_ko"]
+    )
+    assert (
+        statuses["xlsx.render"]["status"] == "NOT_RUN"
+        and "libreoffice" in statuses["xlsx.render"]["message_ko"]
+    )
     manifest = read_json(out_dir / "document_manifest.json")
     assert "renderer=libreoffice" in " ".join(manifest["notes"])

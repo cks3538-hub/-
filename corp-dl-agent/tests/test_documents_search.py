@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -17,12 +18,12 @@ FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "documents"
 
 
 @pytest.fixture
-def index(tmp_path: Path) -> DocumentIndex:
+def index(tmp_path: Path) -> Iterator[DocumentIndex]:
     d = tmp_path / "근거 자료"
     shutil.copytree(FIXTURES, d)
     idx = DocumentIndex(tmp_path / "documents.sqlite")
     idx.index_roots([d])
-    yield idx  # type: ignore[misc]
+    yield idx
     idx.close()
 
 

@@ -677,7 +677,7 @@ def fill_xlsx(
                 if _is_formula_cell(cell):
                     # 수식 셀은 어떤 경우에도 쓰지 않는다. 호환성 보고에 남겨 사용자가 named range 를 확인하게 한다.
                     m = XLSX_NAME_RE.match(name)
-                    has_value = bool(m) and (m.group(1) in payload.items or m.group(1) in payload.texts)
+                    has_value = m is not None and (m.group(1) in payload.items or m.group(1) in payload.texts)
                     unsupported.append(
                         UnsupportedElement(
                             locator=loc,

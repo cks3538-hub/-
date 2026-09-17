@@ -40,10 +40,14 @@ def test_fill_pptx_replaces_only_placeholders_and_preserves_structure(tmp_path: 
     texts = collect_pptx_texts(out)
     assert texts["slide:1/shape:Title 1"] == payload.subject
     body = texts["slide:2/shape:Body 1"]
-    assert "중량 A: 11.2 kg" in body and "중량 차이(B-A): -0.8 kg" in body and "차종: X-NEW (synthetic)" in body
+    assert (
+        "중량 A: 11.2 kg" in body and "중량 차이(B-A): -0.8 kg" in body and "차종: X-NEW (synthetic)" in body
+    )
     # run 이 나뉜 placeholder 도 치환되고 서식(run) 은 유지된다
     assert "원가 합계: 1,980 원 (출처 cost:asm_b:total)" in body and "{{" not in body
-    assert texts["slide:3/table:Table 1/r2c2"] == "11.2 kg" and texts["slide:3/table:Table 1/r3c4"] == "-70 원"
+    assert (
+        texts["slide:3/table:Table 1/r2c2"] == "11.2 kg" and texts["slide:3/table:Table 1/r3c4"] == "-70 원"
+    )
     assert texts["slide:3/table:Table 1/r2c1"] == "중량 A"
     assert texts["slide:3/notes"] == "근거 요약: evidence.json 참조 (synthetic 템플릿)"
     assert "{{" not in "".join(texts.values())
@@ -52,9 +56,10 @@ def test_fill_pptx_replaces_only_placeholders_and_preserves_structure(tmp_path: 
     assert tpl == cur
     by_key = {(r.locator, r.key, r.attr): r for r in m.replacements}
     assert by_key[("slide:2/shape:Body 1", "cost_total", None)].rendered == "1,980 원"
-    assert by_key[("slide:2/shape:Body 1", "cost_total", None)].numeric and by_key[
-        ("slide:2/shape:Body 1", "cost_total", None)
-    ].value == 1980
+    assert (
+        by_key[("slide:2/shape:Body 1", "cost_total", None)].numeric
+        and by_key[("slide:2/shape:Body 1", "cost_total", None)].value == 1980
+    )
     assert by_key[("slide:3/table:Table 1/r2c2", "mass_a", "unit")].rendered == "kg"
     from pptx import Presentation
 
@@ -70,12 +75,19 @@ def test_fill_pptx_missing_conflict_unknown_and_unapproved(tmp_path: Path) -> No
     del payload.texts["conclusion"]
     m = fill_pptx(PPTX_TPL, payload, tmp_path / "review.pptx")
     texts = collect_pptx_texts(tmp_path / "review.pptx")
-    assert "중량 B: MISSING" in texts["slide:2/shape:Body 1"] and "결론: MISSING" in texts["slide:2/shape:Body 1"]
+    assert (
+        "중량 B: MISSING" in texts["slide:2/shape:Body 1"]
+        and "결론: MISSING" in texts["slide:2/shape:Body 1"]
+    )
     assert texts["slide:3/table:Table 1/r3c3"] == "CONFLICT"
     assert m.missing_keys == ["cost_b", "mass_b"] and m.unknown_keys == ["conclusion"]
-    m2 = fill_pptx(PPTX_TPL, example_payload(), tmp_path / "review2.pptx", approved_keys={"subject", "mass_a"})
+    m2 = fill_pptx(
+        PPTX_TPL, example_payload(), tmp_path / "review2.pptx", approved_keys={"subject", "mass_a"}
+    )
     texts2 = collect_pptx_texts(tmp_path / "review2.pptx")
-    assert "{{mass_b}}" in texts2["slide:2/shape:Body 1"] and "중량 A: 11.2 kg" in texts2["slide:2/shape:Body 1"]
+    assert (
+        "{{mass_b}}" in texts2["slide:2/shape:Body 1"] and "중량 A: 11.2 kg" in texts2["slide:2/shape:Body 1"]
+    )
     assert "mass_b" in m2.unapproved_keys and "subject" not in m2.unapproved_keys
 
 
@@ -83,7 +95,9 @@ def test_fill_pptx_preserves_chart_and_reports_unsupported(tmp_path: Path) -> No
     out = tmp_path / "past_copy.pptx"
     m = fill_pptx(FIXTURES / "past_review_2023.pptx", example_payload(), out)
     assert [u.element_type for u in m.unsupported_elements] == ["chart"]
-    assert m.unsupported_elements[0].preserved and m.unsupported_elements[0].locator == "slide:3/chart:Chart 1"
+    assert (
+        m.unsupported_elements[0].preserved and m.unsupported_elements[0].locator == "slide:3/chart:Chart 1"
+    )
     assert m.changed_locators == [] and read_pptx_structure(out)["n_charts"] == 1
     assert read_pptx_structure(out) == read_pptx_structure(FIXTURES / "past_review_2023.pptx")
     with pytest.raises(AgentError) as ei:
@@ -98,7 +112,9 @@ def test_fill_xlsx_named_ranges_formulas_preserved_recalc_not_run(tmp_path: Path
     before = sha256_file(XLSX_TPL)
     out = tmp_path / "산출" / "comparison.xlsx"
     m = fill_xlsx(XLSX_TPL, payload, out)
-    assert sha256_file(XLSX_TPL) == before and m.template_hash_unchanged and m.recalc_status == "RECALC_NOT_RUN"
+    assert (
+        sha256_file(XLSX_TPL) == before and m.template_hash_unchanged and m.recalc_status == "RECALC_NOT_RUN"
+    )
     tpl = read_xlsx_structure(XLSX_TPL)
     cur = read_xlsx_structure(out)
     assert tpl == cur
@@ -111,7 +127,9 @@ def test_fill_xlsx_named_ranges_formulas_preserved_recalc_not_run(tmp_path: Path
         "Comparison!D9",
         "Lines!B8",
     ]
-    assert cur["formulas"]["Comparison!D8"] == "=C8-B8" and cur["formulas"]["Comparison!B16"] == "=SUM(B13:B15)"
+    assert (
+        cur["formulas"]["Comparison!D8"] == "=C8-B8" and cur["formulas"]["Comparison!B16"] == "=SUM(B13:B15)"
+    )
     wb = openpyxl.load_workbook(out)
     ws = wb["Comparison"]
     assert ws["B8"].value == 11.2 and ws["C8"].value == 10.4 and ws["E8"].value == "kg"
@@ -150,10 +168,11 @@ def test_fill_xlsx_refuses_lossy_and_macro_templates(tmp_path: Path) -> None:
     import openpyxl
     from openpyxl.chart import BarChart, Reference
     from openpyxl.workbook.defined_name import DefinedName
+    from openpyxl.worksheet.worksheet import Worksheet
 
     wb = openpyxl.Workbook()
-    ws = wb.active
-    assert ws is not None
+    ws = wb.worksheets[0]
+    assert isinstance(ws, Worksheet)
     ws.append(["a", 1])
     ws.append(["b", 2])
     chart = BarChart()
@@ -195,11 +214,16 @@ def test_fill_xlsx_table_range_too_small_reports(tmp_path: Path) -> None:
 def test_extra_payload_items_do_not_touch_template(tmp_path: Path) -> None:
     payload = example_payload()
     payload.items["unused"] = PayloadItem(
-        key="unused", label_ko="미사용", quantity=Quantity(value=1.0, unit="", value_type="assumed", assumption=True)
+        key="unused",
+        label_ko="미사용",
+        quantity=Quantity(value=1.0, unit="", value_type="assumed", assumption=True),
     )
     m = fill_xlsx(XLSX_TPL, payload, tmp_path / "x.xlsx")
     assert "range:unused" not in m.changed_locators
-    assert read_xlsx_structure(tmp_path / "x.xlsx")["defined_names"] == read_xlsx_structure(XLSX_TPL)["defined_names"]
+    assert (
+        read_xlsx_structure(tmp_path / "x.xlsx")["defined_names"]
+        == read_xlsx_structure(XLSX_TPL)["defined_names"]
+    )
 
 
 def test_fill_pptx_refuses_macro_template_without_executing(tmp_path: Path) -> None:
