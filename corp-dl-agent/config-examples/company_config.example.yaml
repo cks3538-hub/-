@@ -1,0 +1,72 @@
+# 회사 설정 예시 (secret 값 없음). 사내에서 company/config/company_config.yaml 로 복사하여 채운다.
+# 우선순위: package defaults < 이 파일 < CLI --set KEY=VALUE
+# 상대 경로는 이 파일이 있는 폴더 기준. 한글/공백 경로 가능.
+schema_version: "4.0"
+
+# personal-dev | transfer-test | corp-offline | corp-gateway
+# corp-offline: API 호출 0회 (기본 운영 프로파일)
+profile: corp-offline
+
+paths:
+  install_root: null            # 설치기가 채움 (예: "D:/apps/DIA")
+  data_root: "../workspace"     # data/runs/models/outputs/state/indexes/logs
+  company_root: ".."            # company/config, company/templates, company/extensions
+  input_roots: []               # 추가로 읽기 허용할 폴더 (예: ["//fileserver/design/exports"])  ※ 읽기 전용
+  sources_roots: []             # docs index 대상 폴더 (PPTX/XLSX)
+  output_root: null             # null -> <data_root>/outputs
+
+ml:
+  device: cpu                   # cuda 는 GPU 프로파일 + 드라이버/torch 빌드 확인 후에만
+  num_workers: 0                # Windows 기본
+  amp: false
+  allow_synthetic_models_in_production: false
+
+# 사내 LLM gateway (선택). corp-gateway 프로파일에서만 enabled 가능.
+# 값이 없으면 어떤 public provider 로도 fallback 하지 않는다.
+gateway:
+  enabled: false
+  base_url: null                # 예: "https://llm-gateway.example.internal"  (사내 담당자 확인)
+  api_format: openai_chat       # openai_chat | anthropic_messages | gemini_custom(미확정)
+  model_id: null                # 사내 실제 model ID (표시 이름으로 추정하지 말 것)
+  secret_ref: null              # "env:CORP_LLM_TOKEN" 또는 "file:C:/secure/llm_token.txt" (값 직접 기입 금지)
+  ca_bundle: null               # 사내 CA 번들 경로 (TLS 검증 유지)
+  approved_origins: []          # 예: ["https://llm-gateway.example.internal"]
+  timeout_seconds: 60
+  max_calls: 12
+  max_total_tokens: 30000
+  max_response_tokens: 2000
+  retry_transient: 2
+  json_repair_attempts: 1
+  reserve_tokens_per_call: 2000
+
+# Atlassian (선택). write 는 기본 false: preview/export 만.
+integrations:
+  write: false
+  approved_origins: []
+  bitbucket: { enabled: false, base_url: null, deployment: datacenter, secret_ref: null }
+  jira:      { enabled: false, base_url: null, deployment: datacenter, secret_ref: null, project_key: null }
+  confluence:{ enabled: false, base_url: null, deployment: datacenter, secret_ref: null, space_key: null }
+  bamboo:    { enabled: false, base_url: null, deployment: datacenter, secret_ref: null }
+
+cad:
+  adapter: csv_json             # csv_json | catia_v5_com(현장 확인 필요) | 3dexperience(현장 확인 필요)
+  field_mapping: {}             # snapshot 필드 <- 회사 export 열 이름 (예: {reference_id: "PartNumber"})
+  default_density_policy: reject   # reject | use_material_table
+  material_table: null          # 예: "material_table.csv"
+
+documents:
+  approved_fonts: []            # 예: ["맑은 고딕"]
+  renderer: none                # none | libreoffice (승인된 경우)
+  renderer_path: null
+  recalc_engine: none           # none | excel_com (비대화형 서비스 기본 엔진으로 가정하지 않음)
+  allow_hidden_content_to_llm: false
+  include_notes: true
+
+extensions: []                  # [{name, path, version, compatible_schema: "4.0"}] 명시 로드만
+
+security:
+  forbid_symlinks: true
+
+logging:
+  level: INFO
+  json_events: true

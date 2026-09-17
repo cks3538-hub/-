@@ -1,0 +1,11 @@
+# CATIA/PDM export 열 이름 -> snapshot 필드 매핑 예시 (cad.field_mapping 에 넣거나 cad import --mapping 으로 지정)
+# snapshot 필드: document_id, revision, configuration_id, occurrence_path, reference_id, quantity, material_id,
+#                density_kg_m3, volume_m3, mass_kg, geometry_status, surface_thickness_m, is_assembly, parent_path
+document_id: "DocumentNumber"
+revision: "Rev"
+reference_id: "PartNumber"
+occurrence_path: "InstancePath"
+quantity: "Qty"
+material_id: "Material"
+volume_m3: "Volume"          # 원본 단위는 units 열 또는 --set 으로 지정 (mm3 등)
+density_kg_m3: "Density"

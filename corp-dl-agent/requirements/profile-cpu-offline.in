@@ -1,0 +1,13 @@
+# 기본 검증 배포 프로파일 (core + documents + ml-cpu) 의 직접 의존성 pin.
+# 전이 의존성은 대상 플랫폼별 `pip download` 로 해석하고 locks/<profile>.txt 에 hash 와 함께 고정한다.
+# 출처: PyPI (https://pypi.org). download.pytorch.org 는 이 개발 환경에서 차단되어 사용하지 않았다.
+# Windows x64 의 torch PyPI wheel 은 CPU 빌드이며, Linux x64 의 torch PyPI wheel 은 CUDA 빌드(+nvidia 패키지)이다.
+pydantic==2.13.5
+PyYAML==6.0.3
+httpx==0.28.1
+python-pptx==1.0.2
+openpyxl==3.1.5
+numpy==2.5.3
+pandas==3.0.5
+scikit-learn==1.9.1
+torch==2.14.0

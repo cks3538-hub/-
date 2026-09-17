@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "corp-dl-agent"
+version = "4.0.0"
+description = "설계·문서 업무 자동화 범용 코어 (CAD snapshot 중량/원가, CSV 성능 예측, PPTX/XLSX 근거 검색·생성, 오프라인 설치)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary - internal use" }
+authors = [{ name = "corp-dl-agent maintainers" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+]
+# core: 설정/상태/CLI/보안/패키징. 표준 라이브러리 + 아래 최소 의존성.
+dependencies = [
+  "pydantic>=2.7,<3",
+  "PyYAML>=6.0",
+  "httpx>=0.27,<1",
+]
+
+[project.optional-dependencies]
+documents = [
+  "python-pptx>=1.0",
+  "openpyxl>=3.1",
+]
+ml-cpu = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scikit-learn>=1.4",
+  "torch>=2.2",
+]
+# ml-gpu: CPU와 동일한 패키지 목록이지만 GPU torch 빌드는 대상 GPU/드라이버/빌드 조합을 현장에서 확인해야 한다.
+# 이 extra는 별도 wheelhouse 프로파일(ml-gpu)로만 준비하며 기본 검증 프로파일에 포함되지 않는다.
+ml-gpu = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scikit-learn>=1.4",
+  "torch>=2.2",
+]
+cad-windows = [
+  "pywin32>=306; sys_platform == 'win32'",
+]
+dev = [
+  "pytest>=8",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "build>=1.2",
+  "wheel",
+  "pandas-stubs",
+  "types-PyYAML",
+  "types-openpyxl",
+]
+
+[project.scripts]
+corp-dl-agent = "corp_dl_agent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["corp_dl_agent*"]
+
+[tool.setuptools.package-data]
+corp_dl_agent = ["py.typed", "defaults/*.yaml", "defaults/*.json"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = [".venv", "dist", "build", "wheelhouse", "workspace", "test-evidence"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = [
+  "S101",  # assert in tests
+  "S603",  # subprocess without shell=True is the intended pattern
+  "S607",  # partial executable path (we always pass explicit interpreter paths)
+  "E501",  # long lines handled by formatter; Korean text lines may exceed
+  "UP007", "UP045",  # X | None style is fine either way
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B011"]
+"scripts/*" = ["S"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = false
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["^\\.venv/", "^dist/", "^build/", "^wheelhouse/", "^workspace/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+  "slow: 느린 시험 (학습 등)",
+  "torch: torch 필요 시험",
+  "documents: python-pptx/openpyxl 필요 시험",
+]

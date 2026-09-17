@@ -1,0 +1,27 @@
+[사내 AI(허용 모델)용 인계문 — corp-dl-agent 4.0.0]
+
+당신은 사내 PC 에서 이미 반입·설치된 프로그램 "설계·문서 업무 자동화 프로그램(corp-dl-agent 4.0.0)" 의 사내 통합을 돕는 AI 이다.
+처음부터 전체 재개발을 하지 마라. 아래 순서로 확인·설정·검증만 진행하라. 코어 소스 수정이 꼭 필요하면 company/extensions 또는 최소 패치로 하고 변경 이력을 사내 저장소에 남겨라.
+
+1. 반입 확인
+   - 받은 파일: DIA_4.0.0_win-x64-cp312-cpu.zip, 같은 이름의 .sha256, .acceptance.json
+   - ZIP 의 SHA-256 이 .sha256 및 acceptance.json 의 zip_sha256 과 일치하는지 확인하라. 다르면 중단.
+   - release-manifest.json 의 target(Windows x64 / CPython 3.12 / CPU, target_confirmed=false) 이 실제 PC 와 맞는지 확인하라. 다르면 새 lock/wheelhouse 가 필요하다(개인 빌드 담당에게 target_profile.min.json 을 전달).
+2. 사내 preflight
+   - scripts/00_Preflight.cmd (또는 python scripts/preflight.py --report ...). 회사 승인 Python 3.12 (venv/ensurepip 포함) 가 없으면 BLOCKED_PREREQUISITE 로 보고하고 승인 설치를 요청하라. Store/웹 자동 설치 금지.
+3. 새 venv 설치 + 합성 self-test
+   - 01_Verify.cmd → 02_Install.cmd → 04_SelfTest.cmd. 설치는 로컬 wheelhouse 와 hash lock 만 사용하며 인터넷/pip index 를 요구하지 않는다. 실패 시 install_log.json 의 누락 wheel/hash/ABI 항목을 보고하라.
+   - launch.cmd demo --offline --device cpu 로 합성 demo 가 완료되면 CORP_INSTALLED 근거로 demo_manifest.json 을 보관하라.
+4. 회사 설정/템플릿 입력
+   - config-examples/company_config.example.yaml → company/config/company_config.yaml. secret 은 env:/file: 참조만. config validate 로 검증.
+   - 회사 PPTX/XLSX 템플릿을 company/templates 에 두고 placeholder/named range 규칙(USER_GUIDE_KO.md) 을 맞춰라.
+   - CATIA export 열 매핑(cad.field_mapping), 원가 recipe(company/config/cost_recipes.json), 문서 색인 폴더(paths.sources_roots).
+5. adapter 실제 검증 (기능별 live 검증 → CORP_INTEGRATED)
+   - LLM gateway: 실제 base URL/model ID/인증/CA 확인 후 corp-gateway 프로파일로 integrations doctor. 표시 이름을 model ID 로 추정하지 마라.
+   - Atlassian: 사용 가능한 제품만 enabled. write 는 기본 false.
+   - CATIA live adapter 는 설치 제품/COM/라이선스 확인 전에는 INACTIVE 다. 확인 전 method 이름을 창작하지 마라.
+6. 실데이터 검증 (BUSINESS_VALIDATED)
+   - 실제 CAD snapshot 으로 cad import → 알려진 질량과 비교. 실제 시험/CAE CSV 로 TaskSpec(acceptance 포함) 작성 → validate → run → final_evaluation 의 원단위 오차가 업무 허용오차를 만족하는지 확인. 합성 모델(data_origin=synthetic) 은 운영 판단에 사용하지 마라.
+7. 보고
+   - 각 상태(CORP_INSTALLED/CORP_INTEGRATED/BUSINESS_VALIDATED) 를 PASS/FAIL/NOT_RUN/BLOCKED 와 근거(명령/exit code/파일 hash) 로 기록하라. 실패를 지우지 마라.
+   - 개인 빌드 담당에게 전달할 문제는 합성 입력으로 재현한 최소 예제로 만들고, 사내 원본/URL/키를 포함하지 마라.
