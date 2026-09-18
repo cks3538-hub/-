@@ -313,3 +313,18 @@ def test_preflight_on_old_python_reports_version_not_crash(tmp_path: Path) -> No
     out = json.loads(r.stdout)
     names = {c["name"]: c["status"] for c in out["checks"]}
     assert names["python_version"] == "FAIL" and "python_version" in out["blocked"]
+
+
+def test_cmd_wrappers_are_ascii_crlf_without_chcp() -> None:
+    """cmd.exe 는 UTF-8 한글이 든 배치 파일(특히 chcp 65001 이후)을 잘못 파싱한다 — 실제 Windows 에서 재현된 결함.
+    래퍼는 ASCII + CRLF 만 허용하고 chcp 를 쓰지 않는다. 한국어 메시지는 Python 스크립트가 출력한다."""
+    root = SCRIPTS_DIR.parent
+    for path in [*sorted(SCRIPTS_DIR.glob("*.cmd")), root / "tools" / "Rebuild_Release_Windows.cmd"]:
+        raw = path.read_bytes()
+        assert all(b < 0x80 for b in raw), f"{path.name}: non-ASCII bytes present"
+        assert b"\r\n" in raw and b"\n" not in raw.replace(b"\r\n", b""), f"{path.name}: CRLF 가 아닌 줄바꿈"
+        assert b"chcp" not in raw.lower(), f"{path.name}: chcp 사용 금지"
+    ps1 = (SCRIPTS_DIR / "preflight.ps1").read_bytes()
+    assert ps1.startswith(b"\xef\xbb\xbf"), (
+        "preflight.ps1 은 UTF-8 BOM 이어야 PowerShell 5.1 이 한글을 바르게 읽는다"
+    )

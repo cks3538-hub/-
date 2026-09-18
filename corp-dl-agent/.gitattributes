@@ -1,0 +1,4 @@
+# Windows wrappers: keep bytes exactly (CRLF, ASCII / UTF-8 BOM) - no eol normalization
+*.cmd -text
+*.ps1 -text
+*.bat -text
