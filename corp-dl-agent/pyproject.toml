@@ -8,7 +8,7 @@ version = "4.0.0"
 description = "설계·문서 업무 자동화 범용 코어 (CAD snapshot 중량/원가, CSV 성능 예측, PPTX/XLSX 근거 검색·생성, 오프라인 설치)"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Proprietary - internal use" }
+license = "LicenseRef-Proprietary"
 authors = [{ name = "corp-dl-agent maintainers" }]
 classifiers = [
   "Programming Language :: Python :: 3",

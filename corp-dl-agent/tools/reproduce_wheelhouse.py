@@ -54,6 +54,14 @@ def main() -> int:
     prof = PROFILES[args.profile]
     wh = Path(args.wheelhouse or (root / "wheelhouse" / args.profile))
     wh.mkdir(parents=True, exist_ok=True)
+    prov = json.loads((root / args.provenance).read_text(encoding="utf-8"))
+    expected = {w["filename"]: w["sha256"] for w in prov["profiles"][args.profile]["wheels"]}
+    existing = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in wh.glob("*.whl")}
+    if expected and all(existing.get(n) == h for n, h in expected.items()):
+        print(
+            f"PASS: wheelhouse 가 이미 provenance 와 일치합니다 ({len(expected)}개). 다운로드를 건너뜁니다."
+        )
+        return 0
     cmd = [
         sys.executable,
         "-m",
@@ -77,8 +85,6 @@ def main() -> int:
     if rc != 0:
         print("pip download 실패", file=sys.stderr)
         return rc
-    prov = json.loads((root / args.provenance).read_text(encoding="utf-8"))
-    expected = {w["filename"]: w["sha256"] for w in prov["profiles"][args.profile]["wheels"]}
     actual = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in wh.glob("*.whl")}
     missing = sorted(set(expected) - set(actual))
     extra = sorted(set(actual) - set(expected))

@@ -24,7 +24,7 @@
 | `release-manifest.json` | 릴리스·대상·기능·schema 버전·검증 상태·파일 목록 |
 | `checksums.sha256` | payload 파일 hash (자기 자신 제외) |
 | `dependency-inventory.json` | package/version/wheel/source/license/hash/approval_state=UNREVIEWED |
-| `test-evidence/` | 개인 환경 시험 명령·exit code·환경·결과 (경로는 `<PROJECT_ROOT>`/`<TEST_ROOT>` 로 정규화) |
+| `test-evidence/` | 개인 환경 코어 시험(host-*) 명령·exit code·환경·결과 (경로는 `<PROJECT_ROOT>`/`<TEST_ROOT>`/`<HOME>` 으로 정규화). Linux rehearsal 기록은 저장소의 `test-evidence/transfer-linux/` 에 별도 보관 |
 
 ## 포함하지 않은 것 (사내 선행 조건)
 - Python 3.12 런타임(회사 승인), CATIA, Office, GPU 드라이버, 문서 렌더러, 한국어 폰트

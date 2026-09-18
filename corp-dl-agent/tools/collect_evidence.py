@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -29,6 +30,9 @@ def normalize(text: str, mapping: list[tuple[str, str]]) -> str:
     home = os.path.expanduser("~")
     if home and home != "/":
         out = out.replace(home, "<HOME>")
+    # 다른 사용자 홈(예: 비관리자 시험 계정)도 일반화 — 반입 증거에 개인 절대 경로가 남지 않게
+    out = re.sub(r"/home/[A-Za-z0-9._-]+", "<HOME>", out)
+    out = re.sub(r"(?i)([A-Za-z]:\\+Users\\+)[^\\\s\"']+", r"\1<USER>", out)
     return out
 
 
