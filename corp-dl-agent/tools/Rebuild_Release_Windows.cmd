@@ -16,17 +16,25 @@ for %%I in ("%SCRIPT_DIR%..") do set "ROOT=%%~fI"
 cd /d "%ROOT%" || (echo [ERROR] cannot enter project folder: %ROOT% & goto :fail)
 echo Project: %ROOT%
 
-rem ---- 1. Find Python 3.12 (PYTHON env var, then py -3.12, then python)
+rem ---- 1. Find a build Python: PYTHON env var, then py -3.12/-3.13/-3.11/-3.14, then py -3, then python (3.11+).
+rem      The build itself only needs Python 3.11+; the wheelhouse is downloaded for the 3.12 target regardless.
 set "PYCMD="
 if defined PYTHON if exist "%PYTHON%" set "PYCMD="%PYTHON%""
 if not defined PYCMD ( py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12" )
-if not defined PYCMD ( python -c "import sys; raise SystemExit(0 if sys.version_info[:2]==(3,12) else 1)" >nul 2>&1 && set "PYCMD=python" )
+if not defined PYCMD ( py -3.13 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.13" )
+if not defined PYCMD ( py -3.11 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.11" )
+if not defined PYCMD ( py -3.14 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.14" )
+if not defined PYCMD ( py -3 -c "import sys; raise SystemExit(0 if sys.version_info[:2] >= (3, 11) else 1)" >nul 2>&1 && set "PYCMD=py -3" )
+if not defined PYCMD ( python -c "import sys; raise SystemExit(0 if sys.version_info[:2] >= (3, 11) else 1)" >nul 2>&1 && set "PYCMD=python" )
 if not defined PYCMD (
-  echo [ERROR] Python 3.12 not found. Install Python 3.12 x64 from https://www.python.org/downloads/windows/
-  echo         - tick "Add python.exe to PATH" during setup, then run this script again.
+  echo [ERROR] No Python 3.11+ found. Install Python 3.12 x64 from https://www.python.org/downloads/windows/
+  echo         - tick "Add python.exe to PATH" during setup, then open a NEW cmd window and run this script again.
+  echo         - if Python is installed elsewhere: set "PYTHON=C:\path\to\python.exe" and run again.
+  echo         Diagnostics you can paste back: py --list  /  where python  /  python --version
   goto :fail
 )
 echo Python : %PYCMD%
+%PYCMD% -c "import sys, platform; print('Python', platform.python_version(), platform.architecture()[0], sys.executable)"
 
 rem ---- 2. Build-only virtualenv (never shipped in the ZIP)
 if not exist ".venv\Scripts\python.exe" (
