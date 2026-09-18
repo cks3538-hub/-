@@ -1,0 +1,23 @@
+{
+  "name": "transfer-02-preflight",
+  "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-02-preflight.sh\"'",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-18T04:17:41+00:00",
+  "elapsed_seconds": 0.26,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+    "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+    "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-02-preflight.sh"
+  },
+  "lock_sha256": null,
+  "stdout_tail": "      \"prerequisite\": true\n    },\n    {\n      \"name\": \"write_permission_data_root\",\n      \"status\": \"PASS\",\n      \"detail\": \"/home/tester\",\n      \"prerequisite\": true\n    },\n    {\n      \"name\": \"korean_space_path\",\n      \"status\": \"PASS\",\n      \"detail\": \"/home/tester\",\n      \"prerequisite\": false\n    },\n    {\n      \"name\": \"package_target\",\n      \"status\": \"PASS\",\n      \"detail\": \"패키지 target linux-x64-cp312-cpu 과 호환\",\n      \"prerequisite\": true\n    }\n  ],\n  \"host\": {\n    \"profile_id\": \"linux-x64-cp312-cpu\",\n    \"os\": \"Linux\",\n    \"os_version\": \"6.18.44-fc-v33\",\n    \"architecture\": \"x64\",\n    \"python_implementation\": \"CPython\",\n    \"python_version\": \"3.12.3\",\n    \"python_abi\": \"cp312\",\n    \"platform_tags\": [\n      \"manylinux_2_39_x86_64\",\n      \"linux_x86_64\"\n    ],\n    \"features\": [\n      \"core\",\n      \"documents\",\n      \"ml-cpu\"\n    ],\n    \"device\": \"cpu\",\n    \"gpu\": null,\n    \"target_confirmed\": false,\n    \"verified_environment\": {\n      \"detected\": true,\n      \"detected_at\": \"2026-09-18T04:17:42+00:00\",\n      \"machine\": \"x86_64\",\n      \"bits\": 64,\n      \"libc\": [\n        \"glibc\",\n        \"2.39\"\n      ],\n      \"has_venv\": true,\n      \"has_ensurepip\": true,\n      \"pip_version\": \"24.0\",\n      \"in_virtualenv\": false,\n      \"python_executable\": \"/usr/bin/python3.12\"\n    },\n    \"notes\": [\n      \"호스트에서 자동 감지한 값이며 사내 타깃 확정값이 아닙니다 (target_confirmed=false).\"\n    ]\n  },\n  \"python\": \"/usr/bin/python3.12\",\n  \"install_root\": \"/home/tester/.local/share/DIA\",\n  \"data_root\": \"/home/tester/.local/share/DIA/workspace\",\n  \"package_target\": {\n    \"profile_id\": \"linux-x64-cp312-cpu\",\n    \"os\": \"Linux\",\n    \"os_version\": \"glibc>=2.28 x86_64 (개발 호스트 rehearsal 용)\",\n    \"architecture\": \"x64\",\n    \"python_implementation\": \"CPython\",\n    \"python_version\": \"3.12\",\n    \"python_abi\": \"cp312\",\n    \"platform_tags\": [\n      \"manylinux_2_28_x86_64\",\n      \"linux_x86_64\"\n    ],\n    \"features\": [\n      \"core\",\n      \"documents\",\n      \"ml-cpu\"\n    ],\n    \"device\": \"cpu\",\n    \"gpu\": null,\n    \"target_confirmed\": false,\n    \"verified_environment\": null,\n    \"notes\": [\n      \"개발 호스트(Linux x86_64) 에서 새 경로 설치 rehearsal 에 쓰는 프로파일. 사내 타깃이 아니다.\",\n      \"Linux x64 의 PyPI torch wheel 은 CUDA 빌드(+nvidia 패키지)이며 CPU 에서도 동작하지만 크기가 크다.\"\n    ]\n  },\n  \"written\": {\n    \"report\": \"<TEST_ROOT>/preflight_report.json\",\n    \"min_profile\": \"/home/tester/반입 테�\n{\n  \"format\": \"dia-target-profile-min/1\",\n  \"generated_at\": \"2026-09-18T04:17:42+00:00\",\n  \"preflight_status\": \"PASS\",\n  \"profile_id\": \"linux-x64-cp312-cpu\",\n  \"os\": \"Linux\",\n  \"os_version\": \"6.18.44-fc-v33\",\n  \"architecture\": \"x64\",\n  \"python_implementation\": \"CPython\",\n  \"python_version\": \"3.12.3\",\n  \"python_abi\": \"cp312\",\n  \"platform_tags\": [\n    \"manylinux_2_39_x86_64\",\n    \"linux_x86_64\"\n  ],\n  \"features\": [\n    \"core\",\n    \"documents\",\n    \"ml-cpu\"\n  ],\n  \"device\": \"cpu\",\n  \"gpu\": null,\n  \"target_confirmed\": false,\n  \"bits\": 64,\n  \"feature_status\": {\n    \"preflight\": \"PASS\"\n  }\n}",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/transfer-02-preflight.log (개인 로컬 보관, 반입 제외)"
+}

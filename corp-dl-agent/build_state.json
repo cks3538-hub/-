@@ -1,7 +1,7 @@
 {
   "project": "corp-dl-agent",
   "version": "4.0.0",
-  "updated_at": "2026-09-17T11:48:03+00:00",
+  "updated_at": "2026-09-18T04:20:37+00:00",
   "host": {
     "os": "Linux x86_64 (cloud container)",
     "python_dev_venv": "CPython 3.12.3",
@@ -80,16 +80,19 @@
   },
   "artifacts": {
     "win_zip": "dist/DIA_4.0.0_win-x64-cp312-cpu.zip",
-    "win_zip_sha256": "397e7ea19e14064b04de5d3440313e88c9c23bdb7b382cb46e62dd6778f1afe7",
-    "win_zip_bytes": 219755193,
+    "win_zip_sha256": "2c6bea169ea02e630268aa1f659fc2357c469becfd7e52accb2a9d6a0f8dbcc1",
+    "win_zip_bytes": 219756025,
     "linux_zip": "dist/DIA_4.0.0_linux-x64-cp312-cpu.zip",
-    "linux_zip_sha256": "d037dfe1c9753178dc272d10f8925d2e2da29a60a3cb4c655699a34961814cde",
-    "linux_zip_bytes": 3101955188,
+    "linux_zip_sha256": "228aef5bc2a6fd552cb57b4483fd0c7ac40a0df227baecd3c4c7220f9e6480d9",
+    "linux_zip_bytes": 3101956008,
     "app_wheel": "dist/corp_dl_agent-4.0.0-py3-none-any.whl",
     "acceptance": [
       "dist/DIA_4.0.0_win-x64-cp312-cpu.acceptance.json",
       "dist/DIA_4.0.0_linux-x64-cp312-cpu.acceptance.json"
     ],
     "note": "dist/ 와 wheelhouse/ 는 git 에 없음(용량). release-artifacts/ 에 sha256·acceptance·앱 wheel 사본"
-  }
+  },
+  "notes": [
+    "Windows .cmd 래퍼는 ASCII+CRLF 로 재작성(cmd.exe UTF-8 파싱 결함). Windows 실행은 사용자 PC 에서 확인 필요"
+  ]
 }

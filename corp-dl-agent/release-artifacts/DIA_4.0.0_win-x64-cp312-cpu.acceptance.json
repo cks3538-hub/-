@@ -1,10 +1,10 @@
 {
   "format": "dia-acceptance/1",
-  "created_at": "2026-09-17T11:47:16+00:00",
+  "created_at": "2026-09-18T04:20:36+00:00",
   "zip": {
     "name": "DIA_4.0.0_win-x64-cp312-cpu.zip",
-    "sha256": "397e7ea19e14064b04de5d3440313e88c9c23bdb7b382cb46e62dd6778f1afe7",
-    "size_bytes": 219755193,
+    "sha256": "2c6bea169ea02e630268aa1f659fc2357c469becfd7e52accb2a9d6a0f8dbcc1",
+    "size_bytes": 219756025,
     "sha256_file": "DIA_4.0.0_win-x64-cp312-cpu.zip.sha256",
     "sha256_file_match": true
   },
@@ -15,7 +15,7 @@
     "schema_version": "4.0",
     "db_schema_version": 4,
     "file_count": 257,
-    "created_at": "2026-09-17T11:42:42+00:00"
+    "created_at": "2026-09-18T04:16:16+00:00"
   },
   "environment": {
     "os": "Linux",
@@ -39,8 +39,8 @@
       "command": ".venv/bin/python -m pytest -q tests -p no:cacheprovider",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:40:45+00:00",
-      "elapsed_seconds": 101.26,
+      "started_at": "2026-09-18T04:12:34+00:00",
+      "elapsed_seconds": 188.76,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -57,7 +57,7 @@
       "command": ".venv/bin/python -m ruff check .",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:26+00:00",
+      "started_at": "2026-09-18T04:15:43+00:00",
       "elapsed_seconds": 0.03,
       "environment": {
         "os": "Linux",
@@ -75,7 +75,7 @@
       "command": ".venv/bin/python -m ruff format --check .",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:26+00:00",
+      "started_at": "2026-09-18T04:15:43+00:00",
       "elapsed_seconds": 0.03,
       "environment": {
         "os": "Linux",
@@ -93,8 +93,8 @@
       "command": ".venv/bin/python -m mypy corp_dl_agent",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:26+00:00",
-      "elapsed_seconds": 1.42,
+      "started_at": "2026-09-18T04:15:43+00:00",
+      "elapsed_seconds": 4.28,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -111,8 +111,8 @@
       "command": ".venv/bin/python -m build --wheel --no-isolation -o dist",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:28+00:00",
-      "elapsed_seconds": 0.72,
+      "started_at": "2026-09-18T04:15:48+00:00",
+      "elapsed_seconds": 0.75,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -129,8 +129,8 @@
       "command": ".venv/bin/python -m corp_dl_agent demo --offline --device cpu --output-dir workspace/demo-evidence --json",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:29+00:00",
-      "elapsed_seconds": 7.46,
+      "started_at": "2026-09-18T04:15:48+00:00",
+      "elapsed_seconds": 6.96,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -147,8 +147,8 @@
       "command": ".venv/bin/python -m corp_dl_agent self-test --set paths.data_root=workspace/selftest-ws",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:36+00:00",
-      "elapsed_seconds": 3.17,
+      "started_at": "2026-09-18T04:15:55+00:00",
+      "elapsed_seconds": 3.0,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -165,8 +165,8 @@
       "command": ".venv/bin/python -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse/win-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:빌드 호스트가 Linux 이므로 Windows 실행 시험 없음. 사용자 Windows PC 에서 00~04 스크립트로 수행 --json",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:39+00:00",
-      "elapsed_seconds": 4.54,
+      "started_at": "2026-09-18T04:15:58+00:00",
+      "elapsed_seconds": 18.89,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -183,8 +183,8 @@
       "command": ".venv/bin/python -m corp_dl_agent package build --profile linux-x64-cp312-cpu --wheelhouse wheelhouse/linux-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:포장 시점에는 미실행. 외부 acceptance.json 에 Linux rehearsal 결과 기록 --json",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:42:44+00:00",
-      "elapsed_seconds": 56.52,
+      "started_at": "2026-09-18T04:16:17+00:00",
+      "elapsed_seconds": 55.57,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -201,7 +201,7 @@
       "command": "/usr/bin/python3.12 scripts/verify.py --package dist/DIA_4.0.0_win-x64-cp312-cpu.zip --target-profile /tmp/claude-0/-home-user/bb3392bd-2f9a-5ef4-b734-9884221b4d4f/scratchpad/win_target_profile.json --json",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:43:41+00:00",
+      "started_at": "2026-09-18T04:17:13+00:00",
       "elapsed_seconds": 0.77,
       "environment": {
         "os": "Linux",
@@ -219,8 +219,8 @@
       "command": "/usr/bin/python3.12 scripts/verify.py --package dist/DIA_4.0.0_linux-x64-cp312-cpu.zip --json",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:43:41+00:00",
-      "elapsed_seconds": 9.41,
+      "started_at": "2026-09-18T04:17:14+00:00",
+      "elapsed_seconds": 9.45,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -237,7 +237,7 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-00-sha256.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:43:58+00:00",
+      "started_at": "2026-09-18T04:17:29+00:00",
       "elapsed_seconds": 8.33,
       "environment": {
         "os": "Linux",
@@ -255,8 +255,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-01-extract.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:06+00:00",
-      "elapsed_seconds": 3.48,
+      "started_at": "2026-09-18T04:17:37+00:00",
+      "elapsed_seconds": 4.01,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -273,8 +273,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-02-preflight.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:10+00:00",
-      "elapsed_seconds": 2.01,
+      "started_at": "2026-09-18T04:17:41+00:00",
+      "elapsed_seconds": 0.26,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -291,8 +291,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-03-verify.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:12+00:00",
-      "elapsed_seconds": 9.39,
+      "started_at": "2026-09-18T04:17:42+00:00",
+      "elapsed_seconds": 9.37,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -309,8 +309,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-03b-verify-tampered-must-fail.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:21+00:00",
-      "elapsed_seconds": 0.18,
+      "started_at": "2026-09-18T04:17:51+00:00",
+      "elapsed_seconds": 0.15,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -327,8 +327,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-04-install.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:22+00:00",
-      "elapsed_seconds": 107.32,
+      "started_at": "2026-09-18T04:17:51+00:00",
+      "elapsed_seconds": 100.29,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -345,8 +345,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-05-active.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:09+00:00",
-      "elapsed_seconds": 0.1,
+      "started_at": "2026-09-18T04:19:32+00:00",
+      "elapsed_seconds": 0.11,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -363,8 +363,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-06-selftest.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:09+00:00",
-      "elapsed_seconds": 3.38,
+      "started_at": "2026-09-18T04:19:32+00:00",
+      "elapsed_seconds": 3.32,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -381,8 +381,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-07-doctor.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:12+00:00",
-      "elapsed_seconds": 3.29,
+      "started_at": "2026-09-18T04:19:35+00:00",
+      "elapsed_seconds": 3.2,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -399,8 +399,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-08-demo.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:16+00:00",
-      "elapsed_seconds": 7.87,
+      "started_at": "2026-09-18T04:19:38+00:00",
+      "elapsed_seconds": 8.12,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -417,8 +417,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-09-install-tampered-keeps-active.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:24+00:00",
-      "elapsed_seconds": 0.21,
+      "started_at": "2026-09-18T04:19:46+00:00",
+      "elapsed_seconds": 0.22,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -435,7 +435,7 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-10-no-pip-index.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:24+00:00",
+      "started_at": "2026-09-18T04:19:47+00:00",
       "elapsed_seconds": 0.1,
       "environment": {
         "os": "Linux",
@@ -461,7 +461,7 @@
   "verification": {
     "HOST_CORE_TESTED": {
       "status": "PASS",
-      "reason": "개인 빌드 호스트(Linux): pytest 575 통과, ruff/mypy 통과, demo 12/12·16/16 PASS"
+      "reason": "개인 빌드 호스트(Linux): pytest 전체 통과, ruff/mypy 통과, demo 12/12·16/16 PASS"
     },
     "TARGET_BUNDLE_PREPARED": {
       "status": "PASS",
@@ -469,7 +469,7 @@
     },
     "TARGET_OFFLINE_TESTED": {
       "status": "NOT_RUN",
-      "reason": "빌드 호스트에 Windows 없음. 사용자 Windows PC 또는 사내 PC 에서 00_Preflight→01_Verify→02_Install→04_SelfTest→demo 실행 필요. 동일 소스의 Linux 프로파일 rehearsal 은 PASS(별도 acceptance)"
+      "reason": "빌드 호스트에 Windows 없음. 사용자 Windows PC 또는 사내 PC 에서 00_Preflight→01_Verify→02_Install→04_SelfTest→demo 실행 필요. .cmd 래퍼는 ASCII+CRLF 로 재작성했으나 Windows 실행은 미검증"
     },
     "CORP_INSTALLED": {
       "status": "NOT_RUN",

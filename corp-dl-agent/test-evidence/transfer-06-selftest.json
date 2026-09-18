@@ -1,0 +1,23 @@
+{
+  "name": "transfer-06-selftest",
+  "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-06-selftest.sh\"'",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-18T04:19:32+00:00",
+  "elapsed_seconds": 3.32,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+    "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+    "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-06-selftest.sh"
+  },
+  "lock_sha256": null,
+  "stdout_tail": "{\n  \"version\": \"4.0.0\",\n  \"ok\": true,\n  \"exit_code\": 0,\n  \"required_failures\": [],\n  \"items\": [\n    {\n      \"name\": \"config\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"profile=corp-offline, network_allowed=False\",\n      \"elapsed_ms\": 0\n    },\n    {\n      \"name\": \"strict_schema_reject\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"extra 필드 거부 확인\",\n      \"elapsed_ms\": 0\n    },\n    {\n      \"name\": \"hash\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"sha256 검증\",\n      \"elapsed_ms\": 0\n    },\n    {\n      \"name\": \"quantity\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"Quantity provenance\",\n      \"elapsed_ms\": 0\n    },\n    {\n      \"name\": \"units_1kg\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"1,000,000 mm3 × 1.0 g/cm3 = 1.0 kg\",\n      \"elapsed_ms\": 28\n    },\n    {\n      \"name\": \"fixture_mass\",\n      \"required\": false,\n      \"status\": \"PASS\",\n      \"detail\": \"asm_a PART_CUBE.1 unit_mass=1.0 kg, total=4.675\",\n      \"elapsed_ms\": 1\n    },\n    {\n      \"name\": \"sqlite\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"WAL sqlite 쓰기/읽기\",\n      \"elapsed_ms\": 15\n    },\n    {\n      \"name\": \"atomic_write_korean_path\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"한글/공백 경로 원자적 쓰기: 원자적 쓰기.json\",\n      \"elapsed_ms\": 0\n    },\n    {\n      \"name\": \"path_isolation\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"root 이탈/traversal 거부\",\n      \"elapsed_ms\": 0\n    },\n    {\n      \"name\": \"documents_libs\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"python-pptx 1.0.2, openpyxl 3.1.5\",\n      \"elapsed_ms\": 191\n    },\n    {\n      \"name\": \"ml_libs\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"numpy 2.5.3, pandas 3.0.5, scikit-learn 1.9.1\",\n      \"elapsed_ms\": 904\n    },\n    {\n      \"name\": \"torch_cpu\",\n      \"required\": true,\n      \"status\": \"PASS\",\n      \"detail\": \"torch 2.14.0+cu130 CPU 연산 OK (cuda=False)\",\n      \"elapsed_ms\": 1329\n    }\n  ]\n}",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/transfer-06-selftest.log (개인 로컬 보관, 반입 제외)"
+}

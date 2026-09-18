@@ -20,7 +20,7 @@
 |---|---|---|
 | HOST_CORE_TESTED | PASS | test-evidence/host-01~07 (pytest 572, ruff, mypy, wheel, demo, self-test) |
 | TARGET_BUNDLE_PREPARED | PASS | wheelhouse/win-x64-cp312-cpu 38 wheel + locks/win-x64-cp312-cpu.txt(hash) + release-manifest; requirements/download_provenance.json |
-| TARGET_OFFLINE_TESTED | NOT_RUN(Windows 참조 타깃) / PASS(Linux rehearsal 프로파일) | Windows ZIP SHA-256 397e7ea19e14064b… 는 정적 검증만(host-10); Linux ZIP d037dfe1c9753178… 는 test-evidence/transfer-* 12 단계 PASS |
+| TARGET_OFFLINE_TESTED | NOT_RUN(Windows 참조 타깃) / PASS(Linux rehearsal 프로파일) | Windows ZIP SHA-256 2c6bea169ea02e63… 는 정적 검증만(host-10); Linux ZIP 228aef5bc2a6fd55… 는 test-evidence/transfer-* 12 단계 PASS |
 | CORP_INSTALLED | NOT_RUN | 사내 PC 에서만 |
 | CORP_INTEGRATED | NOT_RUN | 사내 PC 에서만 |
 | BUSINESS_VALIDATED | NOT_RUN | 실데이터·업무 허용오차 필요 |

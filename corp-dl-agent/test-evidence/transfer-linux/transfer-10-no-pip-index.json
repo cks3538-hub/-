@@ -1,0 +1,23 @@
+{
+  "name": "transfer-10-no-pip-index",
+  "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-10-no-pip-index.sh\"'",
+  "cwd": "<PROJECT_ROOT>",
+  "started_at": "2026-09-18T04:19:47+00:00",
+  "elapsed_seconds": 0.1,
+  "exit_code": 0,
+  "timed_out": false,
+  "status": "PASS",
+  "environment": {
+    "os": "Linux",
+    "os_release": "6.18.44-fc-v33",
+    "machine": "x86_64",
+    "collector_python": "3.11.15",
+    "command_python": "CPython 3.12.3 (/usr/bin/python3.12, 회사 승인 Python 역할)",
+    "network_isolation": "unshare -n (network namespace, external interfaces absent, loopback only)",
+    "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-10-no-pip-index.sh"
+  },
+  "lock_sha256": null,
+  "stdout_tail": "releases/4.0.0/linux-x64-cp312-cpu/install_log.json\n1",
+  "stderr_tail": "",
+  "raw_log": "test-evidence/raw/transfer-10-no-pip-index.log (개인 로컬 보관, 반입 제외)"
+}

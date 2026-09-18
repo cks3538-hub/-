@@ -1,10 +1,10 @@
 {
   "format": "dia-acceptance/1",
-  "created_at": "2026-09-17T11:47:16+00:00",
+  "created_at": "2026-09-18T04:20:36+00:00",
   "zip": {
     "name": "DIA_4.0.0_linux-x64-cp312-cpu.zip",
-    "sha256": "d037dfe1c9753178dc272d10f8925d2e2da29a60a3cb4c655699a34961814cde",
-    "size_bytes": 3101955188,
+    "sha256": "228aef5bc2a6fd552cb57b4483fd0c7ac40a0df227baecd3c4c7220f9e6480d9",
+    "size_bytes": 3101956008,
     "sha256_file": "DIA_4.0.0_linux-x64-cp312-cpu.zip.sha256",
     "sha256_file_match": true
   },
@@ -15,7 +15,7 @@
     "schema_version": "4.0",
     "db_schema_version": 4,
     "file_count": 275,
-    "created_at": "2026-09-17T11:43:19+00:00"
+    "created_at": "2026-09-18T04:16:53+00:00"
   },
   "environment": {
     "os": "Linux",
@@ -39,7 +39,7 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-00-sha256.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:43:58+00:00",
+      "started_at": "2026-09-18T04:17:29+00:00",
       "elapsed_seconds": 8.33,
       "environment": {
         "os": "Linux",
@@ -57,8 +57,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-01-extract.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:06+00:00",
-      "elapsed_seconds": 3.48,
+      "started_at": "2026-09-18T04:17:37+00:00",
+      "elapsed_seconds": 4.01,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -75,8 +75,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-02-preflight.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:10+00:00",
-      "elapsed_seconds": 2.01,
+      "started_at": "2026-09-18T04:17:41+00:00",
+      "elapsed_seconds": 0.26,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -93,8 +93,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-03-verify.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:12+00:00",
-      "elapsed_seconds": 9.39,
+      "started_at": "2026-09-18T04:17:42+00:00",
+      "elapsed_seconds": 9.37,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -111,8 +111,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-03b-verify-tampered-must-fail.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:21+00:00",
-      "elapsed_seconds": 0.18,
+      "started_at": "2026-09-18T04:17:51+00:00",
+      "elapsed_seconds": 0.15,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -129,8 +129,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-04-install.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:44:22+00:00",
-      "elapsed_seconds": 107.32,
+      "started_at": "2026-09-18T04:17:51+00:00",
+      "elapsed_seconds": 100.29,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -147,8 +147,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-05-active.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:09+00:00",
-      "elapsed_seconds": 0.1,
+      "started_at": "2026-09-18T04:19:32+00:00",
+      "elapsed_seconds": 0.11,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -165,8 +165,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-06-selftest.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:09+00:00",
-      "elapsed_seconds": 3.38,
+      "started_at": "2026-09-18T04:19:32+00:00",
+      "elapsed_seconds": 3.32,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -183,8 +183,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-07-doctor.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:12+00:00",
-      "elapsed_seconds": 3.29,
+      "started_at": "2026-09-18T04:19:35+00:00",
+      "elapsed_seconds": 3.2,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -201,8 +201,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-08-demo.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:16+00:00",
-      "elapsed_seconds": 7.87,
+      "started_at": "2026-09-18T04:19:38+00:00",
+      "elapsed_seconds": 8.12,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -219,8 +219,8 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-09-install-tampered-keeps-active.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:24+00:00",
-      "elapsed_seconds": 0.21,
+      "started_at": "2026-09-18T04:19:46+00:00",
+      "elapsed_seconds": 0.22,
       "environment": {
         "os": "Linux",
         "os_release": "6.18.44-fc-v33",
@@ -237,7 +237,7 @@
       "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-10-no-pip-index.sh\"'",
       "exit_code": 0,
       "status": "PASS",
-      "started_at": "2026-09-17T11:46:24+00:00",
+      "started_at": "2026-09-18T04:19:47+00:00",
       "elapsed_seconds": 0.1,
       "environment": {
         "os": "Linux",
@@ -253,7 +253,7 @@
   "verification": {
     "HOST_CORE_TESTED": {
       "status": "PASS",
-      "reason": "개인 빌드 호스트: pytest 575 통과, ruff/mypy 통과, demo 12/12·16/16 PASS (ZIP 내부 test-evidence/host-*)"
+      "reason": "개인 빌드 호스트: pytest 전체 통과, ruff/mypy 통과, demo 12/12·16/16 PASS (ZIP 내부 test-evidence/host-*)"
     },
     "TARGET_BUNDLE_PREPARED": {
       "status": "PASS",
@@ -261,7 +261,7 @@
     },
     "TARGET_OFFLINE_TESTED": {
       "status": "PASS",
-      "reason": "Linux x86_64 CPython 3.12.3 새 경로(한글/공백), 비관리자 tester, CWD=/tmp, unshare -n 네트워크 네임스페이스, PIP_INDEX_URL 오염 환경에서 ZIP 만으로 verify→install(--no-index --require-hashes)→self-test→doctor→demo(12/12) PASS; 변조 ZIP 거부·active 유지 PASS. 이 프로파일은 개발 호스트 rehearsal 용이며 사내 Windows 타깃이 아님"
+      "reason": "Linux x86_64 CPython 3.12.3 새 경로(한글/공백), 비관리자 tester, CWD=/tmp, unshare -n 네트워크 네임스페이스, PIP_INDEX_URL 오염 환경에서 ZIP 만으로 verify→install(--no-index --require-hashes)→self-test→doctor→demo(12/12) PASS; 변조 ZIP 거부·active 유지 PASS. 개발 호스트 rehearsal 프로파일이며 사내 Windows 타깃이 아님"
     },
     "CORP_INSTALLED": {
       "status": "NOT_RUN",
@@ -280,6 +280,6 @@
     "이 파일은 ZIP 밖에 있으며 ZIP 은 수정되지 않았다 (ZIP 재포장 금지).",
     "zip.sha256 은 무결성 확인이며 배포자 진위 확인이 아니다.",
     "빌드 호스트: Linux x86_64 클라우드 컨테이너, CPython 3.12.3",
-    "이전 rehearsal 시도 2회의 실패(설치기 version 파싱 결함, 설치 기본 경로 미반영)는 수정 후 새 ZIP 으로 재시험함; 원시 기록은 개인 로컬 test-evidence/raw/transfer-attempt*/ 에 보관"
+    "이전 시도의 실패(설치기 version 파싱, 설치 기본 경로, .cmd UTF-8 파싱)는 수정 후 새 ZIP 으로 재시험; 원시 기록은 개인 로컬 test-evidence/raw/ 보관"
   ]
 }

@@ -5,7 +5,7 @@
 (Linux 참조 프로파일 ZIP `DIA_4.0.0_linux-x64-cp312-cpu.zip` 은 개인 환경 rehearsal 용이며 사내 Windows PC 에는 옮기지 않습니다.)
 | 파일 | 설명 |
 |---|---|
-| `DIA_4.0.0_win-x64-cp312-cpu.zip` | 반입 패키지 (package_kind=CPU_OFFLINE, 219,755,193 bytes, 254 항목). SHA-256 `397e7ea19e14064b04de5d3440313e88c9c23bdb7b382cb46e62dd6778f1afe7` |
+| `DIA_4.0.0_win-x64-cp312-cpu.zip` | 반입 패키지 (package_kind=CPU_OFFLINE, 219,756,025 bytes, 254 항목). SHA-256 `2c6bea169ea02e630268aa1f659fc2357c469becfd7e52accb2a9d6a0f8dbcc1` |
 | `DIA_4.0.0_win-x64-cp312-cpu.zip.sha256` | ZIP 의 SHA-256 (ZIP 밖) |
 | `DIA_4.0.0_win-x64-cp312-cpu.acceptance.json` | 최종 ZIP hash·검증 환경·명령/exit code·PASS/FAIL/NOT_RUN |
 
@@ -35,7 +35,7 @@
 |---|---|---|
 | HOST_CORE_TESTED | PASS | test-evidence/host-01~07 (pytest 572, ruff, mypy, wheel, demo, self-test) |
 | TARGET_BUNDLE_PREPARED | PASS | wheelhouse/lock/manifest/inventory (PyPI sha256 대조) |
-| TARGET_OFFLINE_TESTED | NOT_RUN (Windows 환경 없음). 같은 소스의 Linux 프로파일 ZIP(`DIA_4.0.0_linux-x64-cp312-cpu.zip`, SHA-256 `d037dfe1c9753178dc272d10f8925d2e2da29a60a3cb4c655699a34961814cde`, 3.1 GB) 은 새 환경 rehearsal PASS (12 단계) — `DIA_4.0.0_linux-x64-cp312-cpu.acceptance.json` | acceptance.json |
+| TARGET_OFFLINE_TESTED | NOT_RUN (Windows 환경 없음). 같은 소스의 Linux 프로파일 ZIP(`DIA_4.0.0_linux-x64-cp312-cpu.zip`, SHA-256 `228aef5bc2a6fd552cb57b4483fd0c7ac40a0df227baecd3c4c7220f9e6480d9`, 3.1 GB) 은 새 환경 rehearsal PASS (12 단계) — `DIA_4.0.0_linux-x64-cp312-cpu.acceptance.json` | acceptance.json |
 | CORP_INSTALLED / CORP_INTEGRATED / BUSINESS_VALIDATED | NOT_RUN | 사내에서만 확인 |
 
 라이브러리 반입/사용 승인은 회사 절차이며 `dependency-inventory.json` 의 `approval_state` 는 UNREVIEWED 입니다.
