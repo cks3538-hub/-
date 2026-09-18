@@ -23,7 +23,7 @@ if not defined PYCMD ( py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12
 if not defined PYCMD ( python -c "import sys; raise SystemExit(0 if sys.version_info[:2]==(3,12) else 1)" >nul 2>&1 && set "PYCMD=python" )
 if not defined PYCMD (
   echo [ERROR] Python 3.12 not found. Install Python 3.12 x64 from https://www.python.org/downloads/windows/
-  echo         (check "Add python.exe to PATH") and run this script again.
+  echo         - tick "Add python.exe to PATH" during setup, then run this script again.
   goto :fail
 )
 echo Python : %PYCMD%

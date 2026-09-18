@@ -328,3 +328,38 @@ def test_cmd_wrappers_are_ascii_crlf_without_chcp() -> None:
     assert ps1.startswith(b"\xef\xbb\xbf"), (
         "preflight.ps1 은 UTF-8 BOM 이어야 PowerShell 5.1 이 한글을 바르게 읽는다"
     )
+
+
+def _cmd_block_lint(path: Path) -> list[str]:
+    """cmd.exe 는 ( ... ) 블록을 통째로 파싱하므로, 블록 안 echo 줄의 따옴표 밖 괄호는 블록을 조기 종료시킨다
+    (실제 Windows 에서 'and은(는) 예상되지 않았습니다' 로 재현된 결함)."""
+    import re
+
+    problems: list[str] = []
+    depth = 0
+    for lineno, line in enumerate(path.read_bytes().decode("ascii").split("\r\n"), 1):
+        s = line.strip()
+        if s.lower().startswith("rem "):
+            if depth > 0 and ("(" in s or ")" in s):
+                problems.append(f"{path.name}:{lineno}: rem 에 괄호 (블록 안)")
+            continue
+        unq = re.sub(r'"[^"]*"', '""', s)
+        unq = re.sub(r"\^.", "", unq)
+        if depth > 0:
+            body = unq[:-1] if unq.endswith("(") else unq
+            if body == ")" or body.startswith(") else ("):
+                body = ""
+            if body.count("(") != body.count(")"):
+                problems.append(f"{path.name}:{lineno}: 블록 안 괄호 불균형: {s[:80]}")
+            elif ("(" in body or ")" in body) and s.lower().startswith("echo"):
+                problems.append(f"{path.name}:{lineno}: 블록 안 echo 에 괄호: {s[:80]}")
+        depth = max(depth + unq.count("(") - unq.count(")"), 0)
+    return problems
+
+
+def test_cmd_wrappers_no_parentheses_in_echo_inside_blocks() -> None:
+    root = SCRIPTS_DIR.parent
+    problems: list[str] = []
+    for path in [*sorted(SCRIPTS_DIR.glob("*.cmd")), root / "tools" / "Rebuild_Release_Windows.cmd"]:
+        problems += _cmd_block_lint(path)
+    assert not problems, "\n".join(problems)
