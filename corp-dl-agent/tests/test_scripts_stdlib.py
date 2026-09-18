@@ -345,9 +345,11 @@ def _cmd_block_lint(path: Path) -> list[str]:
             continue
         unq = re.sub(r'"[^"]*"', '""', s)
         unq = re.sub(r"\^.", "", unq)
+        if re.fullmatch(r"\)\s*else\s*\(", unq):  # 블록 연결 구문은 깊이 변화 없음
+            continue
         if depth > 0:
             body = unq[:-1] if unq.endswith("(") else unq
-            if body == ")" or body.startswith(") else ("):
+            if body == ")":
                 body = ""
             if body.count("(") != body.count(")"):
                 problems.append(f"{path.name}:{lineno}: 블록 안 괄호 불균형: {s[:80]}")
