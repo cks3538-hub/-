@@ -37,6 +37,7 @@
 7. 외부 acceptance: `python scripts\acceptance.py --zip dist\DIA_4.0.0_win-x64-cp312-cpu.zip --evidence-dir <transfer-test 결과 폴더> --out dist\` → `DIA_4.0.0_win-x64-cp312-cpu.acceptance.json`. **시험 결과를 넣기 위해 ZIP 을 다시 포장하지 않습니다.** 소스를 고쳤으면 새 ZIP 을 만들고 시험을 다시 합니다.
 
 ## 2b. ZIP 을 직접 받지 못한 경우 (git 저장소만 있을 때)
+한 번에 실행: `tools\Rebuild_Release_Windows.cmd` 더블클릭 (Python 3.12 x64 + 인터넷 필요; Linux 호스트에서 작성되어 Windows 실행은 NOT_RUN). 수동 실행은 아래.
 소스 저장소에는 wheelhouse/ZIP 이 없습니다(용량). Windows PC 에서 아래 순서로 같은 ZIP 을 재현합니다. 내려받은 wheel 의 sha256 은 `requirements/download_provenance.json` 과 대조되어 하나라도 다르면 실패합니다.
 ```powershell
 cd <프로젝트>\corp-dl-agent
