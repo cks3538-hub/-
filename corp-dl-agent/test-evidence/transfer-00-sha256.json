@@ -2,7 +2,7 @@
   "name": "transfer-00-sha256",
   "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-00-sha256.sh\"'",
   "cwd": "<PROJECT_ROOT>",
-  "started_at": "2026-09-17T11:43:58+00:00",
+  "started_at": "2026-09-18T04:17:29+00:00",
   "elapsed_seconds": 8.33,
   "exit_code": 0,
   "timed_out": false,
