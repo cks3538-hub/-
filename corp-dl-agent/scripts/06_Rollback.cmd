@@ -11,6 +11,7 @@ rem  No automatic Python download/installation (no Store, no web installer).
 rem ---------------------------------------------------------------------------
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
+set "PYTHONDONTWRITEBYTECODE=1"
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "PKG_DIR=%%~fI"
 if not defined DIA_INSTALL_ROOT set "DIA_INSTALL_ROOT=%LOCALAPPDATA%\DIA"

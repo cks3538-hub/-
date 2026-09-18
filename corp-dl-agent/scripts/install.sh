@@ -4,7 +4,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 : "${DIA_INSTALL_ROOT:=${XDG_DATA_HOME:-$HOME/.local/share}/DIA}"
-export DIA_INSTALL_ROOT PYTHONIOENCODING=utf-8 PYTHONUTF8=1
+export DIA_INSTALL_ROOT PYTHONIOENCODING=utf-8 PYTHONUTF8=1 PYTHONDONTWRITEBYTECODE=1
 PY="${PYTHON:-}"
 if [ -n "$PY" ] && [ ! -x "$PY" ] && ! command -v "$PY" >/dev/null 2>&1; then echo "[경고] PYTHON 환경변수의 경로를 실행할 수 없습니다: $PY"; PY=""; fi
 if [ -z "$PY" ]; then

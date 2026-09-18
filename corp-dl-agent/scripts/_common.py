@@ -117,6 +117,11 @@ COMPANY_SUBDIRS = ("config", "templates", "extensions")
 STATE_DB_RELATIVE = os.path.join("state", "agent_state.sqlite")
 
 
+# 폴더 형태 패키지에서 무시하는 일시 파일 (Python 바이트코드 캐시). ZIP 에는 애초에 포함되지 않는다.
+TRANSIENT_DIRS = ("__pycache__",)
+TRANSIENT_SUFFIXES = (".pyc", ".pyo")
+
+
 class ScriptError(Exception):
     """스크립트 사용자 오류. code 는 corp_dl_agent.errors.ERROR_CATALOG 의 키와 같은 이름을 쓴다."""
 
@@ -961,8 +966,14 @@ class PackageSource:
                 if (d / dn).is_symlink():
                     self.links.append(str((d / dn).relative_to(root)).replace("\\", "/"))
                     dirnames.remove(dn)
+                elif dn in TRANSIENT_DIRS:
+                    # 추출 폴더에서 preflight/verify 를 실행하면 Python 이 scripts/__pycache__ 를 만든다.
+                    # 바이트코드 캐시는 manifest 대상이 아니므로 검사·복사에서 제외한다 (Windows 에서 재현된 결함).
+                    dirnames.remove(dn)
             for fn in filenames:
                 fp = d / fn
+                if fn.endswith(TRANSIENT_SUFFIXES):
+                    continue
                 rel = str(fp.relative_to(root)).replace("\\", "/")
                 if fp.is_symlink():
                     self.links.append(rel)

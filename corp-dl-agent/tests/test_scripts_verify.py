@@ -459,3 +459,23 @@ def test_target_profile_min_json_has_no_forbidden_fields(tmp_path: Path) -> None
     text = minimal.read_text(encoding="utf-8")
     assert "python_executable" not in text and str(Path.home()) not in text and "://" not in text
     assert min_doc["python_abi"] == prof.python_abi and min_doc["target_confirmed"] is False
+
+
+def test_verify_dir_ignores_pycache_created_by_running_scripts(release: Any, tmp_path: Path) -> None:
+    """추출 폴더에서 preflight.py 를 실행하면 scripts/__pycache__/*.pyc 가 생긴다(Windows 에서 재현된 결함).
+    바이트코드 캐시는 manifest 대상이 아니므로 폴더 검증은 PASS 여야 하고, 추출/복사 시에도 포함되지 않아야 한다."""
+    extracted = tmp_path / "추출 폴더"
+    with zipfile.ZipFile(release.zip_path) as zf:
+        zf.extractall(extracted)
+    cache = extracted / "scripts" / "__pycache__"
+    cache.mkdir(parents=True)
+    (cache / "_common.cpython-312.pyc").write_bytes(b"\x00fake")
+    (extracted / "docs" / "stale.pyo").write_bytes(b"\x00fake")
+    rc, out = verify_json(extracted)
+    assert rc == 0 and out["ok"] is True, out
+    st = checks(out)
+    assert st["file_list"] == "PASS" and st["checksums"] == "PASS"
+    # 진짜 추가 파일은 여전히 거부
+    (extracted / "docs" / "extra.txt").write_text("x", encoding="utf-8")
+    rc, out = verify_json(extracted)
+    assert rc != 0 and checks(out)["file_list"] == "FAIL"

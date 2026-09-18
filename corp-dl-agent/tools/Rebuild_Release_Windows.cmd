@@ -11,6 +11,7 @@ rem  until you confirm it; if it fails, run docs\PERSONAL_BUILD_KO.md section 2b
 rem ---------------------------------------------------------------------------
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
+set "PYTHONDONTWRITEBYTECODE=1"
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "ROOT=%%~fI"
 cd /d "%ROOT%" || (echo [ERROR] cannot enter project folder: %ROOT% & goto :fail)
