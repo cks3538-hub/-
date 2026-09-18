@@ -2,8 +2,8 @@
   "name": "host-09-package-build-linux",
   "command": ".venv/bin/python -m corp_dl_agent package build --profile linux-x64-cp312-cpu --wheelhouse wheelhouse/linux-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:포장 시점에는 미실행. 외부 acceptance.json 에 Linux rehearsal 결과 기록 --json",
   "cwd": "<PROJECT_ROOT>",
-  "started_at": "2026-09-18T04:16:17+00:00",
-  "elapsed_seconds": 55.57,
+  "started_at": "2026-09-18T05:27:15+00:00",
+  "elapsed_seconds": 23.8,
   "exit_code": 0,
   "timed_out": false,
   "status": "PASS",
@@ -17,7 +17,7 @@
     "user": null
   },
   "lock_sha256": null,
-  "stdout_tail": "{\n  \"ok\": true,\n  \"zip\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_linux-x64-cp312-cpu.zip\",\n  \"zip_sha256\": \"228aef5bc2a6fd552cb57b4483fd0c7ac40a0df227baecd3c4c7220f9e6480d9\",\n  \"zip_size\": 3101956008,\n  \"sha256_file\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_linux-x64-cp312-cpu.zip.sha256\",\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"linux-x64-cp312-cpu\",\n  \"package_kind\": \"CPU_OFFLINE\",\n  \"file_count\": 275,\n  \"total_bytes\": 3103600314,\n  \"wheel_count\": 56,\n  \"verification\": {\n    \"HOST_CORE_TESTED\": \"PASS\",\n    \"TARGET_BUNDLE_PREPARED\": \"PASS\",\n    \"TARGET_OFFLINE_TESTED\": \"NOT_RUN\",\n    \"CORP_INSTALLED\": \"NOT_RUN\",\n    \"CORP_INTEGRATED\": \"NOT_RUN\",\n    \"BUSINESS_VALIDATED\": \"NOT_RUN\",\n    \"TARGET_CONFIRMED\": \"TARGET_UNCONFIRMED\"\n  },\n  \"warnings\": [],\n  \"skipped_count\": 13\n}",
+  "stdout_tail": "{\n  \"ok\": true,\n  \"zip\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_linux-x64-cp312-cpu.zip\",\n  \"zip_sha256\": \"42f0c54c16b483e3b9420298e1df120c003fd83f82b1e12890ef935635c2f8a3\",\n  \"zip_size\": 3101958433,\n  \"sha256_file\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_linux-x64-cp312-cpu.zip.sha256\",\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"linux-x64-cp312-cpu\",\n  \"package_kind\": \"CPU_OFFLINE\",\n  \"file_count\": 275,\n  \"total_bytes\": 3103605866,\n  \"wheel_count\": 56,\n  \"verification\": {\n    \"HOST_CORE_TESTED\": \"FAIL\",\n    \"TARGET_BUNDLE_PREPARED\": \"PASS\",\n    \"TARGET_OFFLINE_TESTED\": \"NOT_RUN\",\n    \"CORP_INSTALLED\": \"NOT_RUN\",\n    \"CORP_INTEGRATED\": \"NOT_RUN\",\n    \"BUSINESS_VALIDATED\": \"NOT_RUN\",\n    \"TARGET_CONFIRMED\": \"TARGET_UNCONFIRMED\"\n  },\n  \"warnings\": [],\n  \"skipped_count\": 13\n}",
   "stderr_tail": "",
   "raw_log": "test-evidence/raw/host-09-package-build-linux.log (개인 로컬 보관, 반입 제외)"
 }

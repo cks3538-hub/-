@@ -2,8 +2,8 @@
   "name": "host-08-package-build-win",
   "command": ".venv/bin/python -m corp_dl_agent package build --profile win-x64-cp312-cpu --wheelhouse wheelhouse/win-x64-cp312-cpu --app-wheel dist/corp_dl_agent-4.0.0-py3-none-any.whl --evidence-dir test-evidence --out dist --package-kind CPU_OFFLINE --verification TARGET_OFFLINE_TESTED=NOT_RUN:빌드 호스트가 Linux 이므로 Windows 실행 시험 없음. 사용자 Windows PC 에서 00~04 스크립트로 수행 --json",
   "cwd": "<PROJECT_ROOT>",
-  "started_at": "2026-09-18T04:15:58+00:00",
-  "elapsed_seconds": 18.89,
+  "started_at": "2026-09-18T05:26:57+00:00",
+  "elapsed_seconds": 18.1,
   "exit_code": 0,
   "timed_out": false,
   "status": "PASS",
@@ -17,7 +17,7 @@
     "user": null
   },
   "lock_sha256": null,
-  "stdout_tail": "{\n  \"ok\": true,\n  \"zip\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_win-x64-cp312-cpu.zip\",\n  \"zip_sha256\": \"2c6bea169ea02e630268aa1f659fc2357c469becfd7e52accb2a9d6a0f8dbcc1\",\n  \"zip_size\": 219756025,\n  \"sha256_file\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_win-x64-cp312-cpu.zip.sha256\",\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"win-x64-cp312-cpu\",\n  \"package_kind\": \"CPU_OFFLINE\",\n  \"file_count\": 257,\n  \"total_bytes\": 221396006,\n  \"wheel_count\": 38,\n  \"verification\": {\n    \"HOST_CORE_TESTED\": \"PASS\",\n    \"TARGET_BUNDLE_PREPARED\": \"PASS\",\n    \"TARGET_OFFLINE_TESTED\": \"NOT_RUN\",\n    \"CORP_INSTALLED\": \"NOT_RUN\",\n    \"CORP_INTEGRATED\": \"NOT_RUN\",\n    \"BUSINESS_VALIDATED\": \"NOT_RUN\",\n    \"TARGET_CONFIRMED\": \"TARGET_UNCONFIRMED\"\n  },\n  \"warnings\": [],\n  \"skipped_count\": 13\n}",
+  "stdout_tail": "{\n  \"ok\": true,\n  \"zip\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_win-x64-cp312-cpu.zip\",\n  \"zip_sha256\": \"b8a3218aa724fa786b557a8434c0b4e819387084dea8df34fb67687e4eafc59a\",\n  \"zip_size\": 219758428,\n  \"sha256_file\": \"<PROJECT_ROOT>/dist/DIA_4.0.0_win-x64-cp312-cpu.zip.sha256\",\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"win-x64-cp312-cpu\",\n  \"package_kind\": \"CPU_OFFLINE\",\n  \"file_count\": 257,\n  \"total_bytes\": 221401560,\n  \"wheel_count\": 38,\n  \"verification\": {\n    \"HOST_CORE_TESTED\": \"FAIL\",\n    \"TARGET_BUNDLE_PREPARED\": \"PASS\",\n    \"TARGET_OFFLINE_TESTED\": \"NOT_RUN\",\n    \"CORP_INSTALLED\": \"NOT_RUN\",\n    \"CORP_INTEGRATED\": \"NOT_RUN\",\n    \"BUSINESS_VALIDATED\": \"NOT_RUN\",\n    \"TARGET_CONFIRMED\": \"TARGET_UNCONFIRMED\"\n  },\n  \"warnings\": [],\n  \"skipped_count\": 13\n}",
   "stderr_tail": "",
   "raw_log": "test-evidence/raw/host-08-package-build-win.log (개인 로컬 보관, 반입 제외)"
 }

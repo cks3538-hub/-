@@ -1,7 +1,7 @@
 {
   "project": "corp-dl-agent",
   "version": "4.0.0",
-  "updated_at": "2026-09-18T04:20:37+00:00",
+  "updated_at": "2026-09-18T05:30:26+00:00",
   "host": {
     "os": "Linux x86_64 (cloud container)",
     "python_dev_venv": "CPython 3.12.3",
@@ -80,11 +80,11 @@
   },
   "artifacts": {
     "win_zip": "dist/DIA_4.0.0_win-x64-cp312-cpu.zip",
-    "win_zip_sha256": "2c6bea169ea02e630268aa1f659fc2357c469becfd7e52accb2a9d6a0f8dbcc1",
-    "win_zip_bytes": 219756025,
+    "win_zip_sha256": "b8a3218aa724fa786b557a8434c0b4e819387084dea8df34fb67687e4eafc59a",
+    "win_zip_bytes": 219758428,
     "linux_zip": "dist/DIA_4.0.0_linux-x64-cp312-cpu.zip",
-    "linux_zip_sha256": "228aef5bc2a6fd552cb57b4483fd0c7ac40a0df227baecd3c4c7220f9e6480d9",
-    "linux_zip_bytes": 3101956008,
+    "linux_zip_sha256": "42f0c54c16b483e3b9420298e1df120c003fd83f82b1e12890ef935635c2f8a3",
+    "linux_zip_bytes": 3101958433,
     "app_wheel": "dist/corp_dl_agent-4.0.0-py3-none-any.whl",
     "acceptance": [
       "dist/DIA_4.0.0_win-x64-cp312-cpu.acceptance.json",
@@ -94,5 +94,12 @@
   },
   "notes": [
     "Windows .cmd 래퍼는 ASCII+CRLF 로 재작성(cmd.exe UTF-8 파싱 결함). Windows 실행은 사용자 PC 에서 확인 필요"
-  ]
+  ],
+  "user_windows_pc": {
+    "python": "CPython 3.12.9",
+    "os": "Windows 10.0.26200 x64",
+    "preflight": "PASS (13/13)",
+    "verify": "FAIL→__pycache__ 결함 수정, 우회 후 재실행 중",
+    "user_built_zip_sha256": "9eea6625c67f67176ef628be5b171afc4bbf52d25ca9087a9ec352500ce2c5c8 (수정 전 소스; 재빌드 권장)"
+  }
 }

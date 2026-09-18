@@ -2,8 +2,8 @@
   "name": "transfer-05-active",
   "command": "unshare -n bash -c ip link set lo up 2>/dev/null; su - tester -c 'bash \"<TEST_ROOT>/steps/transfer-05-active.sh\"'",
   "cwd": "<PROJECT_ROOT>",
-  "started_at": "2026-09-18T04:19:32+00:00",
-  "elapsed_seconds": 0.11,
+  "started_at": "2026-09-18T05:29:19+00:00",
+  "elapsed_seconds": 0.09,
   "exit_code": 0,
   "timed_out": false,
   "status": "PASS",
@@ -17,7 +17,7 @@
     "user": "non-root user 'tester' (no sudo), cwd=/tmp, Korean+space install path, step script: steps/transfer-05-active.sh"
   },
   "lock_sha256": null,
-  "stdout_tail": "{\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"linux-x64-cp312-cpu\",\n  \"venv_python\": \"<TEST_ROOT>/DIA 설치/releases/4.0.0/linux-x64-cp312-cpu/.venv/bin/python\",\n  \"release_dir\": \"<TEST_ROOT>/DIA 설치/releases/4.0.0/linux-x64-cp312-cpu\",\n  \"install_root\": \"<TEST_ROOT>/DIA 설치\",\n  \"data_root\": \"<TEST_ROOT>/work space\",\n  \"installed_at\": \"2026-09-18T04:19:31+00:00\",\n  \"schema_version\": \"4.0\",\n  \"db_schema_version\": 4,\n  \"app_version\": \"4.0.0\",\n  \"app_module\": \"corp_dl_agent\",\n  \"activated_by\": \"install\",\n  \"previous\": null\n}\n4.0.0",
+  "stdout_tail": "{\n  \"release_id\": \"4.0.0\",\n  \"profile_id\": \"linux-x64-cp312-cpu\",\n  \"venv_python\": \"<TEST_ROOT>/DIA 설치/releases/4.0.0/linux-x64-cp312-cpu/.venv/bin/python\",\n  \"release_dir\": \"<TEST_ROOT>/DIA 설치/releases/4.0.0/linux-x64-cp312-cpu\",\n  \"install_root\": \"<TEST_ROOT>/DIA 설치\",\n  \"data_root\": \"<TEST_ROOT>/work space\",\n  \"installed_at\": \"2026-09-18T05:29:19+00:00\",\n  \"schema_version\": \"4.0\",\n  \"db_schema_version\": 4,\n  \"app_version\": \"4.0.0\",\n  \"app_module\": \"corp_dl_agent\",\n  \"activated_by\": \"install\",\n  \"previous\": null\n}\n4.0.0",
   "stderr_tail": "",
   "raw_log": "test-evidence/raw/transfer-05-active.log (개인 로컬 보관, 반입 제외)"
 }

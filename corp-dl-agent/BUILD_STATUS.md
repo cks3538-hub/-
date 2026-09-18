@@ -20,7 +20,8 @@
 |---|---|---|
 | HOST_CORE_TESTED | PASS | test-evidence/host-01~07 (pytest 572, ruff, mypy, wheel, demo, self-test) |
 | TARGET_BUNDLE_PREPARED | PASS | wheelhouse/win-x64-cp312-cpu 38 wheel + locks/win-x64-cp312-cpu.txt(hash) + release-manifest; requirements/download_provenance.json |
-| TARGET_OFFLINE_TESTED | NOT_RUN(Windows 참조 타깃) / PASS(Linux rehearsal 프로파일) | Windows ZIP SHA-256 2c6bea169ea02e63… 는 정적 검증만(host-10); Linux ZIP 228aef5bc2a6fd55… 는 test-evidence/transfer-* 12 단계 PASS |
+| TARGET_OFFLINE_TESTED(사용자 Windows PC) | 진행 중: CPython 3.12.9 / Windows 10.0.26200 x64 에서 preflight 13항목 PASS, verify 는 __pycache__ 결함(수정됨) 우회 후 진행 | 사용자 보고 |
+| TARGET_OFFLINE_TESTED | NOT_RUN(Windows 참조 타깃) / PASS(Linux rehearsal 프로파일) | Windows ZIP SHA-256 b8a3218aa724fa78… 는 정적 검증만(host-10); Linux ZIP 42f0c54c16b483e3… 는 test-evidence/transfer-* 12 단계 PASS |
 | CORP_INSTALLED | NOT_RUN | 사내 PC 에서만 |
 | CORP_INTEGRATED | NOT_RUN | 사내 PC 에서만 |
 | BUSINESS_VALIDATED | NOT_RUN | 실데이터·업무 허용오차 필요 |
