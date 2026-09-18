@@ -3,7 +3,7 @@ setlocal
 rem ---------------------------------------------------------------------------
 rem  03_Start: run the program with the active release venv (menu when no arguments)
 rem  This wrapper is ASCII-only on purpose: cmd.exe mis-parses batch files that
-rem  contain UTF-8 text (especially after chcp 65001). Korean messages are
+rem  contain UTF-8 text (especially after switching the console code page). Korean messages are
 rem  printed by the Python scripts themselves.
 rem  Runs relative to its own location (%~dp0). Package root = parent of scripts.
 rem  Env: PYTHON (approved python.exe), DIA_INSTALL_ROOT, DIA_DATA_ROOT.

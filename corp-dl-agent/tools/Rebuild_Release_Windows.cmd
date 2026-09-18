@@ -5,7 +5,7 @@ rem  Rebuild the corp-dl-agent 4.0.0 transfer ZIP on a personal Windows PC.
 rem  Needs: Python 3.12 x64 (python.org) and internet access to PyPI.
 rem  Location: <project>\corp-dl-agent\tools\  (works from any current directory)
 rem  Result:   dist\DIA_4.0.0_win-x64-cp312-cpu.zip  +  .zip.sha256
-rem  ASCII-only on purpose (cmd.exe mis-parses UTF-8 batch files). Korean output
+rem  ASCII-only on purpose (cmd.exe mis-parses UTF-8 batch files when the code page is switched). Korean output
 rem  comes from the Python tools. Written on a Linux build host: Windows run = NOT_RUN
 rem  until you confirm it; if it fails, run docs\PERSONAL_BUILD_KO.md section 2b by hand.
 rem ---------------------------------------------------------------------------
