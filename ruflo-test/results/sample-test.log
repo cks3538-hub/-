@@ -1,0 +1,700 @@
+ruflo 샘플 테스트 시작: 2026-09-19 15:49:28
+
+════════════════════════════════════════════════════════════
+ STEP 01: 버전 확인
+ $ npx ruflo --version
+════════════════════════════════════════════════════════════
+ruflo v3.42.4
+→ PASS (318ms)
+
+════════════════════════════════════════════════════════════
+ STEP 02: 시스템 진단 (doctor)
+ $ npx ruflo doctor
+════════════════════════════════════════════════════════════
+
+RuFlo Doctor
+System diagnostics and health check
+──────────────────────────────────────────────────
+
+
+✓ Version Freshness: v3.42.4 (up to date)
+✓ Node.js Version: v22.22.2 (>= 20 required)
+✓ npm Version: v10.9.7
+✓ Claude Code CLI: v2.1.278
+✓ Git: v2.43.0
+✓ Git Repository: In a git repository
+✓ Config File: Found: .claude-flow/config.yaml
+✓ Stale npx@latest in settings (#2448): no runaway commands detected
+⚠ Daemon Status: Not running
+⚠ Memory Database Presence: Not initialized
+⚠ Memory Structural Integrity (quick_check): no memory.db found (see Memory Database Presence above) — structural-only check skipped
+⚠ Memory Persistence Driver: no memory.db found (see Memory Database Presence above) — driver check skipped
+✓ Learning Bridge: auto-memory hook not installed (run: npx ruflo@latest init)
+✓ API Keys: Claude Code (managed internally)
+✓ MCP Servers: 1 servers (ruflo configured: .mcp.json top-level: claude-flow)
+⚠ MCP Schema Overhead: 353 advertised tools ≈ 65835 schema tokens (all tools)
+⚠ AIDefence: @claude-flow/aidefence not loadable — aidefence_* MCP tools will fail (optional package)
+✓ Disk Space: 28G available
+✓ TypeScript: v6.0.2
+✓ agentic-flow: v3.0.0-alpha.2 (ReasoningBank, Router, QUIC)
+⚠ Encryption at Rest: Off — session/terminal/memory stores are plaintext (mode 0600 only)
+✓ Federation Breaker: ADR-097 breaker loadable — federation_breaker_status / federation_evict / federation_reactivate MCP tools available
+✓ MetaHarness (ADR-150): v0.4.2 — run `npx ruflo metaharness score` for the full scorecard
+✓ MetaHarness declared packages (ADR-150): 4 declared package(s) resolve: @metaharness/darwin, @metaharness/flywheel, @metaharness/radio, @metaharness/turn-credit
+✓ MetaHarness integration (ADR-150): plugin scripts intact, _similarity.mjs + parseMcpScanText load, smoke OK
+✓ Funnel (ADR-305): enabled (decided by: package-default; disclosure: never_seen)
+⚠ Meta LLM Proxy (ADR-313): not installed — no proxy-token found; sponsored-downtime capacity is unavailable
+⚠ Cognitum identity (ADR-306): not logged in
+
+──────────────────────────────────────────────────
+
+Summary: 19 passed, 9 warnings
+
+Run with --fix to see 7 suggested commands (does not auto-apply)
+
+All checks passed with some warnings.
+→ PASS (1345ms)
+
+════════════════════════════════════════════════════════════
+ STEP 03: 초기화 상태 확인
+ $ npx ruflo init check
+════════════════════════════════════════════════════════════
+[OK] RuFlo is initialized
+[INFO]   Claude Code: .claude/settings.json
+[INFO]   V3 Runtime: .claude-flow/config.yaml
+→ PASS (540ms)
+
+════════════════════════════════════════════════════════════
+ STEP 04: 스웜 초기화 (hierarchical, 최대 5)
+ $ npx ruflo swarm init --topology hierarchical --max-agents 5
+════════════════════════════════════════════════════════════
+
+[INFO] Initializing swarm...
+  Creating coordination topology...
+  Initializing memory namespace...
+  Setting up communication channels...
+
++------------+----------------------------+
+| Property   | Value                      |
++------------+----------------------------+
+| Swarm ID   | swarm-1789832970923-fxdgrl |
+| Topology   | hierarchical               |
+| Max Agents | 5                          |
+| Auto Scale | Enabled                    |
+| Protocol   | message-bus                |
+| V3 Mode    | Disabled                   |
++------------+----------------------------+
+
+[OK] Swarm initialized successfully
+→ PASS (551ms)
+
+════════════════════════════════════════════════════════════
+ STEP 05: 에이전트 생성: researcher
+ $ npx ruflo agent spawn -t researcher --name researcher-1
+════════════════════════════════════════════════════════════
+[INFO] Spawning researcher agent: researcher-1
+
++--------------+------------------------------------------+
+| Property     | Value                                    |
++--------------+------------------------------------------+
+| ID           | agent-1789832971517-gqz0x0               |
+| Type         | researcher                               |
+| Name         | researcher-1                             |
+| Status       | registered                               |
+| Created      | 2026-09-19T15:49:31.517Z                 |
+| Capabilities | web-search, data-analysis, summarizat... |
++--------------+------------------------------------------+
+
+[OK] Agent researcher-1 spawned successfully
+→ PASS (608ms)
+
+════════════════════════════════════════════════════════════
+ STEP 06: 에이전트 생성: coder
+ $ npx ruflo agent spawn -t coder --name coder-1
+════════════════════════════════════════════════════════════
+[INFO] Spawning coder agent: coder-1
+
++--------------+------------------------------------------+
+| Property     | Value                                    |
++--------------+------------------------------------------+
+| ID           | agent-1789832972126-kvdu2o               |
+| Type         | coder                                    |
+| Name         | coder-1                                  |
+| Status       | registered                               |
+| Created      | 2026-09-19T15:49:32.126Z                 |
+| Capabilities | code-generation, refactoring, debuggi... |
++--------------+------------------------------------------+
+
+[OK] Agent coder-1 spawned successfully
+→ PASS (601ms)
+
+════════════════════════════════════════════════════════════
+ STEP 07: 에이전트 생성: tester
+ $ npx ruflo agent spawn -t tester --name tester-1
+════════════════════════════════════════════════════════════
+[INFO] Spawning tester agent: tester-1
+
++--------------+------------------------------------------+
+| Property     | Value                                    |
++--------------+------------------------------------------+
+| ID           | agent-1789832972737-ca1vh2               |
+| Type         | tester                                   |
+| Name         | tester-1                                 |
+| Status       | registered                               |
+| Created      | 2026-09-19T15:49:32.737Z                 |
+| Capabilities | unit-testing, integration-testing, co... |
++--------------+------------------------------------------+
+
+[OK] Agent tester-1 spawned successfully
+→ PASS (597ms)
+
+════════════════════════════════════════════════════════════
+ STEP 08: 에이전트 목록
+ $ npx ruflo agent list
+════════════════════════════════════════════════════════════
+
+Active Agents
+
++----------------------+------------+--------+------------+--------------+
+| ID                   | Type       | Status | Created    | Last Acti... |
++----------------------+------------+--------+------------+--------------+
+| agent-17898329715... | researcher | idle   | 3:49:31 PM | N/A          |
+| agent-17898329721... | coder      | idle   | 3:49:32 PM | N/A          |
+| agent-17898329727... | tester     | idle   | 3:49:32 PM | N/A          |
++----------------------+------------+--------+------------+--------------+
+
+[INFO] Total: 3 agents
+→ PASS (599ms)
+
+════════════════════════════════════════════════════════════
+ STEP 09: 작업 생성: 리서치
+ $ npx ruflo task create -t research -d 코인 손익 계산 로직 요구사항 정리 -p high --tags crypto,pnl
+════════════════════════════════════════════════════════════
+
+[INFO] Creating research task...
+
+[OK] Task created: task-1789832973957-oe45j5
+
++-------------+---------------------------+
+| Property    | Value                     |
++-------------+---------------------------+
+| ID          | task-1789832973957-oe45j5 |
+| Type        | research                  |
+| Description | 코인 손익 계산 로직 요구사항 정리       |
+| Priority    | high                      |
+| Status      | pending                   |
+| Assigned To | Unassigned                |
+| Tags        | crypto, pnl               |
+| Created     | 9/19/2026, 3:49:33 PM     |
++-------------+---------------------------+
+→ PASS (586ms)
+
+════════════════════════════════════════════════════════════
+ STEP 10: 작업 생성: 구현
+ $ npx ruflo task create -t implementation -d price-calc.js 에 수수료 반영 기능 추가 -p normal --tags crypto,pnl
+════════════════════════════════════════════════════════════
+
+[INFO] Creating implementation task...
+
+[OK] Task created: task-1789832974541-6m71l3
+
++-------------+------------------------------+
+| Property    | Value                        |
++-------------+------------------------------+
+| ID          | task-1789832974541-6m71l3    |
+| Type        | implementation               |
+| Description | price-calc.js 에 수수료 반영 기능 추가 |
+| Priority    | normal                       |
+| Status      | pending                      |
+| Assigned To | Unassigned                   |
+| Tags        | crypto, pnl                  |
+| Created     | 9/19/2026, 3:49:34 PM        |
++-------------+------------------------------+
+→ PASS (573ms)
+
+════════════════════════════════════════════════════════════
+ STEP 11: 작업 생성: 테스트
+ $ npx ruflo task create -t testing -d 수수료 반영 단위 테스트 작성 -p normal --tags crypto,test
+════════════════════════════════════════════════════════════
+
+[INFO] Creating testing task...
+
+[OK] Task created: task-1789832975131-4ynscc
+
++-------------+---------------------------+
+| Property    | Value                     |
++-------------+---------------------------+
+| ID          | task-1789832975131-4ynscc |
+| Type        | testing                   |
+| Description | 수수료 반영 단위 테스트 작성          |
+| Priority    | normal                    |
+| Status      | pending                   |
+| Assigned To | Unassigned                |
+| Tags        | crypto, test              |
+| Created     | 9/19/2026, 3:49:35 PM     |
++-------------+---------------------------+
+→ PASS (581ms)
+
+════════════════════════════════════════════════════════════
+ STEP 12: 작업 목록 (전체)
+ $ npx ruflo task list --all
+════════════════════════════════════════════════════════════
+
+Tasks
+
+[INFO] No tasks found matching criteria
+→ PASS (576ms)
+
+════════════════════════════════════════════════════════════
+ STEP 13: 작업 라우팅 (Q-Learning)
+ $ npx ruflo route task price-calc.js 의 percentChange 함수에 대한 단위 테스트 작성
+════════════════════════════════════════════════════════════
+
+Routed to Documenter
+
++----------------- Q-Learning Routing -----------------+
+| Task: price-calc.js 의 percentChange 함수에 대한 단위 테스트 작성 |
+|                                                      |
+| Agent: Documenter (documenter)                       |
+| Confidence: 12.5%                                    |
+| Q-Value: 0.000                                       |
+| Exploration: Yes                                     |
+|                                                      |
+| Description: Creates and updates documentation       |
+| Capabilities: documentation, writing, explaining     |
++------------------------------------------------------+
+
+Alternatives:
++-----------+-------+
+| Agent     | Score |
++-----------+-------+
+| Tester    | 0.000 |
+| Reviewer  | 0.000 |
+| Architect | 0.000 |
++-----------+-------+
+→ PASS (563ms)
+
+════════════════════════════════════════════════════════════
+ STEP 14: 라우팅 가능 에이전트 목록
+ $ npx ruflo route list-agents
+════════════════════════════════════════════════════════════
+
+Available Agent Types
+Ordered by priority (highest first)
+
++------------+------------+----------+-------------------------------------------+
+| ID         | Name       | Priority | Description                               |
++------------+------------+----------+-------------------------------------------+
+| coder      | Coder      |        1 | Implements features and writes code       |
+| tester     | Tester     |        2 | Creates tests and validates functionality |
+| reviewer   | Reviewer   |        3 | Reviews code quality and security         |
+| architect  | Architect  |        4 | Designs system architecture               |
+| researcher | Researcher |        5 | Researches requirements and patterns      |
+| optimizer  | Optimizer  |        6 | Optimizes performance and efficiency      |
+| debugger   | Debugger   |        7 | Debugs issues and fixes bugs              |
+| documenter | Documenter |        8 | Creates and updates documentation         |
++------------+------------+----------+-------------------------------------------+
+
+Total: 8 agent types
+→ PASS (572ms)
+
+════════════════════════════════════════════════════════════
+ STEP 15: 메모리 저장 1
+ $ npx ruflo memory store --namespace crypto --key rule/avg-cost --value 평균 매수 단가는 총 매수금액을 총 수량으로 나눈다
+════════════════════════════════════════════════════════════
+[INFO] Storing in crypto/rule/avg-cost...
+
++------------+----------------------+
+| Property   | Value                |
++------------+----------------------+
+| Key        | rule/avg-cost        |
+| Namespace  | crypto               |
+| Size       | 70 bytes             |
+| TTL        | None                 |
+| Tags       | None                 |
+| Vector     | Yes (384-dim)        |
+| Provenance | unknown              |
+| ID         | entry_1789832977597_ |
++------------+----------------------+
+
+[OK] Data stored successfully
+→ PASS (731ms)
+
+════════════════════════════════════════════════════════════
+ STEP 16: 메모리 저장 2
+ $ npx ruflo memory store --namespace crypto --key rule/risk --value 변동률 5% 미만 low, 15% 미만 medium, 그 이상 high
+════════════════════════════════════════════════════════════
+[INFO] Storing in crypto/rule/risk...
+
++------------+----------------------+
+| Property   | Value                |
++------------+----------------------+
+| Key        | rule/risk            |
+| Namespace  | crypto               |
+| Size       | 59 bytes             |
+| TTL        | None                 |
+| Tags       | None                 |
+| Vector     | Yes (384-dim)        |
+| Provenance | unknown              |
+| ID         | entry_1789832978357_ |
++------------+----------------------+
+
+[OK] Data stored successfully
+→ PASS (743ms)
+
+════════════════════════════════════════════════════════════
+ STEP 17: 메모리 저장 3
+ $ npx ruflo memory store --namespace crypto --key todo/fee --value 매매 수수료 0.05% 를 손익 계산에 반영해야 함
+════════════════════════════════════════════════════════════
+[INFO] Storing in crypto/todo/fee...
+
++------------+----------------------+
+| Property   | Value                |
++------------+----------------------+
+| Key        | todo/fee             |
+| Namespace  | crypto               |
+| Size       | 60 bytes             |
+| TTL        | None                 |
+| Tags       | None                 |
+| Vector     | Yes (384-dim)        |
+| Provenance | unknown              |
+| ID         | entry_1789832979092_ |
++------------+----------------------+
+
+[OK] Data stored successfully
+→ PASS (720ms)
+
+════════════════════════════════════════════════════════════
+ STEP 18: 메모리 의미 검색: 손익
+ $ npx ruflo memory search --namespace crypto -q 손익 계산 규칙
+════════════════════════════════════════════════════════════
+[INFO] Searching: "손익 계산 규칙" (semantic)
+
+  Search time: 2ms
+
++----------+-------+-----------+------------------------------+
+| Key      | Score | Namespace | Preview                      |
++----------+-------+-----------+------------------------------+
+| todo/fee |  0.34 | crypto    | 매매 수수료 0.05% 를 손익 계산에 반영해야 함 |
++----------+-------+-----------+------------------------------+
+
+[INFO] Found 1 results
+→ PASS (685ms)
+
+════════════════════════════════════════════════════════════
+ STEP 19: 메모리 목록
+ $ npx ruflo memory list --namespace crypto
+════════════════════════════════════════════════════════════
+
+Memory Entries
+
++---------------+-----------+------+--------+----------+----------+
+| Key           | Namespace | Size | Vector | Accessed | Updated  |
++---------------+-----------+------+--------+----------+----------+
+| todo/fee      | crypto    | 28 B |   ✓    |        0 | just now |
+| rule/risk     | crypto    | 39 B |   ✓    |        0 | just now |
+| rule/avg-cost | crypto    | 28 B |   ✓    |        0 | just now |
++---------------+-----------+------+--------+----------+----------+
+
+[INFO] Showing 3 of 3 entries
+[WARN] 3 more entries are in /home/user/-/ruflo-test/.swarm/agentdb-memory.db and were not read here. That store is written by the MCP/AgentDB path; read it with --path /home/user/-/ruflo-test/.swarm/agentdb-memory.db.
+→ PASS (712ms)
+
+════════════════════════════════════════════════════════════
+ STEP 20: 훅 pre-task
+ $ npx ruflo hooks pre-task --description price-calc.js 리팩터링
+════════════════════════════════════════════════════════════
+[INFO] Starting task: task-mu8kcew4
+
++-------- Task Registered --------+
+| Task ID: task-mu8kcew4          |
+| Description: price-calc.js 리팩터링 |
+| Complexity: LOW                 |
+| Est. Duration: 10-30 min        |
++---------------------------------+
+
+Suggested Agents
++------------+------------+-------------------------------------+
+| Agent Type | Confidence | Reason                              |
++------------+------------+-------------------------------------+
+| coder      |      70.0% | Primary agent for coder tasks ba... |
+| researcher |      65.0% | Alternative agent with researche... |
+| tester     |      60.0% | Alternative agent with tester ca... |
++------------+------------+-------------------------------------+
+
+Recommendations
+  - Use coder as primary agent
+  - Consider using swarm coordination
+→ PASS (584ms)
+
+════════════════════════════════════════════════════════════
+ STEP 21: 훅 목록
+ $ npx ruflo hooks list
+════════════════════════════════════════════════════════════
+
+Registered Hooks
+
++----------------------+--------------+---------+----------+------------+---------------+
+| Name                 | Type         | Enabled | Priority | Executions | Last Executed |
++----------------------+--------------+---------+----------+------------+---------------+
+| pre-edit             | PreToolUse   | No      |          |            | Never         |
+| post-edit            | PostToolUse  | No      |          |            | Never         |
+| pre-command          | PreToolUse   | No      |          |            | Never         |
+| post-command         | PostToolUse  | No      |          |            | Never         |
+| pre-task             | PreToolUse   | No      |          |            | Never         |
+| post-task            | PostToolUse  | No      |          |            | Never         |
+| route                | intelligence | No      |          |            | Never         |
+| explain              | intelligence | No      |          |            | Never         |
+| session-start        | SessionStart | No      |          |            | Never         |
+| session-end          | SessionEnd   | No      |          |            | Never         |
+| session-restore      | SessionStart | No      |          |            | Never         |
+| pretrain             | intelligence | No      |          |            | Never         |
+| build-agents         | intelligence | No      |          |            | Never         |
+| transfer             | intelligence | No      |          |            | Never         |
+| metrics              | analytics    | No      |          |            | Never         |
+| init                 | system       | No      |          |            | Never         |
+| notify               | coordination | No      |          |            | Never         |
+| intelligence         | intelligence | No      |          |            | Never         |
+| intelligence_traj... | intelligence | No      |          |            | Never         |
+| intelligence_traj... | intelligence | No      |          |            | Never         |
+| intelligence_traj... | intelligence | No      |          |            | Never         |
+| intelligence_patt... | intelligence | No      |          |            | Never         |
+| intelligence_patt... | intelligence | No      |          |            | Never         |
+| intelligence_stats   | analytics    | No      |          |            | Never         |
+| intelligence_learn   | intelligence | No      |          |            | Never         |
+| intelligence_atte... | intelligence | No      |          |            | Never         |
++----------------------+--------------+---------+----------+------------+---------------+
+
+[INFO] Total: 26 hooks
+→ PASS (578ms)
+
+════════════════════════════════════════════════════════════
+ STEP 22: 코드 분석: 심볼 추출
+ $ npx ruflo analyze symbols sample/src
+════════════════════════════════════════════════════════════
+[INFO] Extracting symbols: sample/src
+
+
++ Symbol Extraction +
+| Total symbols: 5  |
+| Functions: 5      |
+| Classes: 0        |
+| Files: 2          |
++-------------------+
+
+Symbols
+------------------------------------------------------------
++------+---------------+-----------------------------------+------+
+| Type | Name          | File                              | Line |
++------+---------------+-----------------------------------+------+
+| fn   | summarize     | ...o-test/sample/src/portfolio.js |    4 |
+| fn   | averageCost   | ...-test/sample/src/price-calc.js |    7 |
+| fn   | percentChange | ...-test/sample/src/price-calc.js |   26 |
+| fn   | riskLevel     | ...-test/sample/src/price-calc.js |   32 |
+| fn   | unrealizedPnL | ...-test/sample/src/price-calc.js |   16 |
++------+---------------+-----------------------------------+------+
+→ PASS (564ms)
+
+════════════════════════════════════════════════════════════
+ STEP 23: 코드 분석: 복잡도
+ $ npx ruflo analyze complexity sample/src
+════════════════════════════════════════════════════════════
+[INFO] Analyzing complexity: sample/src
+
+
++- Complexity Analysis -+
+| Files analyzed: 2     |
+| Threshold: 10         |
+| Flagged files: 0      |
+| Average complexity: 3 |
++-----------------------+
+
+All Files
+------------------------------------------------------------
++------------------------------------------+-------+-------+-----+
+| File                                     | Cyclo | Cogni | LOC |
++------------------------------------------+-------+-------+-----+
+| ...user/-/ruflo-test/sample/src/price... |     5 |     8 |  33 |
+| .../user/-/ruflo-test/sample/src/port... |     1 |     0 |  17 |
++------------------------------------------+-------+-------+-----+
+→ PASS (593ms)
+
+════════════════════════════════════════════════════════════
+ STEP 24: 샘플 단위 테스트 (node --test)
+ $ bash -c node --test sample/test/*.test.js
+════════════════════════════════════════════════════════════
+TAP version 13
+# Subtest: averageCost: 매수 평균가 계산
+ok 1 - averageCost: 매수 평균가 계산
+  ---
+  duration_ms: 0.674849
+  type: 'test'
+  ...
+# Subtest: unrealizedPnL: 보유 1.5개, 현재가 400 → (400-150)*1.5
+ok 2 - unrealizedPnL: 보유 1.5개, 현재가 400 → (400-150)*1.5
+  ---
+  duration_ms: 0.155241
+  type: 'test'
+  ...
+# Subtest: percentChange: 100 → 150 은 +50%
+ok 3 - percentChange: 100 → 150 은 +50%
+  ---
+  duration_ms: 0.40523
+  type: 'test'
+  ...
+# Subtest: riskLevel: 등급 경계
+ok 4 - riskLevel: 등급 경계
+  ---
+  duration_ms: 1.175528
+  type: 'test'
+  ...
+# Subtest: summarize: 포트폴리오 요약
+ok 5 - summarize: 포트폴리오 요약
+  ---
+  duration_ms: 0.264377
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 81.561246
+→ PASS (140ms)
+
+════════════════════════════════════════════════════════════
+ STEP 25: 워크플로 목록
+ $ npx ruflo workflow list
+════════════════════════════════════════════════════════════
+
+Workflows
+
+[INFO] No workflows found
+→ PASS (573ms)
+
+════════════════════════════════════════════════════════════
+ STEP 26: 시스템 상태
+ $ npx ruflo status
+════════════════════════════════════════════════════════════
+
+RuFlo V3 [STOPPED]
+
+Swarm
+[INFO]   Swarm not running
+
+Agents
++--------+-------+
+| Status | Count |
++--------+-------+
+| Active |     0 |
+| Idle   |     0 |
+| Total  |     0 |
++--------+-------+
+
+Tasks
++-----------+-------+
+| Status    | Count |
++-----------+-------+
+| Pending   |     0 |
+| Running   |     0 |
+| Completed |     0 |
+| Failed    |     0 |
+| Total     |     0 |
++-----------+-------+
+
+Memory
++----------------+--------+
+| Property       |  Value |
++----------------+--------+
+| Backend        |   none |
+| Entries        |      0 |
+| Size           |    0 B |
+| Search Time    | 0.00ms |
+| Cache Hit Rate |   0.0% |
++----------------+--------+
+
+MCP Server
+[INFO]   Not running
+
+→ PASS (789ms)
+
+════════════════════════════════════════════════════════════
+ STEP 27: 스웜 상태
+ $ npx ruflo swarm status
+════════════════════════════════════════════════════════════
+
+Swarm Status: swarm-1789832970923-fxdgrl
+
+Overall Progress: [##--------------------------------------] 5.0%
+
+Agents
++-----------+-------+
+| Status    | Count |
++-----------+-------+
+| Active    |     0 |
+| Idle      |     3 |
+| Completed |     0 |
+| Total     |     3 |
++-----------+-------+
+
+Tasks
++-------------+-------+
+| Status      | Count |
++-------------+-------+
+| Completed   |     0 |
+| In Progress |     0 |
+| Pending     |     0 |
+| Total       |     0 |
++-------------+-------+
+
+Performance Metrics
+  - Tokens Used: unknown
+  - Avg Response Time: no data
+  - Success Rate: no data
+  - Elapsed Time: 14s
+
+Coordination
+  - Consensus Rounds: 0
+  - Messages Sent: 0
+  - Conflicts Resolved: 0
+→ PASS (551ms)
+
+# ruflo 샘플 테스트 요약
+
+- 실행 시각: 2026-09-19 15:49:44
+- ruflo 버전: ruflo v3.42.4
+- Node: v22.22.2
+- 결과: **PASS 27 / FAIL 0 / 총 27**
+
+| # | 단계 | 결과 | 소요 |
+|---|------|------|------|
+| 01 | 버전 확인 | PASS | 318ms |
+| 02 | 시스템 진단 (doctor) | PASS | 1345ms |
+| 03 | 초기화 상태 확인 | PASS | 540ms |
+| 04 | 스웜 초기화 (hierarchical, 최대 5) | PASS | 551ms |
+| 05 | 에이전트 생성: researcher | PASS | 608ms |
+| 06 | 에이전트 생성: coder | PASS | 601ms |
+| 07 | 에이전트 생성: tester | PASS | 597ms |
+| 08 | 에이전트 목록 | PASS | 599ms |
+| 09 | 작업 생성: 리서치 | PASS | 586ms |
+| 10 | 작업 생성: 구현 | PASS | 573ms |
+| 11 | 작업 생성: 테스트 | PASS | 581ms |
+| 12 | 작업 목록 (전체) | PASS | 576ms |
+| 13 | 작업 라우팅 (Q-Learning) | PASS | 563ms |
+| 14 | 라우팅 가능 에이전트 목록 | PASS | 572ms |
+| 15 | 메모리 저장 1 | PASS | 731ms |
+| 16 | 메모리 저장 2 | PASS | 743ms |
+| 17 | 메모리 저장 3 | PASS | 720ms |
+| 18 | 메모리 의미 검색: 손익 | PASS | 685ms |
+| 19 | 메모리 목록 | PASS | 712ms |
+| 20 | 훅 pre-task | PASS | 584ms |
+| 21 | 훅 목록 | PASS | 578ms |
+| 22 | 코드 분석: 심볼 추출 | PASS | 564ms |
+| 23 | 코드 분석: 복잡도 | PASS | 593ms |
+| 24 | 샘플 단위 테스트 (node --test) | PASS | 140ms |
+| 25 | 워크플로 목록 | PASS | 573ms |
+| 26 | 시스템 상태 | PASS | 789ms |
+| 27 | 스웜 상태 | PASS | 551ms |

@@ -1,0 +1,3 @@
+[OK] RuFlo is initialized
+[INFO]   Claude Code: .claude/settings.json
+[INFO]   V3 Runtime: .claude-flow/config.yaml

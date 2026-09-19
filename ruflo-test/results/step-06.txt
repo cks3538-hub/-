@@ -1,0 +1,14 @@
+[INFO] Spawning coder agent: coder-1
+
++--------------+------------------------------------------+
+| Property     | Value                                    |
++--------------+------------------------------------------+
+| ID           | agent-1789832972126-kvdu2o               |
+| Type         | coder                                    |
+| Name         | coder-1                                  |
+| Status       | registered                               |
+| Created      | 2026-09-19T15:49:32.126Z                 |
+| Capabilities | code-generation, refactoring, debuggi... |
++--------------+------------------------------------------+
+
+[OK] Agent coder-1 spawned successfully

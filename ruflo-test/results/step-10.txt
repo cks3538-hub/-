@@ -1,0 +1,17 @@
+
+[INFO] Creating implementation task...
+
+[OK] Task created: task-1789832974541-6m71l3
+
++-------------+------------------------------+
+| Property    | Value                        |
++-------------+------------------------------+
+| ID          | task-1789832974541-6m71l3    |
+| Type        | implementation               |
+| Description | price-calc.js 에 수수료 반영 기능 추가 |
+| Priority    | normal                       |
+| Status      | pending                      |
+| Assigned To | Unassigned                   |
+| Tags        | crypto, pnl                  |
+| Created     | 9/19/2026, 3:49:34 PM        |
++-------------+------------------------------+

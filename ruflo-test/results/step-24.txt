@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: averageCost: 매수 평균가 계산
+ok 1 - averageCost: 매수 평균가 계산
+  ---
+  duration_ms: 0.674849
+  type: 'test'
+  ...
+# Subtest: unrealizedPnL: 보유 1.5개, 현재가 400 → (400-150)*1.5
+ok 2 - unrealizedPnL: 보유 1.5개, 현재가 400 → (400-150)*1.5
+  ---
+  duration_ms: 0.155241
+  type: 'test'
+  ...
+# Subtest: percentChange: 100 → 150 은 +50%
+ok 3 - percentChange: 100 → 150 은 +50%
+  ---
+  duration_ms: 0.40523
+  type: 'test'
+  ...
+# Subtest: riskLevel: 등급 경계
+ok 4 - riskLevel: 등급 경계
+  ---
+  duration_ms: 1.175528
+  type: 'test'
+  ...
+# Subtest: summarize: 포트폴리오 요약
+ok 5 - summarize: 포트폴리오 요약
+  ---
+  duration_ms: 0.264377
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 81.561246

@@ -1,0 +1,18 @@
+
+[INFO] Initializing swarm...
+  Creating coordination topology...
+  Initializing memory namespace...
+  Setting up communication channels...
+
++------------+----------------------------+
+| Property   | Value                      |
++------------+----------------------------+
+| Swarm ID   | swarm-1789832970923-fxdgrl |
+| Topology   | hierarchical               |
+| Max Agents | 5                          |
+| Auto Scale | Enabled                    |
+| Protocol   | message-bus                |
+| V3 Mode    | Disabled                   |
++------------+----------------------------+
+
+[OK] Swarm initialized successfully

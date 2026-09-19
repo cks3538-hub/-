@@ -1,0 +1,21 @@
+[INFO] Extracting symbols: sample/src
+
+
++ Symbol Extraction +
+| Total symbols: 5  |
+| Functions: 5      |
+| Classes: 0        |
+| Files: 2          |
++-------------------+
+
+Symbols
+------------------------------------------------------------
++------+---------------+-----------------------------------+------+
+| Type | Name          | File                              | Line |
++------+---------------+-----------------------------------+------+
+| fn   | summarize     | ...o-test/sample/src/portfolio.js |    4 |
+| fn   | averageCost   | ...-test/sample/src/price-calc.js |    7 |
+| fn   | percentChange | ...-test/sample/src/price-calc.js |   26 |
+| fn   | riskLevel     | ...-test/sample/src/price-calc.js |   32 |
+| fn   | unrealizedPnL | ...-test/sample/src/price-calc.js |   16 |
++------+---------------+-----------------------------------+------+

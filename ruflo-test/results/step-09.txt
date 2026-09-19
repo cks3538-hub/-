@@ -1,0 +1,17 @@
+
+[INFO] Creating research task...
+
+[OK] Task created: task-1789832973957-oe45j5
+
++-------------+---------------------------+
+| Property    | Value                     |
++-------------+---------------------------+
+| ID          | task-1789832973957-oe45j5 |
+| Type        | research                  |
+| Description | 코인 손익 계산 로직 요구사항 정리       |
+| Priority    | high                      |
+| Status      | pending                   |
+| Assigned To | Unassigned                |
+| Tags        | crypto, pnl               |
+| Created     | 9/19/2026, 3:49:33 PM     |
++-------------+---------------------------+

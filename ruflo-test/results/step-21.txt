@@ -1,0 +1,35 @@
+
+Registered Hooks
+
++----------------------+--------------+---------+----------+------------+---------------+
+| Name                 | Type         | Enabled | Priority | Executions | Last Executed |
++----------------------+--------------+---------+----------+------------+---------------+
+| pre-edit             | PreToolUse   | No      |          |            | Never         |
+| post-edit            | PostToolUse  | No      |          |            | Never         |
+| pre-command          | PreToolUse   | No      |          |            | Never         |
+| post-command         | PostToolUse  | No      |          |            | Never         |
+| pre-task             | PreToolUse   | No      |          |            | Never         |
+| post-task            | PostToolUse  | No      |          |            | Never         |
+| route                | intelligence | No      |          |            | Never         |
+| explain              | intelligence | No      |          |            | Never         |
+| session-start        | SessionStart | No      |          |            | Never         |
+| session-end          | SessionEnd   | No      |          |            | Never         |
+| session-restore      | SessionStart | No      |          |            | Never         |
+| pretrain             | intelligence | No      |          |            | Never         |
+| build-agents         | intelligence | No      |          |            | Never         |
+| transfer             | intelligence | No      |          |            | Never         |
+| metrics              | analytics    | No      |          |            | Never         |
+| init                 | system       | No      |          |            | Never         |
+| notify               | coordination | No      |          |            | Never         |
+| intelligence         | intelligence | No      |          |            | Never         |
+| intelligence_traj... | intelligence | No      |          |            | Never         |
+| intelligence_traj... | intelligence | No      |          |            | Never         |
+| intelligence_traj... | intelligence | No      |          |            | Never         |
+| intelligence_patt... | intelligence | No      |          |            | Never         |
+| intelligence_patt... | intelligence | No      |          |            | Never         |
+| intelligence_stats   | analytics    | No      |          |            | Never         |
+| intelligence_learn   | intelligence | No      |          |            | Never         |
+| intelligence_atte... | intelligence | No      |          |            | Never         |
++----------------------+--------------+---------+----------+------------+---------------+
+
+[INFO] Total: 26 hooks

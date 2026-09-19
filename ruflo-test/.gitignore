@@ -1,0 +1,41 @@
+# 의존성
+node_modules/
+
+# ruflo 런타임 데이터 (실행할 때마다 다시 생성됨, 커밋 불필요)
+.claude-flow/data/
+.claude-flow/logs/
+.claude-flow/sessions/
+.claude-flow/*.db
+.claude-flow/*.db-*
+.swarm/
+.hive-mind/
+.ruflo/
+memory.db
+memory.db-*
+*.log
+
+# 머신별 로컬 설정
+.claude/settings.local.json
+
+# Ruflo local secrets and runtime data
+.env
+.env.local
+.env.*.local
+
+# ruflo 실행 중 생성되는 상태 파일 (커밋 불필요)
+.claude-flow/agents/
+.claude-flow/tasks/
+.claude-flow/swarm/
+.claude-flow/graph/
+.claude-flow/metrics/
+.claude-flow/policy/
+.claude-flow/daemon-state.json
+.claude-flow/daemon.pid
+.claude-flow/harness-active-policy.json
+.claude/.proven-config-version
+.claude/proven-config.json
+ruvector.db
+ruvector.db-*
+
+# 테스트 결과 로그는 보관
+!results/*.log

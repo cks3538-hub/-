@@ -1,0 +1,14 @@
+[INFO] Spawning researcher agent: researcher-1
+
++--------------+------------------------------------------+
+| Property     | Value                                    |
++--------------+------------------------------------------+
+| ID           | agent-1789832971517-gqz0x0               |
+| Type         | researcher                               |
+| Name         | researcher-1                             |
+| Status       | registered                               |
+| Created      | 2026-09-19T15:49:31.517Z                 |
+| Capabilities | web-search, data-analysis, summarizat... |
++--------------+------------------------------------------+
+
+[OK] Agent researcher-1 spawned successfully

@@ -1,0 +1,14 @@
+[INFO] Spawning tester agent: tester-1
+
++--------------+------------------------------------------+
+| Property     | Value                                    |
++--------------+------------------------------------------+
+| ID           | agent-1789832972737-ca1vh2               |
+| Type         | tester                                   |
+| Name         | tester-1                                 |
+| Status       | registered                               |
+| Created      | 2026-09-19T15:49:32.737Z                 |
+| Capabilities | unit-testing, integration-testing, co... |
++--------------+------------------------------------------+
+
+[OK] Agent tester-1 spawned successfully

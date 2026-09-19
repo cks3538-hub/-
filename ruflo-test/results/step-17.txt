@@ -1,0 +1,16 @@
+[INFO] Storing in crypto/todo/fee...
+
++------------+----------------------+
+| Property   | Value                |
++------------+----------------------+
+| Key        | todo/fee             |
+| Namespace  | crypto               |
+| Size       | 60 bytes             |
+| TTL        | None                 |
+| Tags       | None                 |
+| Vector     | Yes (384-dim)        |
+| Provenance | unknown              |
+| ID         | entry_1789832979092_ |
++------------+----------------------+
+
+[OK] Data stored successfully

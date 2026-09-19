@@ -1,0 +1,18 @@
+
+Available Agent Types
+Ordered by priority (highest first)
+
++------------+------------+----------+-------------------------------------------+
+| ID         | Name       | Priority | Description                               |
++------------+------------+----------+-------------------------------------------+
+| coder      | Coder      |        1 | Implements features and writes code       |
+| tester     | Tester     |        2 | Creates tests and validates functionality |
+| reviewer   | Reviewer   |        3 | Reviews code quality and security         |
+| architect  | Architect  |        4 | Designs system architecture               |
+| researcher | Researcher |        5 | Researches requirements and patterns      |
+| optimizer  | Optimizer  |        6 | Optimizes performance and efficiency      |
+| debugger   | Debugger   |        7 | Debugs issues and fixes bugs              |
+| documenter | Documenter |        8 | Creates and updates documentation         |
++------------+------------+----------+-------------------------------------------+
+
+Total: 8 agent types

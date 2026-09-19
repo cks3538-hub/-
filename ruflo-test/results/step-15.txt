@@ -1,0 +1,16 @@
+[INFO] Storing in crypto/rule/avg-cost...
+
++------------+----------------------+
+| Property   | Value                |
++------------+----------------------+
+| Key        | rule/avg-cost        |
+| Namespace  | crypto               |
+| Size       | 70 bytes             |
+| TTL        | None                 |
+| Tags       | None                 |
+| Vector     | Yes (384-dim)        |
+| Provenance | unknown              |
+| ID         | entry_1789832977597_ |
++------------+----------------------+
+
+[OK] Data stored successfully

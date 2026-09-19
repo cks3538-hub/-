@@ -1,0 +1,16 @@
+[INFO] Storing in crypto/rule/risk...
+
++------------+----------------------+
+| Property   | Value                |
++------------+----------------------+
+| Key        | rule/risk            |
+| Namespace  | crypto               |
+| Size       | 59 bytes             |
+| TTL        | None                 |
+| Tags       | None                 |
+| Vector     | Yes (384-dim)        |
+| Provenance | unknown              |
+| ID         | entry_1789832978357_ |
++------------+----------------------+
+
+[OK] Data stored successfully

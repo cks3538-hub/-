@@ -1,0 +1,17 @@
+
+[INFO] Creating testing task...
+
+[OK] Task created: task-1789832975131-4ynscc
+
++-------------+---------------------------+
+| Property    | Value                     |
++-------------+---------------------------+
+| ID          | task-1789832975131-4ynscc |
+| Type        | testing                   |
+| Description | 수수료 반영 단위 테스트 작성          |
+| Priority    | normal                    |
+| Status      | pending                   |
+| Assigned To | Unassigned                |
+| Tags        | crypto, test              |
+| Created     | 9/19/2026, 3:49:35 PM     |
++-------------+---------------------------+

@@ -1,0 +1,23 @@
+
+Routed to Documenter
+
++----------------- Q-Learning Routing -----------------+
+| Task: price-calc.js 의 percentChange 함수에 대한 단위 테스트 작성 |
+|                                                      |
+| Agent: Documenter (documenter)                       |
+| Confidence: 12.5%                                    |
+| Q-Value: 0.000                                       |
+| Exploration: Yes                                     |
+|                                                      |
+| Description: Creates and updates documentation       |
+| Capabilities: documentation, writing, explaining     |
++------------------------------------------------------+
+
+Alternatives:
++-----------+-------+
+| Agent     | Score |
++-----------+-------+
+| Tester    | 0.000 |
+| Reviewer  | 0.000 |
+| Architect | 0.000 |
++-----------+-------+

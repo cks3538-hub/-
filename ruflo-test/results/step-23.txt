@@ -1,0 +1,18 @@
+[INFO] Analyzing complexity: sample/src
+
+
++- Complexity Analysis -+
+| Files analyzed: 2     |
+| Threshold: 10         |
+| Flagged files: 0      |
+| Average complexity: 3 |
++-----------------------+
+
+All Files
+------------------------------------------------------------
++------------------------------------------+-------+-------+-----+
+| File                                     | Cyclo | Cogni | LOC |
++------------------------------------------+-------+-------+-----+
+| ...user/-/ruflo-test/sample/src/price... |     5 |     8 |  33 |
+| .../user/-/ruflo-test/sample/src/port... |     1 |     0 |  17 |
++------------------------------------------+-------+-------+-----+

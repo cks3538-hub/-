@@ -1,0 +1,21 @@
+[INFO] Starting task: task-mu8kcew4
+
++-------- Task Registered --------+
+| Task ID: task-mu8kcew4          |
+| Description: price-calc.js 리팩터링 |
+| Complexity: LOW                 |
+| Est. Duration: 10-30 min        |
++---------------------------------+
+
+Suggested Agents
++------------+------------+-------------------------------------+
+| Agent Type | Confidence | Reason                              |
++------------+------------+-------------------------------------+
+| coder      |      70.0% | Primary agent for coder tasks ba... |
+| researcher |      65.0% | Alternative agent with researche... |
+| tester     |      60.0% | Alternative agent with tester ca... |
++------------+------------+-------------------------------------+
+
+Recommendations
+  - Use coder as primary agent
+  - Consider using swarm coordination

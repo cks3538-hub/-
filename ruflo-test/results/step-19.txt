@@ -1,0 +1,13 @@
+
+Memory Entries
+
++---------------+-----------+------+--------+----------+----------+
+| Key           | Namespace | Size | Vector | Accessed | Updated  |
++---------------+-----------+------+--------+----------+----------+
+| todo/fee      | crypto    | 28 B |   ✓    |        0 | just now |
+| rule/risk     | crypto    | 39 B |   ✓    |        0 | just now |
+| rule/avg-cost | crypto    | 28 B |   ✓    |        0 | just now |
++---------------+-----------+------+--------+----------+----------+
+
+[INFO] Showing 3 of 3 entries
+[WARN] 3 more entries are in /home/user/-/ruflo-test/.swarm/agentdb-memory.db and were not read here. That store is written by the MCP/AgentDB path; read it with --path /home/user/-/ruflo-test/.swarm/agentdb-memory.db.

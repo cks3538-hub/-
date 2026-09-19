@@ -1,0 +1,40 @@
+
+RuFlo V3 [STOPPED]
+
+Swarm
+[INFO]   Swarm not running
+
+Agents
++--------+-------+
+| Status | Count |
++--------+-------+
+| Active |     0 |
+| Idle   |     0 |
+| Total  |     0 |
++--------+-------+
+
+Tasks
++-----------+-------+
+| Status    | Count |
++-----------+-------+
+| Pending   |     0 |
+| Running   |     0 |
+| Completed |     0 |
+| Failed    |     0 |
+| Total     |     0 |
++-----------+-------+
+
+Memory
++----------------+--------+
+| Property       |  Value |
++----------------+--------+
+| Backend        |   none |
+| Entries        |      0 |
+| Size           |    0 B |
+| Search Time    | 0.00ms |
+| Cache Hit Rate |   0.0% |
++----------------+--------+
+
+MCP Server
+[INFO]   Not running
+

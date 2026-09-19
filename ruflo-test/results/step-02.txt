@@ -1,0 +1,42 @@
+
+RuFlo Doctor
+System diagnostics and health check
+──────────────────────────────────────────────────
+
+
+✓ Version Freshness: v3.42.4 (up to date)
+✓ Node.js Version: v22.22.2 (>= 20 required)
+✓ npm Version: v10.9.7
+✓ Claude Code CLI: v2.1.278
+✓ Git: v2.43.0
+✓ Git Repository: In a git repository
+✓ Config File: Found: .claude-flow/config.yaml
+✓ Stale npx@latest in settings (#2448): no runaway commands detected
+⚠ Daemon Status: Not running
+⚠ Memory Database Presence: Not initialized
+⚠ Memory Structural Integrity (quick_check): no memory.db found (see Memory Database Presence above) — structural-only check skipped
+⚠ Memory Persistence Driver: no memory.db found (see Memory Database Presence above) — driver check skipped
+✓ Learning Bridge: auto-memory hook not installed (run: npx ruflo@latest init)
+✓ API Keys: Claude Code (managed internally)
+✓ MCP Servers: 1 servers (ruflo configured: .mcp.json top-level: claude-flow)
+⚠ MCP Schema Overhead: 353 advertised tools ≈ 65835 schema tokens (all tools)
+⚠ AIDefence: @claude-flow/aidefence not loadable — aidefence_* MCP tools will fail (optional package)
+✓ Disk Space: 28G available
+✓ TypeScript: v6.0.2
+✓ agentic-flow: v3.0.0-alpha.2 (ReasoningBank, Router, QUIC)
+⚠ Encryption at Rest: Off — session/terminal/memory stores are plaintext (mode 0600 only)
+✓ Federation Breaker: ADR-097 breaker loadable — federation_breaker_status / federation_evict / federation_reactivate MCP tools available
+✓ MetaHarness (ADR-150): v0.4.2 — run `npx ruflo metaharness score` for the full scorecard
+✓ MetaHarness declared packages (ADR-150): 4 declared package(s) resolve: @metaharness/darwin, @metaharness/flywheel, @metaharness/radio, @metaharness/turn-credit
+✓ MetaHarness integration (ADR-150): plugin scripts intact, _similarity.mjs + parseMcpScanText load, smoke OK
+✓ Funnel (ADR-305): enabled (decided by: package-default; disclosure: never_seen)
+⚠ Meta LLM Proxy (ADR-313): not installed — no proxy-token found; sponsored-downtime capacity is unavailable
+⚠ Cognitum identity (ADR-306): not logged in
+
+──────────────────────────────────────────────────
+
+Summary: 19 passed, 9 warnings
+
+Run with --fix to see 7 suggested commands (does not auto-apply)
+
+All checks passed with some warnings.

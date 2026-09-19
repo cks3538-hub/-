@@ -1,0 +1,14 @@
+{
+  "name": "ruflo-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ruflo (Claude Flow v3) 설치 및 샘플 실행 테스트",
+  "scripts": {
+    "ruflo": "ruflo",
+    "test:sample": "bash ./run-sample-test.sh",
+    "test:unit": "node --test sample/test/*.test.js"
+  },
+  "dependencies": {
+    "ruflo": "^3.42.4"
+  }
+}
