@@ -59,14 +59,15 @@ const md = `# ruflo MCP 서버 연결 · 실제 작업 실행 보고서
 ${read('mcp/claude-mcp.json').trim()}
 \`\`\`
 
-실행 스크립트 \`mcp/run-claude-agent.sh\` 의 핵심 명령:
+실행 스크립트 \`mcp/run-claude-agent.sh\`(macOS·Linux) / \`mcp/run-claude-agent.cmd\`(Windows) 의 핵심 명령. 지시문은 표준입력으로 넘깁니다.
 
 \`\`\`bash
-claude -p "$(cat mcp/agent-task.md)" \\
+claude -p \\
   --output-format stream-json --verbose \\
   --mcp-config mcp/claude-mcp.json --strict-mcp-config \\
   --allowedTools "mcp__claude-flow__*,Read,Edit,Write,Glob,Grep,Bash(node:*),Bash(npx ruflo:*)" \\
-  --max-turns 60 --model sonnet
+  --max-turns 60 --model sonnet \\
+  < mcp/agent-task.md > results/claude-agent-run.jsonl
 \`\`\`
 
 ### B. MCP SDK 클라이언트로 직접 접속
@@ -144,6 +145,7 @@ npm install
 node mcp/list-tools.mjs        # 도구 353개 목록 → results/mcp-tools.json
 node mcp/run-job.mjs           # 경로 B → results/mcp-job.json
 bash mcp/run-claude-agent.sh   # 경로 A (Claude Code 로그인 필요, 비용 발생) → results/claude-agent-*.{jsonl,txt,json}
+mcp\\run-claude-agent.cmd      # 경로 A, Windows cmd
 node mcp/make-mcp-report.mjs   # 이 보고서 재생성
 \`\`\`
 `;

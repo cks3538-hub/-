@@ -1,7 +1,5 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-const transport = new StdioClientTransport({ command: 'npx', args: ['ruflo', 'mcp', 'start'], env: { ...process.env, NO_COLOR: '1' }, stderr: 'pipe' });
-const client = new Client({ name: 'probe', version: '1.0.0' }); await client.connect(transport);
+import { connectRuflo } from './ruflo-client.mjs';
+const client = await connectRuflo('probe');
 const call = async (n, a) => { const r = await client.callTool({ name: n, arguments: a }); const t = r.content.map(c => c.text).join(''); console.log(`\n## ${n} ${JSON.stringify(a)}\n${t.slice(0, 700)}`); };
 await call('memory_list', { namespace: 'crypto', limit: 10 });
 await call('memory_search', { query: '수수료 계산 방식', namespace: 'crypto', limit: 5, threshold: 0.0 });

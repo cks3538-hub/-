@@ -2,8 +2,8 @@
   "mcpServers": {
     "claude-flow": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["ruflo", "mcp", "start"],
+      "command": "node",
+      "args": ["node_modules/ruflo/bin/ruflo.js", "mcp", "start"],
       "env": {
         "npm_config_update_notifier": "false",
         "NO_COLOR": "1",

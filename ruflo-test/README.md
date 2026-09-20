@@ -14,7 +14,8 @@
 |---|---|
 | `run-sample-test.sh` | 27단계 샘플 테스트 시나리오 (한 번에 실행) |
 | `make-report.sh` | `results/` 실제 출력을 발췌해 `TEST_REPORT.md` 재생성 |
-| `mcp/run-claude-agent.sh` | Claude Code CLI 헤드리스 + ruflo MCP 로 실제 코드 작업 수행 (경로 A) |
+| `mcp/run-claude-agent.sh` / `.cmd` | Claude Code CLI 헤드리스 + ruflo MCP 로 실제 코드 작업 수행 (경로 A, macOS·Linux / Windows) |
+| `mcp/ruflo-client.mjs` | 모든 MCP 스크립트가 쓰는 공용 접속 헬퍼 (OS 무관, 로컬 ruflo 직접 실행) |
 | `mcp/run-job.mjs` | MCP SDK 클라이언트로 ruflo 도구 21개 직접 호출 (경로 B) |
 | `mcp/agent-task.md` | 경로 A 에서 에이전트에게 주는 작업 지시서 |
 | `mcp/claude-mcp.json` | Claude Code 용 ruflo MCP 서버 설정 (로컬 설치 사용) |
@@ -47,6 +48,33 @@
    cat results/summary.md
    ```
 
+## 윈도우에서 따라하기 (명령 프롬프트 cmd)
+
+> 폴더를 받아서 그 폴더 **안에서** 실행해야 합니다. 홈 폴더(`C:\Users\이름`)에서 바로 실행하면 "Cannot find module" 오류가 납니다.
+
+1. 시작 메뉴에서 `cmd` 를 입력해 **명령 프롬프트**를 엽니다.
+2. 한글 경로 문제를 피하려고 `C:\dev` 에 받습니다. 아래를 **한 줄씩** 입력하고 Enter 를 누릅니다.
+   ```bat
+   mkdir C:\dev
+   cd /d C:\dev
+   git clone -b claude/lucid-dijkstra-04q0nc https://github.com/cks3538-hub/-.git betherich-tools
+   cd betherich-tools\ruflo-test
+   npm install
+   ```
+   - `git` 이 없다는 오류가 나면 https://git-scm.com/download/win 에서 설치하거나,
+     [ZIP 다운로드](https://github.com/cks3538-hub/-/archive/refs/heads/claude/lucid-dijkstra-04q0nc.zip) 를 받아 `C:\dev` 에 풀고 그 안의 `ruflo-test` 폴더로 `cd` 합니다.
+3. **MCP 직접 호출 (비용 없음)** — 도구 21개를 순서대로 호출하고 결과를 `results\mcp-job.json` 에 저장합니다.
+   ```bat
+   node mcp\run-job.mjs
+   ```
+4. **Claude 에이전트 실행 (Claude Code 로그인 필요, 약 $0.5)** — 에이전트가 ruflo MCP 도구로 스웜을 만들고 샘플 코드에 수수료 기능을 구현합니다.
+   ```bat
+   mcp\run-claude-agent.cmd
+   type results\claude-agent-final.txt
+   ```
+   - `claude` 가 없다는 오류가 나면 `npm install -g @anthropic-ai/claude-code` 로 설치한 뒤, `claude` 를 한 번 실행해 로그인(`/login`)하고 `/exit` 로 나옵니다.
+5. CLI 27단계 샘플 테스트는 Git Bash 가 있을 때만 `bash run-sample-test.sh` 로 실행됩니다. (cmd 전용 버전은 없습니다)
+
 ## 자주 쓰는 명령
 
 | 명령 | 하는 일 |
@@ -71,7 +99,9 @@
 헤드리스(터미널 한 줄)로 실제 작업을 시키려면:
 
 ```bash
-bash mcp/run-claude-agent.sh      # 결과: results/claude-agent-final.txt
+bash mcp/run-claude-agent.sh      # macOS / Linux / Git Bash
+mcp\run-claude-agent.cmd         # Windows cmd
+# 결과: results/claude-agent-final.txt
 ```
 
 MCP 서버에 프로그램으로 직접 붙어 도구를 호출하려면:

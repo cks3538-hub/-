@@ -1,16 +1,8 @@
 // ruflo MCP 서버(stdio)에 접속해 도구 목록과 핵심 도구의 입력 스키마를 저장합니다.
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { connectRuflo } from './ruflo-client.mjs';
 import { writeFileSync } from 'node:fs';
 
-const transport = new StdioClientTransport({
-  command: 'npx',
-  args: ['ruflo', 'mcp', 'start'],
-  env: { ...process.env, NO_COLOR: '1', CLAUDE_FLOW_MODE: 'v3' },
-  stderr: 'pipe',
-});
-const client = new Client({ name: 'ruflo-test-client', version: '1.0.0' });
-await client.connect(transport);
+const client = await connectRuflo('ruflo-test-client');
 const info = client.getServerVersion();
 console.log('connected:', JSON.stringify(info));
 

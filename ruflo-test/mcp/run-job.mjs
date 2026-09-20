@@ -2,16 +2,10 @@
 //   swarm_init → agent_spawn×3 → task_create×3(+assign) → task_update/complete
 //   → memory_store/search → workflow_create/execute/status → task_list/summary → swarm_status → swarm_shutdown
 // 출력: results/mcp-job.json (모든 호출의 입력/출력), 콘솔 요약
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { connectRuflo } from './ruflo-client.mjs';
 import { writeFileSync } from 'node:fs';
 
-const transport = new StdioClientTransport({
-  command: 'npx', args: ['ruflo', 'mcp', 'start'],
-  env: { ...process.env, NO_COLOR: '1', CLAUDE_FLOW_MODE: 'v3' }, stderr: 'pipe',
-});
-const client = new Client({ name: 'ruflo-job-runner', version: '1.0.0' });
-await client.connect(transport);
+const client = await connectRuflo('ruflo-job-runner');
 
 const log = [];
 function parse(res) {
