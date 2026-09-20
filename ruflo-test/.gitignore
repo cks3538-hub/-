@@ -39,3 +39,6 @@ ruvector.db-*
 
 # 테스트 결과 로그는 보관
 !results/*.log
+
+# 워크플로 런타임 저장소
+.claude-flow/workflows/store.json
