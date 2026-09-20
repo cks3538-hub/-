@@ -8,6 +8,13 @@
         "@upstash/context7-mcp"
       ],
       "env": {}
+    },
+    "muapi": {
+      "type": "http",
+      "url": "https://api.muapi.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MUAPI_API_KEY}"
+      }
     }
   }
 }

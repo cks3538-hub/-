@@ -18,3 +18,10 @@ node_modules/
 # Python bytecode caches (created when ui-ux-pro-max scripts/tests run)
 __pycache__/
 *.pyc
+
+# muapi / Open Generative AI: API 키는 환경변수로만 주입한다 (.mcp.json은 ${MUAPI_API_KEY} 치환만 사용).
+# 키가 담긴 파일은 어떤 경우에도 커밋하지 않는다.
+.env
+.env.*
+!.env.example
+outputs/
