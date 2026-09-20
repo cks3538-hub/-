@@ -1,0 +1,18 @@
+모든 작업을 완료했습니다.
+
+**호출한 MCP 도구와 결과:**
+- `swarm_init` (hierarchical, maxAgents 3, specialized) → swarmId: `swarm-1789883926451-71qdvl` (running, agentCount 2)
+- `agent_spawn` × 2 → coder: `agent-1789883929015-o6bsxz` (model sonnet), tester: `agent-1789883929632-zl7sr5` (model haiku)
+- `task_create` (feature/high, coder에게 할당) → taskId: `task-1789883933098-xy6a7y`
+- `task_complete`(taskId, 결과 요약) → status: completed, progress 100
+- `memory_store`(namespace "crypto", key "feature/fee-support") → 저장 성공(임베딩 384차원)
+- `task_list` → 이번에 만든 태스크는 completed, 그 외 과거 대기 중인 태스크 4개 확인
+- `swarm_status` → swarm-1789883926451-71qdvl, running, agent 2개
+
+**코드 변경:**
+- `sample/src/price-calc.js`: 내부 헬퍼 `totalFees(trades, feeRate)`(모든 거래의 qty×price 합계 × feeRate)를 추가하고, 이를 이용해 `netPnL(trades, currentPrice, feeRate=0)`(unrealizedPnL − 수수료)와 `breakEvenPrice(trades, feeRate=0)`(보유 수량 0이면 0, 아니면 평균 매수가 + 수수료/보유 수량)을 새로 export. 기존 함수(averageCost, unrealizedPnL, percentChange, riskLevel)는 변경하지 않음.
+- `sample/test/price-calc.test.js`: netPnL(feeRate 0 = unrealizedPnL과 동일, feeRate 0.0005), breakEvenPrice(feeRate 0 = 평균 매수가와 동일, feeRate 0.0005, 보유 수량 0 케이스) 테스트 5개 추가.
+
+**테스트 결과:** `node --test sample/test/*.test.js` → **10 pass, 0 fail** (전부 통과).
+
+git 커밋은 생성하지 않았습니다.

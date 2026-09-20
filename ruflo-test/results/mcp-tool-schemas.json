@@ -1,0 +1,228 @@
+[
+  {
+    "name": "agent_spawn",
+    "description": "Spawn a Ruflo-tracked agent with cost attribution + memory persistence + swarm coordination. Use when native Task tool is wrong because you need (a) cost tracking per agent in the cost-tracking namespace, (b) cross-session learning via the patterns namespace, or (c) coordination with other agents in a swarm topology (hierarchical / mesh / consensus). For one-shot subtasks with no learning loop, native Task is fine. Pair with hooks_route to pick the right model first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentType": {
+          "type": "string",
+          "description": "Type of agent to spawn"
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Optional custom agent ID"
+        },
+        "swarmId": {
+          "type": "string",
+          "description": "Optional swarm to register the agent with (defaults to most-recent swarm)"
+        },
+        "config": {
+          "type": "object",
+          "description": "Agent configuration"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Agent domain"
+        },
+        "model": {
+          "type": "string",
+          "enum": [
+            "haiku",
+            "sonnet",
+            "opus",
+            "opus-4.7",
+            "inherit"
+          ],
+          "description": "Claude model alias (haiku=fast/cheap, sonnet=balanced, opus=current Opus 4.8, opus-4.7=prior Opus pin)"
+        },
+        "task": {
+          "type": "string",
+          "description": "Task description for intelligent model routing"
+        },
+        "memoryBase": {
+          "type": "string",
+          "description": "Opt-in: base .rvf memory file to fork a per-agent Copy-On-Write branch from (agenticow). When set, the agent gets an isolated ~162-byte COW branch instead of a full copy — promote on success, discard on terminate. Requires the optional `agenticow` dep; degrades to a no-op when absent or when CLAUDE_FLOW_NO_COW_MEMORY=1."
+        },
+        "memoryDimension": {
+          "type": "integer",
+          "description": "Vector dimension for the COW base (required only when memoryBase does not exist yet)"
+        }
+      },
+      "required": [
+        "agentType"
+      ]
+    }
+  },
+  {
+    "name": "agent_list",
+    "description": "List every Ruflo-tracked agent in the registry with its type, model, status, and taskCount. Use when native Task tool is wrong because you need to see the swarm-wide agent inventory across turns (which agents exist, their roles, their cost-tracking handles) rather than spawn a new one-shot Task. Filter by status/domain/agentType if needed. For starting a fresh single-shot subagent, native Task is fine.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Filter by status"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Filter by domain"
+        },
+        "includeTerminated": {
+          "type": "boolean",
+          "description": "Include terminated agents"
+        }
+      }
+    }
+  },
+  {
+    "name": "swarm_init",
+    "description": "Initialize a swarm with persistent state tracking Use when native Task tool is wrong because you need multi-agent coordination — topology (hierarchical/mesh/star), consensus (raft/byzantine/gossip/crdt/quorum), shared memory namespace, or anti-drift gates. For independent one-shot subagents, native Task is fine; spawn each separately.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "topology": {
+          "type": "string",
+          "description": "Swarm topology type (hierarchical, mesh, hierarchical-mesh, ring, star, hybrid, adaptive, pheromone-adaptive)"
+        },
+        "maxAgents": {
+          "type": "number",
+          "description": "Maximum number of agents (1-50)"
+        },
+        "strategy": {
+          "type": "string",
+          "description": "Agent strategy (specialized, balanced, adaptive)"
+        },
+        "config": {
+          "type": "object",
+          "description": "Additional swarm configuration"
+        }
+      }
+    }
+  },
+  {
+    "name": "swarm_status",
+    "description": "Get swarm status from persistent state Use when native Task tool is wrong because you need multi-agent coordination — topology (hierarchical/mesh/star), consensus (raft/byzantine/gossip/crdt/quorum), shared memory namespace, or anti-drift gates. For independent one-shot subagents, native Task is fine; spawn each separately.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "swarmId": {
+          "type": "string",
+          "description": "Swarm ID (omit for most recent)"
+        }
+      }
+    }
+  },
+  {
+    "name": "memory_store",
+    "description": "Persistent key-value store with vector embedding — survives across sessions and is searchable by meaning, not just by file path. Use when native Write is wrong because the data is not a file (e.g. a learned pattern, a decision, a budget config) AND you need to recall it later by semantic query, not by path. Defaults to namespace=\"default\". Upsert semantics: writing an existing key updates it (matching the CLI `memory store` default); pass `upsert: false` to force strict-insert instead.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Memory key (unique within namespace)"
+        },
+        "value": {
+          "description": "Value to store (string or object)"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for organization (default: \"default\")"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional tags for filtering"
+        },
+        "ttl": {
+          "type": "number",
+          "description": "Time-to-live in seconds (optional)"
+        },
+        "upsert": {
+          "type": "boolean",
+          "description": "Update existing key instead of failing (default: true, matching CLI `memory store`; set false for strict-insert). #2775 parity."
+        },
+        "provenance_type": {
+          "type": "string",
+          "enum": [
+            "user_claim",
+            "agent_output",
+            "system_observation",
+            "tool_result",
+            "unknown"
+          ],
+          "description": "ADR-323: who/what produced this value, so shared-namespace retrieval can filter by trust level instead of conflating a user's stated claim with an agent's own output. Default: \"unknown\"."
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    }
+  },
+  {
+    "name": "memory_search",
+    "description": "Find stored memories by meaning (vector similarity), not by literal text — finds \"JWT auth pattern\" when you query \"token-based login flow\". Use when native Grep is wrong because Grep matches characters and you need to find conceptually-related entries across past sessions. Returns top-k with similarity: raw retrieval relevance, which may include lexical scoring and is not guaranteed to be cosine similarity. With smart=true, similarity is the highest raw score across query variants; rankingScore is the composite relevance score used by the ranking pipeline, not cosine similarity, probability, or confidence. Diversity can change result order.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query (semantic similarity)"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace to search (default: all namespaces — omit to search across every namespace)"
+        },
+        "limit": {
+          "type": "number",
+          "description": "Maximum results (default: 10)"
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Minimum raw retrieval relevance 0-1 for candidate admission, applied per query before SmartRetrieval ranking; not a floor on rankingScore (default: 0.3)"
+        },
+        "smart": {
+          "type": "boolean",
+          "description": "Enable SmartRetrieval — query expansion, RRF fusion, recency boost, MMR diversity; preserves raw similarity and adds rankingScore (default: false)"
+        },
+        "provenance_filter": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "user_claim",
+              "agent_output",
+              "system_observation",
+              "tool_result",
+              "unknown"
+            ]
+          },
+          "description": "ADR-323: restrict results to these provenance types (e.g. exclude user_claim when fact-checking). Omit for no filtering. Enforced for standard and SmartRetrieval searches."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "task_status",
+    "description": "Get task status Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Task ID"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "claude-flow": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["ruflo", "mcp", "start"],
+      "env": {
+        "npm_config_update_notifier": "false",
+        "NO_COLOR": "1",
+        "CLAUDE_FLOW_MODE": "v3",
+        "CLAUDE_FLOW_HOOKS_ENABLED": "true",
+        "CLAUDE_FLOW_TOPOLOGY": "hierarchical",
+        "CLAUDE_FLOW_MAX_AGENTS": "5",
+        "CLAUDE_FLOW_MEMORY_BACKEND": "memory"
+      }
+    }
+  }
+}

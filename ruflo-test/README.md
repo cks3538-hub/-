@@ -3,7 +3,8 @@
 [ruflo](https://www.npmjs.com/package/ruflo)(= Claude Flow v3)를 설치하고,
 "코인 매매 손익 계산기" 샘플 코드를 대상으로 핵심 기능을 한 번에 점검하는 폴더입니다.
 
-- 테스트 결과 보고서: [TEST_REPORT.md](./TEST_REPORT.md)
+- CLI 테스트 보고서: [TEST_REPORT.md](./TEST_REPORT.md)
+- **MCP 서버 연결 · 실제 작업 실행 보고서: [MCP_REPORT.md](./MCP_REPORT.md)**
 - 실행 로그 전체: [results/sample-test.log](./results/sample-test.log)
 - 단계별 출력: `results/step-NN.txt`
 
@@ -13,6 +14,10 @@
 |---|---|
 | `run-sample-test.sh` | 27단계 샘플 테스트 시나리오 (한 번에 실행) |
 | `make-report.sh` | `results/` 실제 출력을 발췌해 `TEST_REPORT.md` 재생성 |
+| `mcp/run-claude-agent.sh` | Claude Code CLI 헤드리스 + ruflo MCP 로 실제 코드 작업 수행 (경로 A) |
+| `mcp/run-job.mjs` | MCP SDK 클라이언트로 ruflo 도구 21개 직접 호출 (경로 B) |
+| `mcp/agent-task.md` | 경로 A 에서 에이전트에게 주는 작업 지시서 |
+| `mcp/claude-mcp.json` | Claude Code 용 ruflo MCP 서버 설정 (로컬 설치 사용) |
 | `sample/src/price-calc.js` | 평균단가 · 평가손익 · 변동률 · 리스크 등급 계산 함수 |
 | `sample/src/portfolio.js` | 여러 코인 손익 요약 |
 | `sample/test/price-calc.test.js` | Node 내장 테스트 러너용 단위 테스트 5건 |
@@ -62,6 +67,20 @@
 
 `npx ruflo init`이 만든 `.mcp.json`을 Claude Code가 읽으면 `claude-flow` MCP 서버가 등록됩니다.
 이 폴더에서 Claude Code를 실행하면 자동으로 인식합니다.
+
+헤드리스(터미널 한 줄)로 실제 작업을 시키려면:
+
+```bash
+bash mcp/run-claude-agent.sh      # 결과: results/claude-agent-final.txt
+```
+
+MCP 서버에 프로그램으로 직접 붙어 도구를 호출하려면:
+
+```bash
+node mcp/run-job.mjs              # 결과: results/mcp-job.json
+```
+
+실행 결과와 발견 사항은 [MCP_REPORT.md](./MCP_REPORT.md)에 있습니다.
 
 ## 주의사항
 

@@ -1,0 +1,209 @@
+{
+  "workflows": {
+    "workflow-1789884024386-yg92ti": {
+      "workflowId": "workflow-1789884024386-yg92ti",
+      "name": "fee-feature-pipeline",
+      "description": "리서치 → 구현 → 테스트",
+      "steps": [
+        {
+          "stepId": "step-1",
+          "name": "요구사항 정리",
+          "type": "task",
+          "config": {},
+          "status": "failed",
+          "startedAt": "2026-09-20T06:00:24.391Z",
+          "result": {
+            "error": "task step step-1 requires config.agentId or workflow.variables.defaultAgentId"
+          },
+          "completedAt": "2026-09-20T06:00:24.392Z"
+        },
+        {
+          "stepId": "step-2",
+          "name": "구현",
+          "type": "task",
+          "config": {},
+          "status": "pending"
+        },
+        {
+          "stepId": "step-3",
+          "name": "테스트",
+          "type": "task",
+          "config": {},
+          "status": "pending"
+        }
+      ],
+      "status": "failed",
+      "currentStep": 0,
+      "variables": {},
+      "createdAt": "2026-09-20T06:00:24.386Z",
+      "startedAt": "2026-09-20T06:00:24.391Z",
+      "error": "task step step-1 requires config.agentId or workflow.variables.defaultAgentId",
+      "completedAt": "2026-09-20T06:00:24.392Z"
+    },
+    "workflow-1789884081127-v4wlh4": {
+      "workflowId": "workflow-1789884081127-v4wlh4",
+      "name": "fee-feature-pipeline",
+      "description": "리서치 → 구현 → 테스트",
+      "steps": [
+        {
+          "stepId": "step-1",
+          "name": "요구사항 정리",
+          "type": "task",
+          "config": {
+            "agentId": "agent-1789884080832-k7trr3",
+            "description": "수수료 요구사항 정리"
+          },
+          "status": "failed",
+          "startedAt": "2026-09-20T06:01:21.134Z",
+          "result": {
+            "error": "No LLM provider configured. Set ANTHROPIC_API_KEY (Tier-3), OPENROUTER_API_KEY (#2042), or OLLAMA_API_KEY (Tier-2 — #1725)."
+          },
+          "completedAt": "2026-09-20T06:01:21.139Z"
+        },
+        {
+          "stepId": "step-2",
+          "name": "구현",
+          "type": "task",
+          "config": {
+            "agentId": "agent-1789884080856-u8tjws",
+            "description": "netPnL/breakEvenPrice 구현"
+          },
+          "status": "pending"
+        },
+        {
+          "stepId": "step-3",
+          "name": "테스트",
+          "type": "task",
+          "config": {
+            "agentId": "agent-1789884080867-kewbdd",
+            "description": "단위 테스트"
+          },
+          "status": "pending"
+        }
+      ],
+      "status": "failed",
+      "currentStep": 0,
+      "variables": {
+        "defaultAgentId": "agent-1789884080856-u8tjws"
+      },
+      "createdAt": "2026-09-20T06:01:21.127Z",
+      "startedAt": "2026-09-20T06:01:21.133Z",
+      "error": "No LLM provider configured. Set ANTHROPIC_API_KEY (Tier-3), OPENROUTER_API_KEY (#2042), or OLLAMA_API_KEY (Tier-2 — #1725).",
+      "completedAt": "2026-09-20T06:01:21.139Z"
+    },
+    "workflow-1789884108685-vw6mon": {
+      "workflowId": "workflow-1789884108685-vw6mon",
+      "name": "probe-command",
+      "steps": [
+        {
+          "stepId": "step-1",
+          "name": "run tests",
+          "type": "command",
+          "config": {
+            "command": "node --test sample/test/*.test.js",
+            "script": "node --test sample/test/*.test.js",
+            "cmd": "node --test sample/test/*.test.js"
+          },
+          "status": "skipped",
+          "startedAt": "2026-09-20T06:01:48.696Z",
+          "result": {
+            "_note": "step type 'command' not yet implemented in runtime"
+          },
+          "completedAt": "2026-09-20T06:01:48.699Z"
+        }
+      ],
+      "status": "completed",
+      "currentStep": 1,
+      "variables": {},
+      "createdAt": "2026-09-20T06:01:48.685Z",
+      "startedAt": "2026-09-20T06:01:48.696Z",
+      "completedAt": "2026-09-20T06:01:48.699Z"
+    },
+    "workflow-1789884108707-kqa8ty": {
+      "workflowId": "workflow-1789884108707-kqa8ty",
+      "name": "probe-shell",
+      "steps": [
+        {
+          "stepId": "step-1",
+          "name": "run tests",
+          "type": "shell",
+          "config": {
+            "command": "node --test sample/test/*.test.js",
+            "script": "node --test sample/test/*.test.js",
+            "cmd": "node --test sample/test/*.test.js"
+          },
+          "status": "skipped",
+          "startedAt": "2026-09-20T06:01:48.712Z",
+          "result": {
+            "_note": "step type 'shell' not yet implemented in runtime"
+          },
+          "completedAt": "2026-09-20T06:01:48.713Z"
+        }
+      ],
+      "status": "completed",
+      "currentStep": 1,
+      "variables": {},
+      "createdAt": "2026-09-20T06:01:48.707Z",
+      "startedAt": "2026-09-20T06:01:48.712Z",
+      "completedAt": "2026-09-20T06:01:48.713Z"
+    },
+    "workflow-1789884108719-pbpgf7": {
+      "workflowId": "workflow-1789884108719-pbpgf7",
+      "name": "probe-script",
+      "steps": [
+        {
+          "stepId": "step-1",
+          "name": "run tests",
+          "type": "script",
+          "config": {
+            "command": "node --test sample/test/*.test.js",
+            "script": "node --test sample/test/*.test.js",
+            "cmd": "node --test sample/test/*.test.js"
+          },
+          "status": "skipped",
+          "startedAt": "2026-09-20T06:01:48.726Z",
+          "result": {
+            "_note": "step type 'script' not yet implemented in runtime"
+          },
+          "completedAt": "2026-09-20T06:01:48.726Z"
+        }
+      ],
+      "status": "completed",
+      "currentStep": 1,
+      "variables": {},
+      "createdAt": "2026-09-20T06:01:48.719Z",
+      "startedAt": "2026-09-20T06:01:48.725Z",
+      "completedAt": "2026-09-20T06:01:48.726Z"
+    },
+    "workflow-1789884108732-vzpfmv": {
+      "workflowId": "workflow-1789884108732-vzpfmv",
+      "name": "probe-exec",
+      "steps": [
+        {
+          "stepId": "step-1",
+          "name": "run tests",
+          "type": "exec",
+          "config": {
+            "command": "node --test sample/test/*.test.js",
+            "script": "node --test sample/test/*.test.js",
+            "cmd": "node --test sample/test/*.test.js"
+          },
+          "status": "skipped",
+          "startedAt": "2026-09-20T06:01:48.738Z",
+          "result": {
+            "_note": "step type 'exec' not yet implemented in runtime"
+          },
+          "completedAt": "2026-09-20T06:01:48.738Z"
+        }
+      ],
+      "status": "completed",
+      "currentStep": 1,
+      "variables": {},
+      "createdAt": "2026-09-20T06:01:48.732Z",
+      "startedAt": "2026-09-20T06:01:48.738Z",
+      "completedAt": "2026-09-20T06:01:48.738Z"
+    }
+  },
+  "templates": {},
+  "version": "3.0.0"
+}
