@@ -24,15 +24,37 @@ description: "Open Generative AI(muapi 게이트웨이)로 이미지·영상·�
 `muapi_account_topup`(충전), `muapi_keys_create` / `muapi_keys_delete`(키 발급·삭제)는
 **사용자가 명시적으로 요청할 때만** 호출한다. 절대 자동 실행하지 않는다.
 
+## 0.5 키 없이 이미 되는 경로를 먼저 확인한다
+
+**이미지만 필요하면 muapi 설정이 필요 없을 수 있다.** 요청을 받으면 먼저 사용 가능한 툴을 본다.
+
+Hugging Face 커넥터가 연결돼 있으면 아래 툴을 바로 쓸 수 있다. **무료이고 API 키가 필요 없다.**
+
+| 툴 | 쓰는 때 |
+|---|---|
+| `gr1_flux1_schnell_infer` | 범용·빠른 이미지. 기본값으로 쓴다 |
+| `gr2_flux_1_krea_dev_infer` | 제품컷·인물 등 사진 같은 결과물. 프롬프트에 카메라·렌즈·조명을 적는다 |
+| `gr3_z_image_turbo_generate` | 해상도·비율을 세밀하게 고를 때 (21:9, 9:16 등) |
+
+이 경로로 되는 요청이면 **muapi를 권하지 않는다.** 설정도 비용도 없이 즉시 끝난다.
+
+muapi가 꼭 필요한 경우는 다음뿐이다.
+
+- **영상** 생성 (Kling, Veo, Sora, Seedance 등)
+- **립싱크**, 배경 제거, 업스케일, 얼굴 합성
+- **음악·오디오** 생성
+- 이미지 부분 수정(Nano Banana Edit 등)이나 참조 이미지 여러 장 입력
+
 ## 1. 경로 3가지 — 상황에 맞게 고른다
 
 | 경로 | 쓰는 때 | 진입점 |
 |---|---|---|
-| **MCP** (기본) | Claude Code 대화 중에 바로 생성 | `.mcp.json`의 `muapi` 서버 → `muapi_*` 툴 |
+| **Hugging Face 커넥터** | 이미지만 필요할 때. 무료·키 불필요 | `gr1_flux1_schnell_infer` 등 |
+| **MCP** (muapi) | 영상·립싱크·오디오가 필요할 때 | `.mcp.json`의 `muapi` 서버 → `muapi_*` 툴 |
 | **CLI** | 스크립트·배치·파일 저장이 필요할 때 | `muapi` 명령 (`npm install -g muapi-cli`) |
 | **데스크톱 앱** | 사람이 직접 눈으로 고르며 작업할 때 | Open Generative AI 앱 (GUI) |
 
-이 저장소는 **MCP 경로가 기본**이다. `MUAPI_API_KEY` 환경변수가 설정돼 있어야 동작한다.
+이미지는 Hugging Face 경로가 기본이다. muapi 경로는 `MUAPI_API_KEY` 환경변수와 `api.muapi.ai` 네트워크 허용이 **둘 다** 설정돼 있어야 동작한다. 클라우드 세션은 기본 네트워크 정책에서 `api.muapi.ai`를 차단하므로, 키만 설정하면 연결에 실패한다.
 
 ## 2. MCP 툴 목록
 
