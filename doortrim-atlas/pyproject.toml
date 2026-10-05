@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doortrim-atlas"
+version = "0.1.0"
+description = "도어트림 디자인 스킨 자동 부품분할·사이즈/중량 예측 (아틀라스 라벨 전이, 오프라인)"
+requires-python = ">=3.8"
+dependencies = ["numpy>=1.24", "scipy>=1.10", "scikit-learn>=1.2", "trimesh>=4.0", "matplotlib>=3.7"]
+
+[project.scripts]
+doortrim-atlas = "doortrim_atlas.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["doortrim_atlas*"]

@@ -1,0 +1,6 @@
+# 오프라인 설치용. 집에서 `pip download -r requirements.txt -d wheels` 로 받아 사내 PC에서 `pip install --no-index --find-links wheels -r requirements.txt`
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.2
+trimesh>=4.0
+matplotlib>=3.7
