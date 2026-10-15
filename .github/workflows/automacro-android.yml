@@ -1,0 +1,58 @@
+name: AutoMacro Android APK
+
+on:
+  push:
+    branches: [ccr-f64637cb-3jlj63]
+    paths:
+      - 'automacro-app/**'
+      - '.github/workflows/automacro-android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: automacro-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: automacro-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: automacro-app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npx jest
+      - name: Build release APK
+        working-directory: automacro-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../AutoMacro.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutoMacro-apk
+          path: automacro-app/AutoMacro.apk
+      - name: Publish download link
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: automacro-latest
+          name: 오토매크로 안드로이드 앱 (최신)
+          target_commitish: ${{ github.sha }}
+          make_latest: false
+          body: |
+            오토매크로 APK 최신 빌드입니다. 휴대폰에서 아래 AutoMacro.apk 를 눌러 내려받아 설치하세요.
+            빌드 커밋: ${{ github.sha }}
+          files: automacro-app/AutoMacro.apk
