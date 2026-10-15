@@ -1,0 +1,923 @@
+<title>오토매크로</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone-first app shell (max 560px), sticky top bar, fixed bottom tabs, bottom sheets.
+   Color carries meaning like the original: trigger = red, action = blue, constraint = green. */
+:root {
+  --bg: #EDEFF3;
+  --surface: #FFFFFF;
+  --surface-2: #F5F6F9;
+  --line: #D9DEE7;
+  --fg: #141922;
+  --muted: #5B6474;
+  --trig: #CF3F37;
+  --act: #2A64CC;
+  --cons: #21895A;
+  --warn: #B07A07;
+  --on-color: #FFFFFF;
+  --shadow: 0 1px 2px rgba(20, 25, 34, .06), 0 4px 16px rgba(20, 25, 34, .06);
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1015; --surface: #161A21; --surface-2: #1D222B; --line: #2A303B;
+    --fg: #E7EAF0; --muted: #97A0AF; --trig: #EF645B; --act: #5D92F2; --cons: #47C07F;
+    --warn: #E0AE3C; --on-color: #0D1015; --shadow: 0 1px 2px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1015; --surface: #161A21; --surface-2: #1D222B; --line: #2A303B;
+  --fg: #E7EAF0; --muted: #97A0AF; --trig: #EF645B; --act: #5D92F2; --cons: #47C07F;
+  --warn: #E0AE3C; --on-color: #0D1015; --shadow: 0 1px 2px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+.mono-txt, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.app { max-width: 560px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 10px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.top h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; flex: 1; min-width: 0; text-wrap: balance; }
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand-mark { display: grid; grid-template-columns: repeat(3, 6px); gap: 2px; }
+.brand-mark i { width: 6px; height: 14px; border-radius: 2px; display: block; }
+.brand-mark i:nth-child(1) { background: var(--trig); }
+.brand-mark i:nth-child(2) { background: var(--act); }
+.brand-mark i:nth-child(3) { background: var(--cons); }
+.content {
+  flex: 1; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 104px; display: flex; flex-direction: column; gap: 18px;
+}
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px));
+}
+.tabs-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+.tab { background: none; border: 0; padding: 9px 2px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
+.tab b { width: 22px; height: 4px; border-radius: 4px; background: transparent; }
+.tab.on { color: var(--fg); font-weight: 600; }
+.tab.on b { background: var(--act); }
+
+.sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0; }
+.sec-h h2 { font-size: 13px; font-weight: 600; letter-spacing: .06em; color: var(--muted); margin: 0; text-transform: uppercase; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.list { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; width: 100%; }
+.row:first-child { border-top: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .t { font-weight: 600; overflow-wrap: anywhere; }
+.row .s { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+.mono { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: 15px; color: var(--on-color); }
+.mono.k-trigger { background: var(--trig); }
+.mono.k-action { background: var(--act); }
+.mono.k-constraint { background: var(--cons); }
+.mono.k-off { background: var(--line); color: var(--muted); }
+
+.status { padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+.stat .l { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.stat .v { font-size: 17px; font-weight: 600; }
+.engine { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cons); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cons) 22%, transparent); flex: none; }
+.dot.idle { background: var(--muted); box-shadow: none; }
+
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tile { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 14px 10px 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; text-align: left; box-shadow: var(--shadow); min-height: 92px; }
+.tile .tl { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.tile .ts { font-size: 12px; color: var(--muted); }
+.tile-bar { width: 26px; height: 6px; border-radius: 3px; }
+
+.notice { font-size: 13px; color: var(--muted); padding: 12px 14px; border: 1px dashed var(--line); border-radius: 12px; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 14px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+.btn.primary { background: var(--act); border-color: var(--act); color: var(--on-color); }
+.btn.danger { color: var(--trig); }
+.btn.danger.armed { background: var(--trig); border-color: var(--trig); color: var(--on-color); }
+.btn.sm { padding: 6px 10px; font-size: 13px; }
+.btn.ghost { background: none; border-color: transparent; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.icon-btn { background: none; border: 0; padding: 6px 8px; border-radius: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
+.icon-btn:hover { background: var(--surface-2); }
+
+.sw { flex: none; width: 44px; height: 26px; border-radius: 13px; border: 0; background: var(--line); position: relative; padding: 0; transition: background .15s; }
+.sw span { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s; }
+.sw.on { background: var(--cons); }
+.sw.on span { transform: translateX(18px); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .field > .lab { font-size: 13px; font-weight: 600; color: var(--muted); }
+.inp { width: 100%; border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+textarea.inp { min-height: 84px; resize: vertical; }
+.hint { font-size: 12px; color: var(--muted); }
+.days { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 6px 11px; font-size: 13px; font-weight: 600; }
+.chip.on { background: var(--act); border-color: var(--act); color: var(--on-color); }
+
+.ed-head { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.ed-row2 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px; }
+.block { overflow: hidden; }
+.block-h { display: flex; align-items: center; gap: 10px; padding: 11px 14px; color: var(--on-color); }
+.block-h h3 { margin: 0; font-size: 15px; flex: 1; }
+.block-h .q { font-size: 12px; opacity: .85; }
+.block-h.k-trigger { background: var(--trig); }
+.block-h.k-action { background: var(--act); }
+.block-h.k-constraint { background: var(--cons); }
+.add { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; padding: 11px 14px; text-align: left; font-weight: 600; color: var(--act); }
+.empty { padding: 14px; font-size: 13px; color: var(--muted); }
+.item { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-top: 1px solid var(--line); }
+.item:first-of-type { border-top: 0; }
+.item .grow { flex: 1; min-width: 0; cursor: pointer; }
+.item .t { font-weight: 600; font-size: 14px; }
+.item .s { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.item .mono { width: 30px; height: 30px; font-size: 13px; border-radius: 8px; }
+.ops { display: flex; gap: 2px; flex: none; }
+
+.overlay { position: fixed; inset: 0; background: rgba(8, 10, 14, .45); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet {
+  background: var(--surface); width: 100%; max-width: 560px; max-height: 88%; overflow: auto;
+  border-radius: 18px 18px 0 0; padding-block: 8px calc(18px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 14px;
+}
+.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 0; }
+.sheet h3 { margin: 0; font-size: 18px; }
+.pick-g { display: flex; flex-direction: column; gap: 8px; }
+.pick-g h4 { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pick button { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 10px; text-align: left; font-size: 14px; font-weight: 600; min-width: 0; }
+.pick button span.lbl { min-width: 0; overflow-wrap: anywhere; }
+.pick .mono { width: 30px; height: 30px; font-size: 13px; border-radius: 8px; }
+
+.toasts { position: fixed; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.toast { pointer-events: auto; max-width: 520px; width: 100%; background: var(--fg); color: var(--bg); border-radius: 12px; padding: 11px 14px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); overflow-wrap: anywhere; }
+.toast b { display: block; font-size: 13px; opacity: .75; }
+
+.log { font-family: var(--font-mono); font-size: 12.5px; }
+.log .row { padding: 8px 12px; align-items: flex-start; gap: 10px; }
+.log .tm { color: var(--muted); flex: none; }
+.lv { flex: none; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; border: 1px solid currentColor; }
+.lv.run { color: var(--act); }
+.lv.ok { color: var(--cons); }
+.lv.skip { color: var(--warn); }
+.lv.err { color: var(--trig); }
+.lv.info { color: var(--muted); }
+.search { display: flex; gap: 8px; }
+.cat-h { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .06em; padding: 10px 14px 4px; }
+.cat-h:not(:first-child) { border-top: 1px solid var(--line); }
+.tpl { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.tpl .t { font-weight: 700; font-size: 16px; }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+.pill { border-radius: 999px; padding: 2px 9px; font-weight: 600; color: var(--on-color); }
+.pill.k-trigger { background: var(--trig); }
+.pill.k-action { background: var(--act); }
+.pill.k-constraint { background: var(--cons); }
+.var-row .val { font-family: var(--font-mono); font-size: 14px; }
+.inline-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); }
+@media (max-width: 400px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inline-form { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+(function () {
+'use strict';
+const { useState, useEffect, useRef, useMemo } = React;
+const html = htm.bind(React.createElement);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const LS_KEY = 'automacro.v1';
+const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const pad = (n) => String(n).padStart(2, '0');
+const hhmm = (d) => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const toMin = (s) => { const [h, m] = String(s || '0:0').split(':').map(Number); return h * 60 + m; };
+const isNum = (v) => v !== '' && v !== null && v !== undefined && !isNaN(Number(v));
+
+function daysText(d) {
+  d = (d || []).slice().sort();
+  if (d.length === 7) return '매일';
+  if (d.join() === '1,2,3,4,5') return '평일';
+  if (d.join() === '0,6') return '주말';
+  if (!d.length) return '요일 없음';
+  return d.map((i) => DAYS[i]).join('·');
+}
+const UNIT = { s: ['초', 1000], m: ['분', 60000], h: ['시간', 3600000] };
+const OPS = [['eq', '='], ['ne', '≠'], ['gt', '>'], ['ge', '≥'], ['lt', '<'], ['le', '≤'], ['contains', '포함']];
+const opText = (o) => (OPS.find((x) => x[0] === o) || ['', o])[1];
+function cmp(a, op, b) {
+  const n = isNum(a) && isNum(b);
+  const x = n ? Number(a) : String(a ?? ''), y = n ? Number(b) : String(b ?? '');
+  switch (op) {
+    case 'eq': return x === y; case 'ne': return x !== y;
+    case 'gt': return x > y; case 'ge': return x >= y;
+    case 'lt': return x < y; case 'le': return x <= y;
+    case 'contains': return String(a ?? '').includes(String(b ?? ''));
+  }
+  return false;
+}
+function dist(a, b, c, d) {
+  const R = 6371000, r = Math.PI / 180;
+  const x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+/* ---------------- 카탈로그: 트리거 / 액션 / 제약 조건 ---------------- */
+const F = {
+  state: (o, d) => ({ k: 'state', l: '상태', t: 'select', o, d }),
+  text: (k, l, d, extra) => Object.assign({ k, l, t: 'text', d }, extra),
+};
+const TRIGGERS = {
+  time: { label: '시간/요일', mono: '시', group: '날짜·시간', fields: [{ k: 'time', l: '시각', t: 'time', d: '08:00' }, { k: 'days', l: '요일', t: 'days', d: [1, 2, 3, 4, 5] }], sum: (p) => p.time + ' · ' + daysText(p.days) },
+  interval: { label: '반복 간격', mono: '반', group: '날짜·시간', fields: [{ k: 'every', l: '간격', t: 'number', d: 30, min: 1 }, { k: 'unit', l: '단위', t: 'select', o: [['s', '초'], ['m', '분'], ['h', '시간']], d: 'm' }], sum: (p) => p.every + UNIT[p.unit][0] + '마다' },
+  battery: { label: '배터리 잔량', mono: '배', group: '배터리·전원', fields: [{ k: 'op', l: '조건', t: 'select', o: [['below', '이하로 떨어질 때'], ['above', '이상으로 오를 때']], d: 'below' }, { k: 'level', l: '잔량 (%)', t: 'number', d: 20, min: 1, max: 100 }], sum: (p) => p.level + '% ' + (p.op === 'below' ? '이하로 떨어짐' : '이상으로 오름') },
+  power: { label: '충전기 연결/해제', mono: '전', group: '배터리·전원', fields: [F.state([['connected', '연결됨'], ['disconnected', '해제됨']], 'connected')], sum: (p) => '충전기 ' + (p.state === 'connected' ? '연결됨' : '해제됨') },
+  network: { label: '인터넷 연결 변경', mono: '망', group: '연결', fields: [F.state([['online', '연결됨'], ['offline', '끊김']], 'offline')], sum: (p) => '인터넷 ' + (p.state === 'online' ? '연결됨' : '끊김') },
+  location: { label: '위치 (지오펜스)', mono: '위', group: '위치', fields: [{ k: 'lat', l: '위도', t: 'number', d: 37.5665 }, { k: 'lng', l: '경도', t: 'number', d: 126.978 }, { k: 'geo', t: 'geobtn' }, { k: 'radius', l: '반경 (m)', t: 'number', d: 200, min: 20 }, F.state([['enter', '영역에 들어갈 때'], ['exit', '영역을 나갈 때']], 'enter')], sum: (p) => `반경 ${p.radius}m ${p.state === 'enter' ? '진입' : '이탈'} (${Number(p.lat).toFixed(4)}, ${Number(p.lng).toFixed(4)})` },
+  shake: { label: '기기 흔들기', mono: '흔', group: '센서', fields: [{ k: 'sens', l: '민감도', t: 'select', o: [['low', '낮음'], ['mid', '보통'], ['high', '높음']], d: 'mid' }], sum: (p) => '민감도 ' + { low: '낮음', mid: '보통', high: '높음' }[p.sens] },
+  orientation: { label: '화면 방향', mono: '향', group: '센서', fields: [F.state([['portrait', '세로가 될 때'], ['landscape', '가로가 될 때']], 'landscape')], sum: (p) => (p.state === 'portrait' ? '세로' : '가로') + ' 방향으로 바뀜' },
+  visibility: { label: '앱 화면 진입/이탈', mono: '화', group: '기기 이벤트', fields: [F.state([['visible', '앱으로 돌아올 때'], ['hidden', '앱을 벗어날 때']], 'visible')], sum: (p) => (p.state === 'visible' ? '앱으로 돌아옴' : '앱을 벗어남') },
+  startup: { label: '앱 시작', mono: '앱', group: '기기 이벤트', fields: [], sum: () => '앱을 열 때 1회' },
+  manual: { label: '바로가기 (수동 실행)', mono: '수', group: '기타', fields: [], sum: () => '홈 화면 바로가기 버튼' },
+  variable: { label: '변수 값 변경', mono: '변', group: '기타', fields: [F.text('name', '변수 이름', 'counter', { t: 'var' }), { k: 'op', l: '비교', t: 'select', o: OPS, d: 'ge' }, F.text('value', '값', '10')], sum: (p) => `${p.name} ${opText(p.op)} ${p.value}` },
+};
+const ACTIONS = {
+  notify: { label: '알림 표시', mono: '알', group: '알림', fields: [F.text('title', '제목', '오토매크로'), { k: 'text', l: '내용', t: 'textarea', d: '' }], sum: (p) => p.title + ' — ' + p.text },
+  toast: { label: '팝업 메시지', mono: '팝', group: '알림', fields: [{ k: 'text', l: '메시지', t: 'textarea', d: '' }, { k: 'sec', l: '표시 시간 (초)', t: 'number', d: 3, min: 1 }], sum: (p) => p.text },
+  speak: { label: '텍스트 읽기 (TTS)', mono: '말', group: '알림', fields: [{ k: 'text', l: '읽을 문장', t: 'textarea', d: '' }, { k: 'rate', l: '속도', t: 'select', o: [['0.8', '느리게'], ['1', '보통'], ['1.3', '빠르게']], d: '1' }], sum: (p) => '“' + p.text + '”' },
+  vibrate: { label: '진동', mono: '진', group: '알림', fields: [F.text('pattern', '패턴 (ms, 쉼표로 구분)', '300,100,300')], sum: (p) => p.pattern + ' ms' },
+  beep: { label: '소리 재생', mono: '음', group: '알림', fields: [{ k: 'freq', l: '높이 (Hz)', t: 'number', d: 880 }, { k: 'ms', l: '길이 (ms)', t: 'number', d: 400 }, { k: 'times', l: '횟수', t: 'number', d: 2, min: 1 }], sum: (p) => `${p.freq}Hz · ${p.ms}ms × ${p.times}` },
+  http: { label: 'HTTP 요청', mono: '웹', group: '웹', fields: [{ k: 'method', l: '방식', t: 'select', o: [['GET', 'GET'], ['POST', 'POST']], d: 'GET' }, F.text('url', 'URL', 'https://'), { k: 'body', l: 'POST 본문 (선택)', t: 'textarea', d: '' }, F.text('saveTo', '응답 저장 변수 (선택)', '', { t: 'var' })], sum: (p) => p.method + ' ' + p.url },
+  open_url: { label: '웹사이트 열기', mono: '링', group: '웹', fields: [F.text('url', 'URL', 'https://')], sum: (p) => p.url },
+  set_var: { label: '변수 설정', mono: '변', group: '변수', fields: [F.text('name', '변수 이름', 'counter', { t: 'var' }), { k: 'op', l: '동작', t: 'select', o: [['set', '값으로 설정'], ['add', '더하기'], ['sub', '빼기'], ['append', '글자 이어붙이기'], ['toggle', '참/거짓 전환']], d: 'set' }, F.text('value', '값', '1')], sum: (p) => `${p.name} ${{ set: '=', add: '+=', sub: '-=', append: '+=', toggle: '전환' }[p.op]} ${p.op === 'toggle' ? '' : p.value}` },
+  if: { label: 'If (조건 시작)', mono: 'If', group: '조건·흐름', fields: [F.text('name', '변수 이름', 'counter', { t: 'var' }), { k: 'op', l: '비교', t: 'select', o: OPS, d: 'ge' }, F.text('value', '값', '10')], sum: (p) => `만약 ${p.name} ${opText(p.op)} ${p.value}` },
+  else: { label: 'Else (아니면)', mono: '외', group: '조건·흐름', fields: [], sum: () => '아니면' },
+  end_if: { label: 'End If (조건 끝)', mono: '끝', group: '조건·흐름', fields: [], sum: () => '조건 끝' },
+  wait: { label: '대기', mono: '대', group: '조건·흐름', fields: [{ k: 'sec', l: '대기 시간 (초)', t: 'number', d: 5, min: 0 }], sum: (p) => p.sec + '초 대기' },
+  run_macro: { label: '다른 매크로 실행', mono: '실', group: '매크로', fields: [{ k: 'id', l: '매크로', t: 'macro', d: '' }, { k: 'ignore', l: '제약 조건', t: 'select', o: [['yes', '무시하고 실행'], ['no', '확인 후 실행']], d: 'yes' }], sum: (p, s) => macroName(s, p.id) },
+  enable_macro: { label: '매크로 켜기/끄기', mono: '켜', group: '매크로', fields: [{ k: 'id', l: '매크로', t: 'macro', d: '' }, { k: 'mode', l: '동작', t: 'select', o: [['on', '켜기'], ['off', '끄기'], ['toggle', '전환']], d: 'toggle' }], sum: (p, s) => macroName(s, p.id) + ' ' + { on: '켜기', off: '끄기', toggle: '전환' }[p.mode] },
+  stop: { label: '매크로 중단', mono: '중', group: '매크로', fields: [], sum: () => '여기서 실행을 멈춤' },
+  copy: { label: '클립보드에 복사', mono: '복', group: '기기', fields: [{ k: 'text', l: '복사할 내용', t: 'textarea', d: '' }], sum: (p) => p.text },
+  share: { label: '공유하기', mono: '공', group: '기기', fields: [{ k: 'text', l: '공유할 내용', t: 'textarea', d: '' }], sum: (p) => p.text },
+  wake_lock: { label: '화면 켜짐 유지', mono: '켬', group: '기기', fields: [F.state([['on', '켜짐 유지'], ['off', '해제']], 'on')], sum: (p) => (p.state === 'on' ? '켜짐 유지' : '해제') },
+  log: { label: '로그 기록', mono: '록', group: '기기', fields: [{ k: 'text', l: '기록할 내용', t: 'textarea', d: '' }], sum: (p) => p.text },
+};
+const CONSTRAINTS = {
+  time_between: { label: '시간대', mono: '시', group: '날짜·시간', fields: [{ k: 'from', l: '시작', t: 'time', d: '09:00' }, { k: 'to', l: '끝', t: 'time', d: '18:00' }], sum: (p) => p.from + ' ~ ' + p.to },
+  weekday: { label: '요일', mono: '요', group: '날짜·시간', fields: [{ k: 'days', l: '요일', t: 'days', d: [1, 2, 3, 4, 5] }], sum: (p) => daysText(p.days) },
+  battery_c: { label: '배터리 잔량', mono: '배', group: '배터리·전원', fields: [{ k: 'op', l: '조건', t: 'select', o: [['above', '이상'], ['below', '이하']], d: 'above' }, { k: 'level', l: '잔량 (%)', t: 'number', d: 30 }], sum: (p) => p.level + '% ' + (p.op === 'above' ? '이상' : '이하') },
+  charging_c: { label: '충전 상태', mono: '전', group: '배터리·전원', fields: [F.state([['charging', '충전 중'], ['not', '충전 안 함']], 'charging')], sum: (p) => (p.state === 'charging' ? '충전 중' : '충전 안 함') },
+  network_c: { label: '인터넷 상태', mono: '망', group: '연결', fields: [F.state([['online', '연결됨'], ['offline', '끊김']], 'online')], sum: (p) => '인터넷 ' + (p.state === 'online' ? '연결됨' : '끊김') },
+  orient_c: { label: '화면 방향', mono: '향', group: '센서', fields: [F.state([['portrait', '세로'], ['landscape', '가로']], 'portrait')], sum: (p) => (p.state === 'portrait' ? '세로' : '가로') },
+  var_c: { label: '변수 값', mono: '변', group: '변수', fields: [F.text('name', '변수 이름', 'counter', { t: 'var' }), { k: 'op', l: '비교', t: 'select', o: OPS, d: 'eq' }, F.text('value', '값', '0')], sum: (p) => `${p.name} ${opText(p.op)} ${p.value}` },
+};
+const KINDS = {
+  trigger: { title: '트리거', cat: TRIGGERS, key: 'triggers', q: '언제 실행할까요?' },
+  action: { title: '액션', cat: ACTIONS, key: 'actions', q: '무엇을 할까요?' },
+  constraint: { title: '제약 조건', cat: CONSTRAINTS, key: 'constraints', q: '어떤 조건일 때만?' },
+};
+function macroName(s, id) { const m = s && s.macros.find((x) => x.id === id); return m ? m.name : '(매크로 선택 안 됨)'; }
+function defaults(def) { const p = {}; def.fields.forEach((f) => { if (f.k && f.t !== 'geobtn') p[f.k] = clone(f.d === undefined ? '' : f.d); }); return p; }
+function mk(type, params, kind) { const def = KINDS[kind].cat[type]; return { id: uid(), type, params: Object.assign(defaults(def), params || {}) }; }
+function summary(kind, it, s) { const def = KINDS[kind].cat[it.type]; if (!def) return it.type; try { return def.sum(it.params, s); } catch (e) { return def.label; } }
+
+/* ---------------- 템플릿 ---------------- */
+const TEMPLATES = [
+  { name: '배터리 부족 경고', category: '배터리', desc: '배터리가 20% 이하로 떨어지면 알림과 음성으로 알려줍니다.',
+    t: [['battery', { op: 'below', level: 20 }]], a: [['notify', { title: '배터리 부족', text: '배터리가 {battery}% 남았습니다. 충전해 주세요.' }], ['speak', { text: '배터리가 {battery}퍼센트 남았습니다.' }]], c: [['charging_c', { state: 'not' }]] },
+  { name: '충전 시작 알림', category: '배터리', desc: '충전기를 연결하면 현재 잔량을 팝업으로 보여줍니다.',
+    t: [['power', { state: 'connected' }]], a: [['toast', { text: '충전 시작 · 현재 {battery}%', sec: 3 }], ['beep', { freq: 660, ms: 150, times: 1 }]], c: [] },
+  { name: '아침 브리핑', category: '일상', desc: '평일 07:30에 날짜와 인사를 읽어줍니다.',
+    t: [['time', { time: '07:30', days: [1, 2, 3, 4, 5] }]], a: [['speak', { text: '좋은 아침입니다. 오늘은 {date} {weekday}입니다.' }], ['notify', { title: '아침 브리핑', text: '{date} {weekday} · 배터리 {battery}%' }]], c: [] },
+  { name: '흔들어서 시간 듣기', category: '일상', desc: '기기를 흔들면 현재 시각을 읽어줍니다.',
+    t: [['shake', { sens: 'mid' }]], a: [['speak', { text: '지금은 {time}입니다.' }]], c: [] },
+  { name: '물 마시기 알림', category: '건강', desc: '평일 업무 시간에 1시간마다 물 마시기를 알려줍니다.',
+    t: [['interval', { every: 60, unit: 'm' }]], a: [['notify', { title: '물 마실 시간', text: '{time} · 물 한 잔 드세요.' }], ['vibrate', { pattern: '200,100,200' }]], c: [['time_between', { from: '09:00', to: '18:00' }], ['weekday', { days: [1, 2, 3, 4, 5] }]] },
+  { name: '인터넷 끊김 경고', category: '연결', desc: '인터넷이 끊기면 진동과 팝업으로 알려줍니다.',
+    t: [['network', { state: 'offline' }]], a: [['vibrate', { pattern: '500' }], ['toast', { text: '인터넷 연결이 끊겼습니다.', sec: 4 }]], c: [] },
+  { name: '뽀모도로 25분', category: '집중', desc: '바로가기를 누르면 25분 집중 후 휴식을 알려줍니다.',
+    t: [['manual', {}]], a: [['set_var', { name: 'pomodoro', op: 'add', value: '1' }], ['notify', { title: '집중 시작', text: '{v=pomodoro}번째 뽀모도로 · 25분' }], ['wait', { sec: 1500 }], ['beep', { freq: 880, ms: 400, times: 3 }], ['notify', { title: '휴식 시간', text: '5분 쉬세요.' }]], c: [] },
+  { name: '실행 횟수 카운터', category: '예제', desc: '실행할 때마다 counter를 1 올리고, 5회가 되면 축하 후 0으로 되돌립니다. If/Else 예제입니다.',
+    t: [['manual', {}]], a: [['set_var', { name: 'counter', op: 'add', value: '1' }], ['if', { name: 'counter', op: 'ge', value: '5' }], ['toast', { text: '5회 달성! 카운터를 초기화합니다.', sec: 3 }], ['set_var', { name: 'counter', op: 'set', value: '0' }], ['else', {}], ['toast', { text: '현재 {v=counter}회', sec: 2 }], ['end_if', {}]], c: [] },
+  { name: '회사 도착', category: '위치', desc: '지정한 위치 반경 200m에 들어가면 알려줍니다. 위치는 편집에서 바꾸세요.',
+    t: [['location', { lat: 37.5665, lng: 126.978, radius: 200, state: 'enter' }]], a: [['notify', { title: '도착', text: '{time} 회사에 도착했습니다.' }]], c: [] },
+];
+function fromTemplate(tp) {
+  return { id: uid(), name: tp.name, category: tp.category, enabled: true, lastRun: null,
+    triggers: tp.t.map(([ty, p]) => mk(ty, p, 'trigger')), actions: tp.a.map(([ty, p]) => mk(ty, p, 'action')), constraints: tp.c.map(([ty, p]) => mk(ty, p, 'constraint')) };
+}
+function seed() {
+  const m = [TEMPLATES[7], TEMPLATES[0], TEMPLATES[2], TEMPLATES[3]].map(fromTemplate);
+  m.forEach((x) => { x.category = '예시'; });
+  return { macros: m, vars: { counter: '0', pomodoro: '0' }, log: [{ t: Date.now(), lv: 'info', msg: '예시 매크로 4개를 불러왔습니다.' }] };
+}
+function loadState() {
+  try { const s = localStorage.getItem(LS_KEY); if (s) { const j = JSON.parse(s); if (j && Array.isArray(j.macros)) return Object.assign({ vars: {}, log: [] }, j); } } catch (e) {}
+  return seed();
+}
+function saveState(s) { try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) {} }
+
+/* ---------------- 실행 엔진 ---------------- */
+class Engine {
+  constructor(api) {
+    this.api = api; // { get, update, toast, sensors }
+    this.s = { battery: null, charging: null, online: navigator.onLine, orientation: this.orient(), geo: null };
+    this.fired = new Set(); this.lastInt = {}; this.geoPrev = {}; this.lastShake = 0; this.running = 0;
+    this.watchId = null; this.wake = null; this.audio = null; this.started = false;
+  }
+  orient() { try { return matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape'; } catch (e) { return 'portrait'; } }
+  push() { this.api.sensors(Object.assign({ running: this.running }, this.s)); }
+  log(lv, msg) {
+    this.api.update((st) => Object.assign({}, st, { log: [{ t: Date.now(), lv, msg }].concat(st.log).slice(0, 300) }));
+  }
+  start() {
+    if (this.started) return; this.started = true;
+    if (navigator.getBattery) {
+      navigator.getBattery().then((b) => {
+        const read = () => { this.s.battery = Math.round(b.level * 100); this.s.charging = b.charging; this.push(); };
+        read();
+        b.addEventListener('levelchange', () => {
+          const prev = this.s.battery; read(); const cur = this.s.battery;
+          this.emit('battery', (p) => (p.op === 'below' ? prev > p.level && cur <= p.level : prev < p.level && cur >= p.level), '배터리 ' + cur + '%');
+        });
+        b.addEventListener('chargingchange', () => {
+          read(); const st = b.charging ? 'connected' : 'disconnected';
+          this.emit('power', (p) => p.state === st, b.charging ? '충전기 연결' : '충전기 해제');
+        });
+      }).catch(() => {});
+    }
+    addEventListener('online', () => { this.s.online = true; this.push(); this.emit('network', (p) => p.state === 'online', '인터넷 연결됨'); });
+    addEventListener('offline', () => { this.s.online = false; this.push(); this.emit('network', (p) => p.state === 'offline', '인터넷 끊김'); });
+    document.addEventListener('visibilitychange', () => {
+      const st = document.hidden ? 'hidden' : 'visible';
+      this.emit('visibility', (p) => p.state === st, st === 'visible' ? '앱으로 돌아옴' : '앱을 벗어남');
+    });
+    try {
+      matchMedia('(orientation: portrait)').addEventListener('change', () => {
+        this.s.orientation = this.orient(); this.push();
+        this.emit('orientation', (p) => p.state === this.s.orientation, '화면 ' + (this.s.orientation === 'portrait' ? '세로' : '가로'));
+      });
+    } catch (e) {}
+    addEventListener('devicemotion', (e) => {
+      const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+      const g = Math.abs(Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z) - 9.81);
+      const now = Date.now(); if (now - this.lastShake < 1500) return;
+      const lv = g > 25 ? 'low' : g > 18 ? 'mid' : g > 12 ? 'high' : null; if (!lv) return;
+      this.lastShake = now;
+      const rank = { high: 1, mid: 2, low: 3 };
+      this.emit('shake', (p) => rank[lv] >= rank[p.sens], '흔들기 감지');
+    });
+    this.timer = setInterval(() => this.tick(), 1000);
+    this.push();
+    this.emit('startup', () => true, '앱 시작');
+  }
+  enabledTriggers(type) {
+    const out = [];
+    this.api.get().macros.forEach((m) => { if (m.enabled) m.triggers.forEach((t) => { if (t.type === type) out.push([m, t]); }); });
+    return out;
+  }
+  emit(type, match, label, depth) {
+    this.enabledTriggers(type).forEach(([m, t]) => { if (match(t.params, t)) this.fire(m.id, label || TRIGGERS[type].label, depth || 0); });
+  }
+  tick() {
+    const now = new Date(), key = ymd(now) + ' ' + hhmm(now);
+    this.enabledTriggers('time').forEach(([m, t]) => {
+      const k = m.id + t.id + key;
+      if (t.params.time === hhmm(now) && (t.params.days || []).includes(now.getDay()) && !this.fired.has(k)) { this.fired.add(k); this.fire(m.id, '시각 ' + t.params.time); }
+    });
+    const ints = this.enabledTriggers('interval'); const live = new Set();
+    ints.forEach(([m, t]) => {
+      live.add(t.id);
+      const per = Math.max(1, Number(t.params.every) || 1) * UNIT[t.params.unit || 'm'][1];
+      if (this.lastInt[t.id] === undefined) this.lastInt[t.id] = now.getTime();
+      else if (now.getTime() - this.lastInt[t.id] >= per) { this.lastInt[t.id] = now.getTime(); this.fire(m.id, summary('trigger', t)); }
+    });
+    Object.keys(this.lastInt).forEach((k) => { if (!live.has(k)) delete this.lastInt[k]; });
+    const needGeo = this.enabledTriggers('location').length > 0;
+    if (needGeo && this.watchId === null && navigator.geolocation) {
+      this.watchId = navigator.geolocation.watchPosition((pos) => this.onGeo(pos), (err) => {
+        this.log('err', '위치를 읽을 수 없습니다: ' + (err.message || err.code)); this.stopGeo(true);
+      }, { enableHighAccuracy: true, maximumAge: 15000 });
+    } else if (!needGeo && this.watchId !== null) this.stopGeo();
+    if (this.fired.size > 500) this.fired.clear();
+  }
+  stopGeo(failed) { if (this.watchId !== null && this.watchId !== -1) navigator.geolocation.clearWatch(this.watchId); this.watchId = failed ? -1 : null; }
+  onGeo(pos) {
+    const { latitude: la, longitude: lo } = pos.coords; this.s.geo = [la, lo]; this.push();
+    this.enabledTriggers('location').forEach(([m, t]) => {
+      const p = t.params, inside = dist(la, lo, Number(p.lat), Number(p.lng)) <= Number(p.radius);
+      const prev = this.geoPrev[t.id]; this.geoPrev[t.id] = inside;
+      if (prev !== undefined && prev !== inside && ((inside && p.state === 'enter') || (!inside && p.state === 'exit'))) this.fire(m.id, inside ? '영역 진입' : '영역 이탈');
+    });
+  }
+  checkConstraints(m) {
+    const now = new Date(), s = this.s, vars = this.api.get().vars;
+    for (const c of m.constraints) {
+      const p = c.params; let ok = true;
+      switch (c.type) {
+        case 'time_between': { const n = now.getHours() * 60 + now.getMinutes(), a = toMin(p.from), b = toMin(p.to); ok = a <= b ? n >= a && n < b : n >= a || n < b; break; }
+        case 'weekday': ok = (p.days || []).includes(now.getDay()); break;
+        case 'battery_c': ok = s.battery !== null && (p.op === 'above' ? s.battery >= Number(p.level) : s.battery <= Number(p.level)); break;
+        case 'charging_c': ok = s.charging !== null && (p.state === 'charging') === s.charging; break;
+        case 'network_c': ok = (p.state === 'online') === navigator.onLine; break;
+        case 'orient_c': ok = this.orient() === p.state; break;
+        case 'var_c': ok = cmp(vars[p.name], p.op, p.value); break;
+      }
+      if (!ok) return CONSTRAINTS[c.type].label + ' (' + summary('constraint', c) + ')';
+    }
+    return null;
+  }
+  fire(id, label, depth) {
+    const m = this.api.get().macros.find((x) => x.id === id); if (!m || !m.enabled) return;
+    const fail = this.checkConstraints(m);
+    if (fail) { this.log('skip', `「${m.name}」 건너뜀 · 조건 불충족: ${fail}`); return; }
+    this.run(m, { label, depth: depth || 0 });
+  }
+  fmt(str, ctx) {
+    const d = new Date(), s = this.s, vars = this.api.get().vars;
+    return String(str ?? '').replace(/\{(\w+)(?:=([^}]+))?\}/g, (all, k, v) => {
+      switch (k) {
+        case 'time': return hhmm(d); case 'date': return ymd(d);
+        case 'weekday': return DAYS[d.getDay()] + '요일';
+        case 'battery': return s.battery === null ? '?' : String(s.battery);
+        case 'charging': return s.charging ? '충전 중' : '충전 안 함';
+        case 'online': return navigator.onLine ? '연결됨' : '끊김';
+        case 'macro': return ctx && ctx.macro ? ctx.macro : '';
+        case 'trigger': return ctx && ctx.label ? ctx.label : '';
+        case 'v': return v in vars ? String(vars[v]) : '';
+      }
+      return all;
+    });
+  }
+  setVar(name, op, value, depth) {
+    if (!name) return;
+    let next;
+    this.api.update((st) => {
+      const cur = st.vars[name];
+      switch (op) {
+        case 'add': next = String((Number(cur) || 0) + (Number(value) || 0)); break;
+        case 'sub': next = String((Number(cur) || 0) - (Number(value) || 0)); break;
+        case 'append': next = String(cur ?? '') + value; break;
+        case 'toggle': next = String(!(cur === true || cur === 'true' || cur === '1')); break;
+        default: next = String(value);
+      }
+      return Object.assign({}, st, { vars: Object.assign({}, st.vars, { [name]: next }) });
+    });
+    if (depth < 6) this.emit('variable', (p) => p.name === name && cmp(next, p.op, p.value), `변수 ${name} = ${next}`, depth + 1);
+  }
+  sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+  async beep(freq, ms, times) {
+    try {
+      this.audio = this.audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (this.audio.state === 'suspended') await this.audio.resume();
+      for (let i = 0; i < times; i++) {
+        const o = this.audio.createOscillator(), g = this.audio.createGain();
+        o.frequency.value = freq; o.type = 'sine'; g.gain.value = 0.15;
+        o.connect(g); g.connect(this.audio.destination); o.start(); await this.sleep(ms); o.stop(); await this.sleep(120);
+      }
+    } catch (e) { this.log('err', '소리를 재생할 수 없습니다.'); }
+  }
+  speak(text, rate) {
+    return new Promise((res) => {
+      if (!('speechSynthesis' in window)) { this.log('err', '이 브라우저는 음성 읽기를 지원하지 않습니다.'); return res(); }
+      const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; u.rate = Number(rate) || 1;
+      const done = () => { clearTimeout(t); res(); }; const t = setTimeout(res, 30000);
+      u.onend = done; u.onerror = done; speechSynthesis.speak(u);
+    });
+  }
+  async run(m, ctx) {
+    ctx = Object.assign({ macro: m.name, label: '', depth: 0 }, ctx);
+    if (ctx.depth > 6) { this.log('err', `「${m.name}」 중첩 실행이 너무 깊어 중단했습니다.`); return; }
+    const acts = m.actions, jump = {}, stack = [];
+    acts.forEach((a, i) => {
+      if (a.type === 'if') stack.push({ i, e: null });
+      else if (a.type === 'else' && stack.length) stack[stack.length - 1].e = i;
+      else if (a.type === 'end_if' && stack.length) { const b = stack.pop(); jump[b.i] = { e: b.e, end: i }; if (b.e !== null) jump[b.e] = { end: i }; }
+    });
+    this.running++; this.push();
+    this.log('run', `「${m.name}」 실행${ctx.test ? ' (테스트)' : ''}${ctx.label ? ' · 트리거: ' + ctx.label : ''}`);
+    this.api.update((st) => Object.assign({}, st, { macros: st.macros.map((x) => (x.id === m.id ? Object.assign({}, x, { lastRun: Date.now() }) : x)) }));
+    let i = 0;
+    try {
+      while (i < acts.length) {
+        const a = acts[i], p = a.params, f = (v) => this.fmt(v, ctx);
+        switch (a.type) {
+          case 'notify': {
+            const title = f(p.title), body = f(p.text); let shown = false;
+            try { if ('Notification' in window && Notification.permission === 'granted') { new Notification(title, { body }); shown = true; } } catch (e) {}
+            if (!shown) this.api.toast(body, title, 5);
+            break;
+          }
+          case 'toast': this.api.toast(f(p.text), null, Number(p.sec) || 3); break;
+          case 'speak': await this.speak(f(p.text), p.rate); break;
+          case 'vibrate': {
+            const pat = String(p.pattern).split(',').map((x) => Number(x.trim())).filter((x) => !isNaN(x));
+            if (!(navigator.vibrate && navigator.vibrate(pat))) this.log('info', '이 기기는 진동을 지원하지 않습니다.');
+            break;
+          }
+          case 'beep': await this.beep(Number(p.freq) || 880, Number(p.ms) || 300, Math.min(10, Number(p.times) || 1)); break;
+          case 'http': {
+            const url = f(p.url);
+            try {
+              const r = await fetch(url, { method: p.method, body: p.method === 'POST' ? f(p.body) : undefined, headers: p.method === 'POST' ? { 'Content-Type': 'application/json' } : undefined });
+              const txt = (await r.text()).slice(0, 2000);
+              this.log('ok', `HTTP ${r.status} · ${url}`);
+              if (p.saveTo) this.setVar(p.saveTo, 'set', txt, ctx.depth);
+            } catch (e) { this.log('err', 'HTTP 요청 실패: ' + url); }
+            break;
+          }
+          case 'open_url': { const url = f(p.url); let w = null; try { w = window.open(url, '_blank'); } catch (e) {} if (!w) this.api.toast(url, '이 주소를 열어 주세요', 6); break; }
+          case 'set_var': this.setVar(p.name, p.op, f(p.value), ctx.depth); break;
+          case 'if': {
+            const ok = cmp(this.api.get().vars[p.name], p.op, f(p.value)), j = jump[i];
+            if (!ok && j) { i = (j.e !== null ? j.e : j.end) + 1; continue; }
+            break;
+          }
+          case 'else': { const j = jump[i]; if (j) { i = j.end + 1; continue; } break; }
+          case 'end_if': break;
+          case 'wait': await this.sleep(Math.max(0, Number(p.sec) || 0) * 1000); break;
+          case 'run_macro': {
+            const t = this.api.get().macros.find((x) => x.id === p.id);
+            if (!t) { this.log('err', '실행할 매크로를 찾을 수 없습니다.'); break; }
+            if (p.ignore === 'no') { const fail = this.checkConstraints(t); if (fail) { this.log('skip', `「${t.name}」 건너뜀 · ${fail}`); break; } }
+            await this.run(t, { label: '「' + m.name + '」에서 호출', depth: ctx.depth + 1 });
+            break;
+          }
+          case 'enable_macro':
+            this.api.update((st) => Object.assign({}, st, { macros: st.macros.map((x) => (x.id === p.id ? Object.assign({}, x, { enabled: p.mode === 'on' ? true : p.mode === 'off' ? false : !x.enabled }) : x)) }));
+            break;
+          case 'stop': this.log('info', `「${m.name}」 중단 액션으로 종료`); i = acts.length; continue;
+          case 'copy': try { await navigator.clipboard.writeText(f(p.text)); } catch (e) { this.log('err', '클립보드에 복사하지 못했습니다. 화면을 한 번 누른 뒤 다시 시도하세요.'); } break;
+          case 'share': try { await navigator.share({ text: f(p.text) }); } catch (e) { this.log('err', '공유 창을 열 수 없습니다.'); } break;
+          case 'wake_lock':
+            try {
+              if (p.state === 'on') { this.wake = await navigator.wakeLock.request('screen'); }
+              else if (this.wake) { await this.wake.release(); this.wake = null; }
+            } catch (e) { this.log('err', '화면 켜짐 유지를 사용할 수 없습니다.'); }
+            break;
+          case 'log': this.log('info', f(p.text)); break;
+        }
+        i++;
+      }
+      this.log('ok', `「${m.name}」 완료`);
+    } catch (e) { this.log('err', `「${m.name}」 오류: ${e.message}`); }
+    finally { this.running--; this.push(); }
+  }
+}
+
+/* ---------------- UI 조각 ---------------- */
+function Switch({ on, onChange, label }) {
+  return html`<button type="button" role="switch" aria-checked=${on} aria-label=${label} class=${'sw' + (on ? ' on' : '')}
+    onClick=${(e) => { e.stopPropagation(); onChange(!on); }}><span></span></button>`;
+}
+function Mono({ kind, def, off }) {
+  return html`<span class=${'mono ' + (off ? 'k-off' : 'k-' + kind)} aria-hidden="true">${def ? def.mono : '?'}</span>`;
+}
+function Sheet({ onClose, children }) {
+  useEffect(() => { const k = (e) => { if (e.key === 'Escape') onClose(); }; addEventListener('keydown', k); return () => removeEventListener('keydown', k); }, []);
+  return html`<div class="overlay" onClick=${onClose}><div class="sheet" role="dialog" aria-modal="true" onClick=${(e) => e.stopPropagation()}><div class="grab"></div>${children}</div></div>`;
+}
+function ConfirmBtn({ label, armedLabel, onConfirm, cls }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t); }, [armed]);
+  return html`<button type="button" class=${'btn danger ' + (cls || '') + (armed ? ' armed' : '')} onClick=${() => (armed ? onConfirm() : setArmed(true))}>${armed ? armedLabel : label}</button>`;
+}
+function timeAgo(t) {
+  if (!t) return '실행 기록 없음';
+  const s = Math.floor((Date.now() - t) / 1000);
+  if (s < 60) return '방금 실행'; if (s < 3600) return Math.floor(s / 60) + '분 전 실행';
+  if (s < 86400) return Math.floor(s / 3600) + '시간 전 실행'; return Math.floor(s / 86400) + '일 전 실행';
+}
+
+/* ---------------- 화면: 홈 ---------------- */
+function Home({ st, sensors, go, engine, onNew }) {
+  const enabled = st.macros.filter((m) => m.enabled).length;
+  const shortcuts = st.macros.filter((m) => m.enabled && m.triggers.some((t) => t.type === 'manual'));
+  const tiles = [
+    ['매크로 추가', '트리거·액션 만들기', 'var(--trig)', onNew],
+    ['매크로', st.macros.length + '개', 'var(--act)', () => go('macros')],
+    ['템플릿', TEMPLATES.length + '개 준비됨', 'var(--cons)', () => go('templates')],
+    ['변수', Object.keys(st.vars).length + '개', 'var(--warn)', () => go('vars')],
+    ['시스템 로그', st.log.length + '줄', 'var(--muted)', () => go('log')],
+    ['설정', '권한·백업', 'var(--line)', () => go('settings')],
+  ];
+  return html`
+    <section class="card status" aria-label="엔진 상태">
+      <div class="engine"><span class=${'dot' + (enabled ? '' : ' idle')}></span>
+        <div class="grow"><div style=${{ fontWeight: 600 }}>${enabled ? '매크로 엔진 작동 중' : '켜진 매크로 없음'}</div>
+        <div class="small muted">켜진 매크로 ${enabled}개 / 전체 ${st.macros.length}개${sensors.running ? ' · 지금 실행 중 ' + sensors.running + '개' : ''}</div></div>
+      </div>
+      <div class="stat"><div class="l">배터리</div><div class="v num">${sensors.battery === null ? '–' : sensors.battery + '%'}</div><div class="small muted">${sensors.charging === null ? '정보 없음' : sensors.charging ? '충전 중' : '충전 안 함'}</div></div>
+      <div class="stat"><div class="l">인터넷</div><div class="v">${sensors.online ? '연결됨' : '끊김'}</div><div class="small muted">화면 ${sensors.orientation === 'portrait' ? '세로' : '가로'}</div></div>
+    </section>
+    <section class="tiles" aria-label="메뉴">
+      ${tiles.map(([l, s, c, fn]) => html`<button key=${l} type="button" class="tile" onClick=${fn}><span class="tile-bar" style=${{ background: c }}></span><span><div class="tl">${l}</div><div class="ts">${s}</div></span></button>`)}
+    </section>
+    <section style=${{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div class="sec-h"><h2>바로가기</h2><span class="small muted">수동 실행 트리거</span></div>
+      <div class="card list">
+        ${shortcuts.length ? shortcuts.map((m) => html`<div key=${m.id} class="row"><${Mono} kind="trigger" def=${TRIGGERS.manual} />
+          <div class="grow"><div class="t">${m.name}</div><div class="s">${timeAgo(m.lastRun)}</div></div>
+          <button type="button" class="btn primary sm" onClick=${() => engine.fire(m.id, '바로가기')}>실행</button></div>`)
+          : html`<div class="empty">‘바로가기 (수동 실행)’ 트리거를 넣은 매크로가 여기에 버튼으로 나타납니다.</div>`}
+      </div>
+    </section>
+    <section style=${{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div class="sec-h"><h2>최근 기록</h2><button type="button" class="icon-btn" onClick=${() => go('log')}>전체 보기</button></div>
+      <div class="card list log">${st.log.slice(0, 4).map((l, i) => html`<${LogRow} key=${i} l=${l} />`)}${!st.log.length && html`<div class="empty">아직 기록이 없습니다.</div>`}</div>
+    </section>
+    <p class="notice">이 앱은 브라우저에서 동작합니다. 화면이 열려 있는 동안 트리거를 감지하고, 배터리·진동·위치·흔들기처럼 기기 기능을 쓰는 항목은 브라우저가 허용할 때만 작동합니다.</p>`;
+}
+
+/* ---------------- 화면: 매크로 목록 ---------------- */
+function MacroList({ st, onOpen, onToggle, onNew }) {
+  const [q, setQ] = useState('');
+  const list = st.macros.filter((m) => !q || (m.name + m.category).toLowerCase().includes(q.toLowerCase()));
+  const cats = [...new Set(list.map((m) => m.category || '미분류'))];
+  return html`
+    <div class="search"><input id="macro-search" class="inp" placeholder="매크로 검색" value=${q} onInput=${(e) => setQ(e.target.value)} /><button type="button" class="btn primary" onClick=${onNew}>추가</button></div>
+    <div class="card list">
+      ${cats.map((c) => html`<${React.Fragment} key=${c}><div class="cat-h">${c}</div>
+        ${list.filter((m) => (m.category || '미분류') === c).map((m) => html`
+          <div key=${m.id} class="row" role="button" tabIndex="0" style=${{ cursor: 'pointer' }} onClick=${() => onOpen(m.id)} onKeyDown=${(e) => e.key === 'Enter' && onOpen(m.id)}>
+            <${Mono} kind="trigger" def=${TRIGGERS[(m.triggers[0] || {}).type]} off=${!m.enabled} />
+            <div class="grow"><div class="t">${m.name}</div>
+              <div class="s">${m.triggers.length ? summary('trigger', m.triggers[0], st) : '트리거 없음'}${m.triggers.length > 1 ? ' 외 ' + (m.triggers.length - 1) : ''} · 액션 ${m.actions.length}개${m.constraints.length ? ' · 조건 ' + m.constraints.length + '개' : ''}</div></div>
+            <${Switch} on=${m.enabled} label=${m.name + ' 켜기'} onChange=${(v) => onToggle(m.id, v)} />
+          </div>`)}<//>`)}
+      ${!list.length && html`<div class="empty">${q ? '검색 결과가 없습니다.' : '매크로가 없습니다. 추가 버튼이나 템플릿으로 시작하세요.'}</div>`}
+    </div>`;
+}
+
+/* ---------------- 화면: 매크로 편집 ---------------- */
+function Field({ f, value, set, st, params, setParams }) {
+  const id = 'f-' + f.k;
+  switch (f.t) {
+    case 'textarea':
+      return html`<div class="field"><label for=${id}>${f.l}</label><textarea id=${id} class="inp" value=${value} onInput=${(e) => set(e.target.value)}></textarea>
+        <div class="hint">매직 텍스트: {time} {date} {weekday} {battery} {charging} {online} {macro} {trigger} {v=변수이름}</div></div>`;
+    case 'select':
+      return html`<div class="field"><label for=${id}>${f.l}</label><select id=${id} class="inp" value=${value} onChange=${(e) => set(e.target.value)}>${f.o.map(([v, l]) => html`<option key=${v} value=${v}>${l}</option>`)}</select></div>`;
+    case 'number':
+      return html`<div class="field"><label for=${id}>${f.l}</label><input id=${id} class="inp num" type="number" inputMode="decimal" step="any" min=${f.min} max=${f.max} value=${value} onInput=${(e) => set(e.target.value === '' ? '' : Number(e.target.value))} /></div>`;
+    case 'time':
+      return html`<div class="field"><label for=${id}>${f.l}</label><input id=${id} class="inp num" type="time" value=${value} onInput=${(e) => set(e.target.value)} /></div>`;
+    case 'days':
+      return html`<div class="field"><span class="lab">${f.l}</span><div class="days">${DAYS.map((d, i) => html`<button key=${i} type="button" class=${'chip' + ((value || []).includes(i) ? ' on' : '')} aria-pressed=${(value || []).includes(i)}
+          onClick=${() => set((value || []).includes(i) ? value.filter((x) => x !== i) : (value || []).concat(i))}>${d}</button>`)}</div></div>`;
+    case 'macro':
+      return html`<div class="field"><label for=${id}>${f.l}</label><select id=${id} class="inp" value=${value} onChange=${(e) => set(e.target.value)}>
+        <option value="">선택하세요</option>${st.macros.map((m) => html`<option key=${m.id} value=${m.id}>${m.name}</option>`)}</select></div>`;
+    case 'var':
+      return html`<div class="field"><label for=${id}>${f.l}</label><input id=${id} class="inp" list="var-names" value=${value} onInput=${(e) => set(e.target.value.trim())} />
+        <datalist id="var-names">${Object.keys(st.vars).map((v) => html`<option key=${v} value=${v}></option>`)}</datalist></div>`;
+    case 'geobtn':
+      return html`<${GeoButton} onPick=${(la, lo) => setParams(Object.assign({}, params, { lat: Number(la.toFixed(6)), lng: Number(lo.toFixed(6)) }))} />`;
+    default:
+      return html`<div class="field"><label for=${id}>${f.l}</label><input id=${id} class="inp" value=${value} onInput=${(e) => set(e.target.value)} /></div>`;
+  }
+}
+function GeoButton({ onPick }) {
+  const [msg, setMsg] = useState('');
+  const get = () => {
+    if (!navigator.geolocation) return setMsg('이 브라우저는 위치를 지원하지 않습니다.');
+    setMsg('위치를 찾는 중…');
+    navigator.geolocation.getCurrentPosition((p) => { onPick(p.coords.latitude, p.coords.longitude); setMsg('현재 위치를 넣었습니다.'); }, () => setMsg('위치 권한이 없어 직접 입력해야 합니다.'), { enableHighAccuracy: true, timeout: 10000 });
+  };
+  return html`<div class="field"><button type="button" class="btn sm" onClick=${get}>현재 위치로 채우기</button>${msg && html`<div class="hint">${msg}</div>`}</div>`;
+}
+function ItemForm({ kind, item, st, onSave, onCancel }) {
+  const def = KINDS[kind].cat[item.type];
+  const [params, setParams] = useState(clone(item.params));
+  return html`<${Sheet} onClose=${onCancel}>
+    <div style=${{ display: 'flex', alignItems: 'center', gap: '10px' }}><${Mono} kind=${kind} def=${def} /><h3>${def.label}</h3></div>
+    ${def.fields.length ? def.fields.map((f) => html`<${Field} key=${f.k} f=${f} value=${params[f.k]} st=${st} params=${params} setParams=${setParams} set=${(v) => setParams(Object.assign({}, params, { [f.k]: v }))} />`)
+      : html`<p class="muted small" style=${{ margin: 0 }}>설정할 항목이 없습니다.</p>`}
+    <div class="btns" style=${{ justifyContent: 'flex-end' }}><button type="button" class="btn" onClick=${onCancel}>취소</button><button type="button" class="btn primary" onClick=${() => onSave(Object.assign({}, item, { params }))}>확인</button></div>
+  <//>`;
+}
+function Picker({ kind, onPick, onClose }) {
+  const K = KINDS[kind], groups = {};
+  Object.entries(K.cat).forEach(([k, d]) => { (groups[d.group] = groups[d.group] || []).push([k, d]); });
+  return html`<${Sheet} onClose=${onClose}>
+    <h3>${K.title} 추가</h3><p class="muted small" style=${{ margin: 0 }}>${K.q}</p>
+    ${Object.entries(groups).map(([g, items]) => html`<div key=${g} class="pick-g"><h4>${g}</h4><div class="pick">
+      ${items.map(([k, d]) => html`<button key=${k} type="button" onClick=${() => onPick(k)}><${Mono} kind=${kind} def=${d} /><span class="lbl">${d.label}</span></button>`)}</div></div>`)}
+  <//>`;
+}
+function Block({ kind, items, st, onAdd, onEdit, onDel, onMove }) {
+  const K = KINDS[kind];
+  let depth = 0;
+  return html`<section class="card block">
+    <div class=${'block-h k-' + kind}><h3>${K.title} <span class="num">${items.length}</span></h3><span class="q">${K.q}</span></div>
+    ${!items.length && html`<div class="empty">${kind === 'constraint' ? '제약 조건이 없으면 트리거가 감지될 때마다 실행됩니다.' : '아직 없습니다.'}</div>`}
+    ${items.map((it, i) => {
+      if (it.type === 'else' || it.type === 'end_if') depth = Math.max(0, depth - 1);
+      const ind = depth;
+      if (it.type === 'if' || it.type === 'else') depth++;
+      const def = K.cat[it.type];
+      return html`<div key=${it.id} class="item" style=${{ paddingLeft: 14 + ind * 18 + 'px' }}>
+        <${Mono} kind=${kind} def=${def} />
+        <div class="grow" role="button" tabIndex="0" onClick=${() => onEdit(i)} onKeyDown=${(e) => e.key === 'Enter' && onEdit(i)}><div class="t">${def ? def.label : it.type}</div><div class="s">${summary(kind, it, st)}</div></div>
+        <div class="ops">
+          ${kind === 'action' && html`<button type="button" class="icon-btn" aria-label="위로" disabled=${i === 0} onClick=${() => onMove(i, -1)}>위</button>
+          <button type="button" class="icon-btn" aria-label="아래로" disabled=${i === items.length - 1} onClick=${() => onMove(i, 1)}>아래</button>`}
+          <button type="button" class="icon-btn" aria-label="삭제" onClick=${() => onDel(i)}>삭제</button>
+        </div></div>`;
+    })}
+    <button type="button" class="add" onClick=${onAdd}>+ ${K.title} 추가</button>
+  </section>`;
+}
+function Editor({ macro, st, engine, onSave, onDelete, onClose }) {
+  const [d, setD] = useState(clone(macro));
+  const [sheet, setSheet] = useState(null);
+  const setList = (kind, list) => setD(Object.assign({}, d, { [KINDS[kind].key]: list }));
+  const pick = (kind, type) => {
+    const it = mk(type, {}, kind);
+    if (KINDS[kind].cat[type].fields.length) setSheet({ mode: 'form', kind, item: it, index: -1 });
+    else { addItem(kind, it); setSheet(null); }
+  };
+  const addItem = (kind, it) => {
+    const list = d[KINDS[kind].key].slice(); list.push(it);
+    if (kind === 'action' && it.type === 'if') list.push(mk('end_if', {}, 'action'));
+    setList(kind, list);
+  };
+  const saveItem = (it) => {
+    const { kind, index } = sheet;
+    if (index < 0) addItem(kind, it); else { const l = d[KINDS[kind].key].slice(); l[index] = it; setList(kind, l); }
+    setSheet(null);
+  };
+  const valid = d.name.trim() && d.triggers.length && d.actions.length;
+  const block = (kind) => html`<${Block} kind=${kind} items=${d[KINDS[kind].key]} st=${st}
+    onAdd=${() => setSheet({ mode: 'pick', kind })}
+    onEdit=${(i) => setSheet({ mode: 'form', kind, item: d[KINDS[kind].key][i], index: i })}
+    onDel=${(i) => setList(kind, d[KINDS[kind].key].filter((_, j) => j !== i))}
+    onMove=${(i, dir) => { const l = d[KINDS[kind].key].slice(); [l[i], l[i + dir]] = [l[i + dir], l[i]]; setList(kind, l); }} />`;
+  return html`
+    <section class="card ed-head">
+      <div class="ed-row2">
+        <div class="field"><label for="m-name">매크로 이름</label><input id="m-name" class="inp" value=${d.name} placeholder="예: 퇴근길 알림" onInput=${(e) => setD(Object.assign({}, d, { name: e.target.value }))} /></div>
+        <div class="field"><label for="m-cat">분류</label><input id="m-cat" class="inp" list="cats" value=${d.category} onInput=${(e) => setD(Object.assign({}, d, { category: e.target.value }))} />
+          <datalist id="cats">${[...new Set(st.macros.map((m) => m.category))].map((c) => html`<option key=${c} value=${c}></option>`)}</datalist></div>
+      </div>
+      <div style=${{ display: 'flex', alignItems: 'center', gap: '10px' }}><${Switch} on=${d.enabled} label="매크로 켜기" onChange=${(v) => setD(Object.assign({}, d, { enabled: v }))} /><span class="small">${d.enabled ? '켜짐' : '꺼짐'}</span></div>
+    </section>
+    ${block('trigger')}${block('action')}${block('constraint')}
+    ${!valid && html`<p class="notice">저장하려면 이름, 트리거 1개 이상, 액션 1개 이상이 필요합니다.</p>`}
+    <div class="btns">
+      <button type="button" class="btn primary" disabled=${!valid} onClick=${() => onSave(Object.assign({}, d, { name: d.name.trim(), category: (d.category || '').trim() || '미분류' }))}>저장</button>
+      <button type="button" class="btn" disabled=${!d.actions.length} onClick=${() => engine.run(d, { label: '테스트 실행', test: true })}>테스트 실행</button>
+      <button type="button" class="btn ghost" onClick=${onClose}>취소</button>
+      <span style=${{ flex: 1 }}></span>
+      ${st.macros.some((m) => m.id === d.id) && html`<${ConfirmBtn} label="삭제" armedLabel="한 번 더 누르면 삭제" onConfirm=${() => onDelete(d.id)} />`}
+    </div>
+    ${sheet && sheet.mode === 'pick' && html`<${Picker} kind=${sheet.kind} onClose=${() => setSheet(null)} onPick=${(t) => pick(sheet.kind, t)} />`}
+    ${sheet && sheet.mode === 'form' && html`<${ItemForm} kind=${sheet.kind} item=${sheet.item} st=${st} onCancel=${() => setSheet(null)} onSave=${saveItem} />`}`;
+}
+
+/* ---------------- 화면: 템플릿 / 변수 / 로그 / 설정 ---------------- */
+function Templates({ onUse }) {
+  return html`${TEMPLATES.map((tp) => html`<section key=${tp.name} class="card tpl">
+    <div><div class="small muted">${tp.category}</div><div class="t">${tp.name}</div></div>
+    <div class="small">${tp.desc}</div>
+    <div class="flow">${tp.t.map(([ty], i) => html`<span key=${'t' + i} class="pill k-trigger">${TRIGGERS[ty].label}</span>`)}
+      ${tp.a.map(([ty], i) => html`<span key=${'a' + i} class="pill k-action">${ACTIONS[ty].label}</span>`)}
+      ${tp.c.map(([ty], i) => html`<span key=${'c' + i} class="pill k-constraint">${CONSTRAINTS[ty].label}</span>`)}</div>
+    <div class="btns"><button type="button" class="btn primary sm" onClick=${() => onUse(tp)}>내 매크로로 추가</button></div>
+  </section>`)}`;
+}
+function Vars({ st, update, engine }) {
+  const [n, setN] = useState(''); const [v, setV] = useState('0');
+  const names = Object.keys(st.vars).sort();
+  return html`<section class="card list">
+    ${names.map((k) => html`<div key=${k} class="row var-row"><div class="grow"><div class="t mono-txt">${k}</div>
+      <input class="inp val" aria-label=${k + ' 값'} id=${'var-' + k} value=${st.vars[k]} onChange=${(e) => engine.setVar(k, 'set', e.target.value, 0)} /></div>
+      <${ConfirmBtn} cls="sm" label="삭제" armedLabel="확인" onConfirm=${() => update((s) => { const vs = Object.assign({}, s.vars); delete vs[k]; return Object.assign({}, s, { vars: vs }); })} /></div>`)}
+    ${!names.length && html`<div class="empty">전역 변수가 없습니다.</div>`}
+    <form class="inline-form" onSubmit=${(e) => { e.preventDefault(); const k = n.trim(); if (!k) return; engine.setVar(k, 'set', v, 0); setN(''); setV('0'); }}>
+      <input id="new-var-name" class="inp" placeholder="새 변수 이름" value=${n} onInput=${(e) => setN(e.target.value)} />
+      <input id="new-var-val" class="inp" placeholder="초기값" value=${v} onInput=${(e) => setV(e.target.value)} />
+      <button class="btn primary" type="submit">추가</button>
+    </form>
+  </section>
+  <p class="notice">변수는 모든 매크로가 함께 씁니다. 문장에 {v=변수이름}을 쓰면 값으로 바뀌고, ‘변수 값 변경’ 트리거와 If 액션에서 비교할 수 있습니다.</p>`;
+}
+function LogRow({ l }) {
+  const d = new Date(l.t), lvT = { run: '실행', ok: '완료', skip: '건너뜀', err: '오류', info: '정보' }[l.lv] || l.lv;
+  return html`<div class="row"><span class="tm">${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${hhmm(d)}:${pad(d.getSeconds())}</span><span class=${'lv ' + l.lv}>${lvT}</span><span class="grow" style=${{ overflowWrap: 'anywhere' }}>${l.msg}</span></div>`;
+}
+function Log({ st, update }) {
+  const [f, setF] = useState('all');
+  const list = st.log.filter((l) => f === 'all' || l.lv === f);
+  return html`<div class="btns">${[['all', '전체'], ['run', '실행'], ['skip', '건너뜀'], ['err', '오류']].map(([k, l]) => html`<button key=${k} type="button" class=${'chip' + (f === k ? ' on' : '')} onClick=${() => setF(k)}>${l}</button>`)}
+      <span style=${{ flex: 1 }}></span><${ConfirmBtn} cls="sm" label="기록 지우기" armedLabel="한 번 더 누르면 지움" onConfirm=${() => update((s) => Object.assign({}, s, { log: [] }))} /></div>
+    <section class="card list log">${list.map((l, i) => html`<${LogRow} key=${l.t + '-' + i} l=${l} />`)}${!list.length && html`<div class="empty">기록이 없습니다.</div>`}</section>`;
+}
+function Settings({ st, update, toast }) {
+  const [perm, setPerm] = useState('Notification' in window ? Notification.permission : 'unsupported');
+  const [imp, setImp] = useState(''); const [msg, setMsg] = useState('');
+  const exportText = useMemo(() => JSON.stringify({ macros: st.macros, vars: st.vars }, null, 2), [st.macros, st.vars]);
+  const askNotif = async () => { try { setPerm(await Notification.requestPermission()); } catch (e) { setPerm('denied'); } };
+  const askMotion = async () => {
+    try { if (window.DeviceMotionEvent && DeviceMotionEvent.requestPermission) { const r = await DeviceMotionEvent.requestPermission(); toast(r === 'granted' ? '흔들기 감지를 허용했습니다.' : '흔들기 권한이 거부되었습니다.'); } else toast('이 기기는 별도 허용 없이 흔들기를 감지합니다.'); }
+    catch (e) { toast('흔들기 권한을 요청할 수 없습니다.'); }
+  };
+  const copy = async () => { try { await navigator.clipboard.writeText(exportText); setMsg('백업 내용을 복사했습니다.'); } catch (e) { document.getElementById('export-box').select(); setMsg('자동 복사가 막혀 있어 내용을 선택해 두었습니다. 길게 눌러 복사하세요.'); } };
+  const doImport = () => {
+    try {
+      const j = JSON.parse(imp); if (!Array.isArray(j.macros)) throw new Error();
+      update((s) => Object.assign({}, s, { macros: j.macros, vars: j.vars || {} })); setImp(''); setMsg(`매크로 ${j.macros.length}개를 가져왔습니다.`);
+    } catch (e) { setMsg('형식이 맞지 않습니다. 이 화면의 백업 내용을 통째로 붙여넣어 주세요.'); }
+  };
+  const permText = { granted: '허용됨', denied: '거부됨 (브라우저 설정에서 바꿀 수 있습니다)', default: '아직 묻지 않음', unsupported: '지원 안 함 (앱 안 팝업으로 대신 표시)' }[perm];
+  return html`<section class="card list">
+      <div class="row"><div class="grow"><div class="t">시스템 알림</div><div class="s">${permText}</div></div><button type="button" class="btn sm" disabled=${perm !== 'default'} onClick=${askNotif}>허용 요청</button></div>
+      <div class="row"><div class="grow"><div class="t">흔들기 감지</div><div class="s">아이폰은 한 번 허용해야 합니다.</div></div><button type="button" class="btn sm" onClick=${askMotion}>허용 요청</button></div>
+      <div class="row"><div class="grow"><div class="t">소리·음성 준비</div><div class="s">브라우저는 화면을 한 번 누른 뒤에만 소리를 냅니다.</div></div><button type="button" class="btn sm" onClick=${() => { try { speechSynthesis.speak(new SpeechSynthesisUtterance('준비되었습니다')); } catch (e) {} toast('소리를 켰습니다.'); }}>소리 켜기</button></div>
+    </section>
+    <section class="card ed-head">
+      <div class="field"><label for="export-box">백업 (내보내기)</label><textarea id="export-box" class="inp mono-txt small" readOnly value=${exportText} style=${{ minHeight: '120px' }}></textarea></div>
+      <div class="btns"><button type="button" class="btn sm" onClick=${copy}>백업 내용 복사</button></div>
+      <div class="field"><label for="import-box">복원 (가져오기)</label><textarea id="import-box" class="inp mono-txt small" placeholder="백업 내용을 붙여넣으세요" value=${imp} onInput=${(e) => setImp(e.target.value)}></textarea></div>
+      <div class="btns"><button type="button" class="btn sm" disabled=${!imp.trim()} onClick=${doImport}>가져오기</button>
+        <span style=${{ flex: 1 }}></span><${ConfirmBtn} cls="sm" label="전체 초기화" armedLabel="한 번 더 누르면 초기화" onConfirm=${() => { update(() => seed()); setMsg('처음 상태로 되돌렸습니다.'); }} /></div>
+      ${msg && html`<div class="hint" role="status">${msg}</div>`}
+    </section>`;
+}
+
+/* ---------------- 앱 ---------------- */
+function App() {
+  const [st, setSt] = useState(loadState);
+  const ref = useRef(st);
+  const [sensors, setSensors] = useState({ battery: null, charging: null, online: navigator.onLine, orientation: 'portrait', running: 0 });
+  const [tab, setTab] = useState(() => { const h = location.hash.slice(1); return ['home', 'macros', 'templates', 'vars', 'log', 'settings'].includes(h) ? h : 'home'; });
+  const [editing, setEditing] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const update = (fn) => { ref.current = fn(ref.current); setSt(ref.current); };
+  const toast = (text, title, sec) => {
+    const id = uid(); setToasts((t) => t.concat({ id, text, title }).slice(-3));
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), (sec || 3) * 1000);
+  };
+  const engineRef = useRef(null);
+  if (!engineRef.current) engineRef.current = new Engine({ get: () => ref.current, update: (fn) => update(fn), toast: (...a) => toast(...a), sensors: (s) => setSensors(s) });
+  const engine = engineRef.current;
+  useEffect(() => { engine.start(); }, []);
+  useEffect(() => { const t = setTimeout(() => saveState(st), 250); return () => clearTimeout(t); }, [st]);
+  useEffect(() => { const k = () => { try { ref.current && saveState(ref.current); } catch (e) {} }; addEventListener('pagehide', k); return () => removeEventListener('pagehide', k); }, []);
+
+  const go = (t) => { setEditing(null); setTab(t); window.scrollTo(0, 0); };
+  const newMacro = () => { setEditing({ id: uid(), name: '', category: '', enabled: true, lastRun: null, triggers: [], actions: [], constraints: [] }); window.scrollTo(0, 0); };
+  const openMacro = (id) => { setEditing(clone(ref.current.macros.find((m) => m.id === id))); window.scrollTo(0, 0); };
+  const saveMacro = (m) => {
+    update((s) => ({ ...s, macros: s.macros.some((x) => x.id === m.id) ? s.macros.map((x) => (x.id === m.id ? m : x)) : s.macros.concat(m) }));
+    toast(`「${m.name}」 저장됨`); setEditing(null); setTab('macros');
+  };
+  const titles = { home: '오토매크로', macros: '매크로', templates: '템플릿', vars: '변수', log: '시스템 로그', settings: '설정' };
+  let body;
+  if (editing) body = html`<${Editor} key=${editing.id} macro=${editing} st=${st} engine=${engine} onSave=${saveMacro} onClose=${() => setEditing(null)}
+      onDelete=${(id) => { update((s) => ({ ...s, macros: s.macros.filter((x) => x.id !== id) })); toast('매크로를 삭제했습니다.'); setEditing(null); setTab('macros'); }} />`;
+  else if (tab === 'home') body = html`<${Home} st=${st} sensors=${sensors} go=${go} engine=${engine} onNew=${newMacro} />`;
+  else if (tab === 'macros') body = html`<${MacroList} st=${st} onOpen=${openMacro} onNew=${newMacro} onToggle=${(id, v) => update((s) => ({ ...s, macros: s.macros.map((x) => (x.id === id ? { ...x, enabled: v } : x)) }))} />`;
+  else if (tab === 'templates') body = html`<${Templates} onUse=${(tp) => { const m = fromTemplate(tp); update((s) => ({ ...s, macros: s.macros.concat(m) })); toast(`「${m.name}」을(를) 추가했습니다. 눌러서 편집할 수 있습니다.`); go('macros'); }} />`;
+  else if (tab === 'vars') body = html`<${Vars} st=${st} update=${update} engine=${engine} />`;
+  else if (tab === 'log') body = html`<${Log} st=${st} update=${update} />`;
+  else body = html`<${Settings} st=${st} update=${update} toast=${toast} />`;
+  const TABS = [['home', '홈'], ['macros', '매크로'], ['templates', '템플릿'], ['vars', '변수'], ['log', '로그']];
+  return html`<div class="app">
+    <header class="top">
+      ${editing ? html`<button type="button" class="icon-btn" onClick=${() => setEditing(null)}>뒤로</button><h1>${st.macros.some((m) => m.id === editing.id) ? '매크로 편집' : '새 매크로'}</h1>`
+        : html`<h1 class="brand">${tab === 'home' && html`<span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>`}${titles[tab]}</h1>
+          ${tab !== 'settings' && html`<button type="button" class="icon-btn" onClick=${() => go('settings')}>설정</button>`}`}
+    </header>
+    <main class="content">${body}</main>
+    <nav class="tabs" aria-label="화면 전환"><div class="tabs-in">${TABS.map(([k, l]) => html`<button key=${k} type="button" class=${'tab' + (!editing && tab === k ? ' on' : '')} aria-current=${!editing && tab === k ? 'page' : undefined} onClick=${() => go(k)}><b></b>${l}</button>`)}</div></nav>
+    <div class="toasts" aria-live="polite">${toasts.map((t) => html`<div key=${t.id} class="toast">${t.title && html`<b>${t.title}</b>`}${t.text}</div>`)}</div>
+  </div>`;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);
+})();
+</script>
