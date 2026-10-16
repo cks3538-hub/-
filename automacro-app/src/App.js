@@ -148,6 +148,8 @@ async function checkPerms() {
     sms: await has(P.RECEIVE_SMS),
     sendSms: await has(P.SEND_SMS),
     phone: (await has(P.READ_PHONE_STATE)) && (await has(P.READ_CALL_LOG)),
+    callControl: (await has(P.CALL_PHONE)) && (await has(P.ANSWER_PHONE_CALLS)),
+    bt: Platform.Version >= 31 ? await has(P.BLUETOOTH_CONNECT) : true,
     post: Platform.Version >= 33 ? await has(P.POST_NOTIFICATIONS) : true,
   };
 }
@@ -366,9 +368,9 @@ function Block({kind, items, st, onAdd, onEdit, onDel, onMove}) {
       <View style={[s.blockH, {backgroundColor: KC(c)[kind]}]}><Text style={s.blockHT}>{K.title} {items.length}</Text><Text style={{color: c.on, fontSize: 12}}>{K.q}</Text></View>
       {!items.length && <Text style={[s.muted, {padding: 14}]}>{kind === 'constraint' ? '제약 조건이 없으면 트리거가 감지될 때마다 실행됩니다.' : '아직 없습니다.'}</Text>}
       {items.map((it, i) => {
-        if (it.type === 'else' || it.type === 'end_if') depth = Math.max(0, depth - 1);
+        if (['else', 'else_if', 'end_if', 'end_loop'].includes(it.type)) depth = Math.max(0, depth - 1);
         const ind = depth;
-        if (it.type === 'if' || it.type === 'else') depth++;
+        if (['if', 'else', 'else_if', 'loop'].includes(it.type)) depth++;
         const def = K.cat[it.type];
         return (
           <View key={it.id} style={[s.row, i === 0 && s.first, {paddingLeft: 14 + ind * 16, paddingVertical: 10, gap: 10}]}>
@@ -398,6 +400,7 @@ function Editor({macro, st, onSave, onDelete, onClose}) {
     const list = d[KINDS[kind].key].slice();
     list.push(it);
     if (kind === 'action' && it.type === 'if') list.push(mk('action', 'end_if'));
+    if (kind === 'action' && it.type === 'loop') list.push(mk('action', 'end_loop'));
     setList(kind, list);
   };
   const pick = (kind, type) => {
@@ -510,7 +513,11 @@ function Settings({st, perms, refreshPerms}) {
     ['문자 수신 감지', perms.sms, '허용', () => req([P.RECEIVE_SMS])],
     ['문자 보내기', perms.sendSms, '허용', () => req([P.SEND_SMS])],
     ['전화 수신 감지 (번호 포함)', perms.phone, '허용', () => req([P.READ_PHONE_STATE, P.READ_CALL_LOG])],
+    ['전화 걸기·받기·끊기', perms.callControl, '허용', () => req([P.CALL_PHONE, P.ANSWER_PHONE_CALLS])],
+    ['블루투스 기기 이름 읽기', perms.bt, '허용', () => req([P.BLUETOOTH_CONNECT])],
     ['알림 표시', perms.post, '허용', () => req([P.POST_NOTIFICATIONS])],
+    ['시스템 설정 변경 (화면 밝기)', perms.writeSettings, '설정 열기', () => Native.openWriteSettings()],
+    ['방해금지 접근 (무음 모드 전환)', perms.dndAccess, '설정 열기', () => Native.openDndAccess()],
     ['배터리 최적화 제외 (백그라운드 안정성)', perms.batteryUnrestricted, '허용', () => Native.requestBatteryUnrestricted()],
   ];
   return (

@@ -59,3 +59,50 @@ test('If/Else 카운터', async () => {
   expect(store.get().vars.counter).toBe('0');
   expect(calls.filter(c => c[0] === 'toast').map(c => c[1])).toEqual(['현재 4회', '5회 달성! 카운터를 초기화합니다.']);
 });
+
+const {mk, fromTemplate: ft} = require('../src/catalog');
+const macro = actions => ({id: 'x' + Math.random(), name: 't', category: '', enabled: true, triggers: [mk('trigger', 'manual')], constraints: [], actions: actions.map(([t, p]) => mk('action', t, p))});
+
+test('Loop 3회 + Else If 분기 + break', async () => {
+  const m = macro([
+    ['loop', {times: 5}],
+    ['if', {left: '{loop}', op: 'eq', right: '1'}], ['toast', {text: 'one'}],
+    ['else_if', {left: '{loop}', op: 'eq', right: '2'}], ['toast', {text: 'two'}],
+    ['else_if', {left: '{loop}', op: 'eq', right: '4'}], ['break_loop', {}],
+    ['else', {}], ['toast', {text: 'other {loop}'}],
+    ['end_if', {}],
+    ['end_loop', {}],
+    ['toast', {text: 'done'}],
+  ]);
+  store.replaceAll({...store.get(), macros: [m]});
+  const {fire} = require('../src/engine');
+  await fire(m.id, {});
+  expect(calls.filter(c => c[0] === 'toast').map(c => c[1])).toEqual(['one', 'two', 'other 3', 'done']);
+});
+
+test('인증번호 추출 템플릿', async () => {
+  const m = ft(TEMPLATES.find(t => t.name === '인증번호만 복사'));
+  m.enabled = true;
+  store.replaceAll({...store.get(), macros: [m]});
+  await handleEvent({type: 'sms', from: '1588', body: '[Web발신] 인증번호 [482913]를 입력하세요'});
+  expect(calls.find(c => c[0] === 'copy')[1]).toBe('482913');
+});
+
+test('JSON 경로 추출', async () => {
+  const m = macro([['json_parse', {input: '{"data":{"items":[{"price":1200}]}}', path: 'data.items[0].price', saveTo: 'p'}]]);
+  store.replaceAll({...store.get(), macros: [m]});
+  await require('../src/engine').fire(m.id, {});
+  expect(store.get().vars.p).toBe('1200');
+});
+
+test('블루투스 기기 이름 필터와 매크로 완료 트리거', async () => {
+  const a = macro([['toast', {text: 'car'}]]);
+  a.triggers = [mk('trigger', 'bluetooth', {state: 'connected', device: '차량'})];
+  const b = macro([['toast', {text: 'after'}]]);
+  b.triggers = [mk('trigger', 'macro_finished', {id: a.id})];
+  store.replaceAll({...store.get(), macros: [a, b]});
+  await handleEvent({type: 'bluetooth', state: 'connected', device: 'Galaxy Buds'});
+  expect(calls.some(c => c[0] === 'toast')).toBe(false);
+  await handleEvent({type: 'bluetooth', state: 'connected', device: '내 차량 오디오'});
+  expect(calls.filter(c => c[0] === 'toast').map(c => c[1])).toEqual(['car', 'after']);
+});

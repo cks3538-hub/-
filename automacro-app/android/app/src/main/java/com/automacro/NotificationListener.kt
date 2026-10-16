@@ -14,6 +14,9 @@ class NotificationListener : NotificationListenerService() {
     private val replyActions = object : LinkedHashMap<String, Notification.Action>() {
       override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Notification.Action>?) = size > 60
     }
+    private val allActions = object : LinkedHashMap<String, Array<Notification.Action>>() {
+      override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Array<Notification.Action>>?) = size > 60
+    }
     private var lastSig = ""
     private var lastAt = 0L
 
@@ -26,6 +29,35 @@ class NotificationListener : NotificationListenerService() {
       inputs.forEach { results.putCharSequence(it.resultKey, text) }
       RemoteInput.addResultsToIntent(inputs, intent, results)
       return try { action.actionIntent.send(ctx, 0, intent); true } catch (e: Exception) { false }
+    }
+
+    /** Presses a notification button whose label contains [label] (e.g. "읽음"). */
+    fun press(ctx: Context, key: String, label: String): Boolean {
+      val acts = synchronized(allActions) { allActions[key] } ?: return false
+      val a = acts.firstOrNull { it.title?.toString()?.contains(label) == true } ?: return false
+      return try { a.actionIntent.send(); true } catch (e: Exception) { false }
+    }
+
+    fun clear(pkg: String): Boolean {
+      val l = instance ?: return false
+      return try {
+        if (pkg == "*" || pkg.isEmpty()) l.cancelAllNotifications()
+        else l.activeNotifications?.filter { it.packageName == pkg && it.isClearable }?.forEach { l.cancelNotification(it.key) }
+        true
+      } catch (e: Exception) { false }
+    }
+
+    fun present(pkg: String, text: String): Boolean {
+      val l = instance ?: return false
+      return try {
+        l.activeNotifications?.any { sbn ->
+          (pkg == "*" || sbn.packageName == pkg) && (text.isEmpty() || run {
+            val ex = sbn.notification.extras
+            val all = (ex.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: "") + " " + (ex.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: "")
+            text.split(",").map { it.trim() }.filter { it.isNotEmpty() }.any { all.contains(it) }
+          })
+        } == true
+      } catch (e: Exception) { false }
     }
 
     fun dismiss(key: String): Boolean {
@@ -55,6 +87,8 @@ class NotificationListener : NotificationListenerService() {
 
     val replyAction = n.actions?.firstOrNull { a -> a.remoteInputs?.isNotEmpty() == true }
     if (replyAction != null) synchronized(replyActions) { replyActions[sbn.key] = replyAction }
+    n.actions?.let { acts -> synchronized(allActions) { allActions[sbn.key] = acts } }
+    val buttons = n.actions?.mapNotNull { it.title?.toString() }?.joinToString(",") ?: ""
 
     val appName = try {
       packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString()
@@ -67,6 +101,7 @@ class NotificationListener : NotificationListenerService() {
       putString("text", text)
       putString("key", sbn.key)
       putBoolean("canReply", replyAction != null)
+      putString("buttons", buttons)
     }
   }
 }

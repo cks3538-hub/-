@@ -7,7 +7,8 @@ let loading = null;
 const subs = new Set();
 
 function seed() {
-  const m = [TEMPLATES[8], TEMPLATES[0], TEMPLATES[1]].map(fromTemplate);
+  const pick = n => TEMPLATES.find(t => t.name === n);
+  const m = [pick('실행 횟수 카운터'), pick('카톡 부재중 자동응답'), pick('입금 문자 읽어주기')].map(fromTemplate);
   m[0].enabled = true;
   m.forEach(x => { x.category = '예시'; });
   return {

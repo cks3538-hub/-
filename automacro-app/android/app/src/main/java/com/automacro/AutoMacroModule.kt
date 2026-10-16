@@ -1,6 +1,14 @@
 package com.automacro
 
 import android.app.AlarmManager
+import android.app.KeyguardManager
+import android.bluetooth.BluetoothManager
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.media.AudioDeviceInfo
+import android.provider.AlarmClock
+import android.telecom.TelecomManager
+import android.telephony.TelephonyManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -62,6 +70,8 @@ class AutoMacroModule(private val ctx: ReactApplicationContext) : ReactContextBa
     val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     m.putBoolean("exactAlarms", Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms())
     m.putInt("sdk", Build.VERSION.SDK_INT)
+    m.putBoolean("writeSettings", Settings.System.canWrite(ctx))
+    m.putBoolean("dndAccess", (ctx.getSystemService(NotificationManager::class.java)).isNotificationPolicyAccessGranted)
     p.resolve(m)
   }
   @ReactMethod fun openNotificationAccess() = launch(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
@@ -90,6 +100,19 @@ class AutoMacroModule(private val ctx: ReactApplicationContext) : ReactContextBa
     m.putBoolean("wifi", caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true)
     val pm = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
     m.putBoolean("screenOn", pm.isInteractive)
+    val audio = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    m.putBoolean("musicActive", audio.isMusicActive)
+    m.putString("ringer", when (audio.ringerMode) { AudioManager.RINGER_MODE_SILENT -> "silent"; AudioManager.RINGER_MODE_VIBRATE -> "vibrate"; else -> "normal" })
+    m.putBoolean("headphones", audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any {
+      it.type in listOf(AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET, AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_USB_HEADSET)
+    })
+    m.putBoolean("airplane", Settings.Global.getInt(ctx.contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 1)
+    m.putBoolean("locked", (ctx.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked)
+    m.putBoolean("bluetoothOn", try { (ctx.getSystemService(BluetoothManager::class.java)).adapter?.isEnabled == true } catch (e: Exception) { false })
+    m.putString("call", try {
+      @Suppress("DEPRECATION")
+      when ((ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager).callState) { TelephonyManager.CALL_STATE_RINGING -> "ringing"; TelephonyManager.CALL_STATE_OFFHOOK -> "offhook"; else -> "idle" }
+    } catch (e: Exception) { "unknown" })
     p.resolve(m)
   }
   @ReactMethod fun listApps(p: Promise) {
@@ -178,6 +201,64 @@ class AutoMacroModule(private val ctx: ReactApplicationContext) : ReactContextBa
   @ReactMethod fun copy(text: String) {
     main.post { (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("AutoMacro", text)) }
   }
+
+  @ReactMethod fun openWriteSettings() = launch(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + ctx.packageName)))
+  @ReactMethod fun openDndAccess() = launch(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+  @ReactMethod fun setShake(on: Boolean) {
+    Prefs.setShake(ctx, on)
+    main.post { KeepAliveService.instance?.setShake(on) }
+  }
+
+  // ---- device control ----
+  private var torchOn = false
+  @ReactMethod fun torch(mode: String, p: Promise) {
+    try {
+      val cm = ctx.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+      val id = cm.cameraIdList.firstOrNull { cm.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true }
+      if (id == null) { p.resolve(false); return }
+      torchOn = when (mode) { "on" -> true; "off" -> false; else -> !torchOn }
+      cm.setTorchMode(id, torchOn)
+      p.resolve(true)
+    } catch (e: Exception) { p.resolve(false) }
+  }
+  @ReactMethod fun makeCall(number: String, p: Promise) {
+    try { launch(Intent(Intent.ACTION_CALL, Uri.parse("tel:" + Uri.encode(number)))); p.resolve(true) } catch (e: Exception) { p.reject("call", e.message) }
+  }
+  @ReactMethod fun endCall(p: Promise) {
+    try { @Suppress("DEPRECATION") p.resolve((ctx.getSystemService(Context.TELECOM_SERVICE) as TelecomManager).endCall()) } catch (e: Exception) { p.reject("call", e.message) }
+  }
+  @ReactMethod fun answerCall(p: Promise) {
+    try { @Suppress("DEPRECATION") (ctx.getSystemService(Context.TELECOM_SERVICE) as TelecomManager).acceptRingingCall(); p.resolve(true) } catch (e: Exception) { p.reject("call", e.message) }
+  }
+  @ReactMethod fun setVolume(stream: String, percent: Double, p: Promise) {
+    try {
+      val am = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+      val st = when (stream) { "ring" -> AudioManager.STREAM_RING; "notification" -> AudioManager.STREAM_NOTIFICATION; "alarm" -> AudioManager.STREAM_ALARM; else -> AudioManager.STREAM_MUSIC }
+      val max = am.getStreamMaxVolume(st)
+      am.setStreamVolume(st, Math.round(max * percent.coerceIn(0.0, 100.0) / 100.0).toInt(), 0)
+      p.resolve(true)
+    } catch (e: Exception) { p.reject("volume", e.message) }
+  }
+  @ReactMethod fun setRinger(mode: String, p: Promise) {
+    try {
+      val am = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+      am.ringerMode = when (mode) { "silent" -> AudioManager.RINGER_MODE_SILENT; "vibrate" -> AudioManager.RINGER_MODE_VIBRATE; else -> AudioManager.RINGER_MODE_NORMAL }
+      p.resolve(true)
+    } catch (e: Exception) { p.reject("ringer", e.message) }
+  }
+  @ReactMethod fun setBrightness(percent: Double, p: Promise) {
+    if (!Settings.System.canWrite(ctx)) { p.reject("settings", "WRITE_SETTINGS not granted"); return }
+    Settings.System.putInt(ctx.contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
+    Settings.System.putInt(ctx.contentResolver, Settings.System.SCREEN_BRIGHTNESS, Math.round(255 * percent.coerceIn(1.0, 100.0) / 100.0).toInt())
+    p.resolve(true)
+  }
+  @ReactMethod fun setAlarmClock(hour: Int, minute: Int, label: String) {
+    launch(Intent(AlarmClock.ACTION_SET_ALARM).putExtra(AlarmClock.EXTRA_HOUR, hour).putExtra(AlarmClock.EXTRA_MINUTES, minute)
+      .putExtra(AlarmClock.EXTRA_MESSAGE, label).putExtra(AlarmClock.EXTRA_SKIP_UI, true))
+  }
+  @ReactMethod fun pressNotificationButton(key: String, label: String, p: Promise) = p.resolve(NotificationListener.press(ctx, key, label))
+  @ReactMethod fun clearNotifications(pkg: String, p: Promise) = p.resolve(NotificationListener.clear(pkg))
+  @ReactMethod fun hasNotification(pkg: String, text: String, p: Promise) = p.resolve(NotificationListener.present(pkg, text))
 
   // ---- alarms (time / interval triggers) ----
   @ReactMethod fun scheduleAlarm(id: String, atMs: Double) = AlarmReceiver.schedule(ctx, id, atMs.toLong())
