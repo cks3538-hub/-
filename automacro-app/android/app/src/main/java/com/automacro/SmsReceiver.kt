@@ -16,5 +16,10 @@ class SmsReceiver : BroadcastReceiver() {
       putString("from", from)
       putString("body", body)
     }
+    // Keep the receiver alive until the Slack request finishes on OkHttp's thread.
+    if (Prefs.slackUrl(ctx).isNotBlank()) {
+      val pending = goAsync()
+      Slack.send(ctx, "[SMS] $from\n$body") { _, _ -> pending.finish() }
+    }
   }
 }

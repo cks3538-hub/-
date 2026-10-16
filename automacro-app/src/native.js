@@ -40,6 +40,9 @@ export const Native = {
   pressNotificationButton: (k, label) => call('pressNotificationButton', k, label) || Promise.resolve(false),
   clearNotifications: pkg => call('clearNotifications', pkg) || Promise.resolve(false),
   hasNotification: (pkg, text) => call('hasNotification', pkg, text) || Promise.resolve(false),
+  getSlackUrl: () => call('getSlackUrl') || Promise.resolve(''),
+  setSlackUrl: url => call('setSlackUrl', url) || Promise.resolve(true),
+  testSlack: () => call('testSlack') || Promise.resolve(-1),
   scheduleAlarm: (id, at) => call('scheduleAlarm', id, at),
   cancelAlarm: id => call('cancelAlarm', id),
 };

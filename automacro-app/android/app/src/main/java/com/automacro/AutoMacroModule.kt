@@ -209,6 +209,14 @@ class AutoMacroModule(private val ctx: ReactApplicationContext) : ReactContextBa
     main.post { KeepAliveService.instance?.setShake(on) }
   }
 
+  // ---- Slack forwarding ----
+  @ReactMethod fun getSlackUrl(p: Promise) = p.resolve(Prefs.slackUrl(ctx))
+  @ReactMethod fun setSlackUrl(url: String, p: Promise) { Prefs.setSlackUrl(ctx, url); p.resolve(true) }
+  @ReactMethod fun testSlack(p: Promise) {
+    if (Prefs.slackUrl(ctx).isBlank()) { p.resolve(-1); return }
+    Slack.send(ctx, "[오토매크로] Slack 연결 테스트입니다.") { _, code -> p.resolve(code) }
+  }
+
   // ---- device control ----
   private var torchOn = false
   @ReactMethod fun torch(mode: String, p: Promise) {

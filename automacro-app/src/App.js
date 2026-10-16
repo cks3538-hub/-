@@ -503,6 +503,42 @@ function LogView({st}) {
     </>
   );
 }
+function SlackSettings() {
+  const {c, s} = useT();
+  const [url, setUrl] = useState('');
+  const [saved, setSaved] = useState('');
+  const [msg, setMsg] = useState('');
+  useEffect(() => { Native.getSlackUrl().then(u => { setUrl(u || ''); setSaved(u || ''); }).catch(() => {}); }, []);
+  const save = async () => {
+    const u = url.trim();
+    if (u && !/^https:\/\//.test(u)) { setMsg('주소는 https:// 로 시작해야 합니다.'); return; }
+    await Native.setSlackUrl(u);
+    setSaved(u);
+    setMsg(u ? (u.startsWith('https://hooks.slack.com/') ? '저장했습니다. 이제 문자와 카톡이 Slack으로 전송됩니다.' : '저장했습니다. Slack 웹훅 주소(hooks.slack.com)가 맞는지 확인하세요.') : '주소를 지웠습니다. Slack 전송을 멈춥니다.');
+  };
+  const test = async () => {
+    setMsg('테스트 메시지를 보내는 중…');
+    const code = await Native.testSlack().catch(() => 0);
+    setMsg(code === -1 ? '먼저 주소를 저장하세요.' : code >= 200 && code < 300 ? 'Slack 채널에 테스트 메시지를 보냈습니다.' : code ? `전송 실패 (응답 코드 ${code}). 주소를 다시 확인하세요.` : '전송 실패. 인터넷 연결과 주소를 확인하세요.');
+  };
+  return (
+    <Section title="SLACK 전송">
+      <View style={[s.card, {padding: 14, gap: 10}]}>
+        <Text style={s.label}>Slack Webhook URL</Text>
+        <TextInput style={[s.input, {fontSize: 13}]} autoCapitalize="none" autoCorrect={false} keyboardType="url"
+          placeholder="https://hooks.slack.com/services/..." placeholderTextColor="#8A93A3" value={url} onChangeText={setUrl} />
+        <Text style={s.muted}>주소를 저장하면 받은 문자는 「[SMS] 발신번호 + 본문」, 카카오톡 알림은 「[카톡] 제목 + 본문」으로 Slack에 보냅니다. 비워 두면 보내지 않습니다. 이 주소는 휴대폰 안에만 저장되고 백업 내용에는 들어가지 않습니다.</Text>
+        <View style={s.btns}>
+          <Btn small primary disabled={url.trim() === saved} title="저장" onPress={save} />
+          <Btn small disabled={!saved} title="테스트 전송" onPress={test} />
+          <Text style={[s.muted, {color: saved ? c.cons : c.muted}]}>{saved ? '전송 켜짐' : '전송 꺼짐'}</Text>
+        </View>
+        {!!msg && <Text style={s.muted}>{msg}</Text>}
+      </View>
+    </Section>
+  );
+}
+
 function Settings({st, perms, refreshPerms}) {
   const {c, s} = useT();
   const [imp, setImp] = useState('');
@@ -538,6 +574,7 @@ function Settings({st, perms, refreshPerms}) {
         <View style={s.notice}><Text style={s.muted}>버튼을 눌러도 회색으로 막혀 있으면: 휴대폰 설정 → 애플리케이션 → 오토매크로 → 오른쪽 위 ⋮ → 「제한된 설정 허용」을 누른 뒤 다시 시도하세요. (Play 스토어 밖에서 설치한 앱에 안드로이드가 거는 잠금입니다.)</Text>
           <View style={[s.btns, {marginTop: 8}]}><Btn small title="앱 정보 열기" onPress={() => Native.openAppSettings()} /></View></View>
       </Section>
+      <SlackSettings />
       <Section title="백업 · 복원">
         <View style={[s.card, {padding: 14, gap: 10}]}>
           <View style={s.btns}>

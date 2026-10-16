@@ -94,6 +94,8 @@ class NotificationListener : NotificationListenerService() {
       packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString()
     } catch (e: Exception) { sbn.packageName }
 
+    if (sbn.packageName == "com.kakao.talk") Slack.send(this, "[카톡] $title\n$text")
+
     Events.send(this, "notification") {
       putString("pkg", sbn.packageName)
       putString("app", appName)
