@@ -1,0 +1,77 @@
+name: REA analysis - MacroDroid feature catalog
+
+# Static analysis with REA (reverse-engineer-anything) + headless JADX.
+# Prints only package facts and class/feature names to the job log;
+# decompiled source is never committed or uploaded.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ccr-f64637cb-3jlj63]
+    paths: ['.github/workflows/rea-analyze-macrodroid.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    env:
+      REA: rea-agents@6.5.0
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: JADX engine (pinned + verified)
+        run: |
+          mkdir -p ~/rea && cd ~/rea
+          curl -fsSL -o jadx.jar https://github.com/1013503897/jadx-headless-mcp/releases/download/v0.7.1/jadx-headless-mcp-0.7.1-all.jar
+          echo '6e5eacf500b64292bfb73c49797c1958f6ee44646e43e868039ae7feb573ff75  jadx.jar' | sha256sum -c -
+          echo "REA_JADX_MCP_JAR=$HOME/rea/jadx.jar" >> $GITHUB_ENV
+          echo "REA_JADX_HEAP_MIB=4096" >> $GITHUB_ENV
+      - name: Download MacroDroid APK (APKPure via apkeep)
+        run: |
+          mkdir -p ~/apk && cd ~/apk
+          curl -fsSL -o apkeep https://github.com/EFForg/apkeep/releases/download/0.17.0/apkeep-x86_64-unknown-linux-gnu
+          chmod +x apkeep
+          ./apkeep -a com.arlosoft.macrodroid -d apk-pure . || true
+          ls -la
+          f=$(ls | grep -iE '\.(apk|xapk)$' | head -1)
+          if [[ "$f" == *.xapk ]]; then unzip -o -q "$f" -d x; cp "$(ls -S x/*.apk | head -1)" macrodroid.apk; else cp "$f" macrodroid.apk; fi
+          sha256sum macrodroid.apk
+          echo "APK=$HOME/apk/macrodroid.apk" >> $GITHUB_ENV
+      - name: REA inspect-android-package (manifest summary)
+        continue-on-error: true
+        run: |
+          npx -y $REA inspect-android-package "$APK" --json > pkg.json || true
+          python3 - <<'PY'
+          import json,re
+          raw=open('pkg.json').read()
+          print('bytes',len(raw))
+          try: j=json.loads(raw)
+          except Exception as e: print(raw[:3000]); raise SystemExit
+          s=json.dumps(j,ensure_ascii=False)
+          for k in ['package','version_name','version_code','min_sdk','target_sdk','class_count']:
+              m=re.search(r'"%s"\s*:\s*("?[^,}]*)'%k,s); print(k,m.group(1) if m else '')
+          perms=sorted(set(re.findall(r'android\.permission\.[A-Z_]+|[a-z.]+\.permission\.[A-Z_0-9]+',s)))
+          print('PERMISSIONS',len(perms)); print('\n'.join(perms))
+          comps=sorted(set(re.findall(r'com\.arlosoft\.macrodroid\.[A-Za-z0-9_.]*(?:Service|Receiver|Provider)\b',s)))
+          print('COMPONENTS',len(comps)); print('\n'.join(comps))
+          PY
+      - name: REA search-android-classes (feature catalog)
+        continue-on-error: true
+        run: |
+          for q in triggers. actions. constraint. ; do
+            npx -y $REA search-android-classes "$APK" "$q" --json > "s-$q.json" || true
+          done
+          python3 - <<'PY'
+          import re,glob
+          for f in sorted(glob.glob('s-*.json')):
+              s=open(f).read()
+              names=sorted(set(re.findall(r'com\.arlosoft\.macrodroid\.[a-z0-9_.]+\.([A-Z][A-Za-z0-9]+(?:Trigger|Action|Constraint))\b',s)))
+              print('=====',f,len(names)); print(', '.join(names))
+              if not names: print(s[:1500])
+          PY
